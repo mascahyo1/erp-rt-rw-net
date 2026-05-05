@@ -17,6 +17,7 @@ Membangun **ERP berbasis web** yang:
 - Menghitung & mencatat **insentif karyawan penagih** (tunai & non-tunai) secara otomatis.
 - Menyajikan **laporan harian / mingguan / bulanan / tahunan** yang siap pakai.
 - Mendukung **multi-perusahaan (multi-tenant)** dengan **Dynamic RBAC & granular permission**.
+- Memberikan **pengalaman pengguna modern**: SPA, responsif di semua device, dukungan dark/light/auto theme.
 
 ## 4. Cakupan Fitur (High-Level Scope)
 | Modul | Deskripsi |
@@ -30,6 +31,18 @@ Membangun **ERP berbasis web** yang:
 | Laporan | Harian, mingguan, bulanan, tahunan — pendapatan, piutang, insentif, performa karyawan |
 | Multi-Perusahaan | Isolasi data per perusahaan, branding per tenant |
 | Dynamic RBAC | Role & permission bisa dikustomisasi per tenant (granular: view, create, edit, delete, approve) |
+| **UI/UX Modern** | Dark Mode, Light Mode, Auto (ikut OS), Responsif (mobile-first), SPA experience via Inertia, animasi transisi halus |
+
+## 4b. Persyaratan UI/UX (Non-Fungsional Frontend)
+| Aspek | Spesifikasi |
+|---|---|
+| **Color Mode** | 3 pilihan: 🌞 Light Mode, 🌙 Dark Mode, 🖥️ Auto (mengikuti preferensi OS via `prefers-color-scheme`). Disimpan di localStorage per user. Toggle switch di navbar & halaman profil. |
+| **Responsivitas** | Mobile-first design. Breakpoint: `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px), `2xl` (1536px). Sidebar auto-collapse di layar kecil. Tabel jadi swipeable card di mobile. |
+| **SPA Experience** | Inertia.js — navigasi antar halaman tanpa full page reload. Loading progress bar (NProgress style). Preserve scroll position. Partial reloads untuk performa. |
+| **Modern Aesthetic** | Gradasi subtle, glassmorphism (backdrop blur), micro-interactions, skeleton loading, smooth transitions (200-300ms), rounded corners (xl/2xl), shadow hierarchy. |
+| **Aksesibilitas (A11y)** | WCAG 2.1 AA minimal. Kontras warna cukup, focus ring terlihat, ARIA labels, keyboard navigable, screen reader friendly. |
+| **Tipografi** | Font Inter (body) + JetBrains Mono (kode/angka). Consistent type scale (12px–48px). |
+| **Animasi** | Transisi halaman Inertia (fade/slide), hover effects, skeleton loader, toast notifications animasi slide-in. |
 
 ## 5. Tech Stack
 
@@ -37,9 +50,11 @@ Membangun **ERP berbasis web** yang:
 |---|---|---|
 | Backend | **Laravel 13** | REST API, ORM Eloquent, Queue Job |
 | Frontend | **Vue 3.5+** + **Inertia.js 2** | SPA-like tanpa perlu REST API terpisah; server-side routing Laravel + client-side Vue |
-| CSS Framework | **Tailwind CSS 4.2** | Utility-first, JIT compiler via Vite plugin |
-| UI Components | **Flowbite 4.0** | Komponen UI siap pakai berbasis Tailwind |
+| CSS Framework | **Tailwind CSS 4.2** | Utility-first, JIT compiler via Vite plugin, dark mode via `dark:` variant & `prefers-color-scheme` |
+| UI Components | **Flowbite 4.0** | Komponen UI siap pakai berbasis Tailwind, termasuk `DarkThemeToggle`, Sidebar, Navbar, Modal, Table |
 | Ikon | **Font Awesome 7** | 64K+ ikon, SVG/JS, 14 icon packs |
+| Theme Manager | **Custom Vue Composable** (`useTheme`) | Kelola 3 mode: light/dark/auto, localStorage persistence, OS preference listener |
+| Font | **Inter** (body) + **JetBrains Mono** (monospace) | Tipografi modern, variable font, di-load dari Google Fonts atau self-hosted |
 | Real-time | **Laravel Reverb 1.10** | WebSocket server native Laravel (real-time notifikasi, status penagihan live) |
 | Storage | **S3 / S3 Compatible** (MinIO) | Upload bukti transfer, dokumen pelanggan |
 | Database | **MySQL 8.4 / MariaDB 11** | Relasional, transaksi ACID |
@@ -47,14 +62,19 @@ Membangun **ERP berbasis web** yang:
 
 ## 6. Arsitektur Singkat
 ```
-┌─────────────┐     ┌──────────────┐     ┌───────────┐
-│   Browser    │────▶│  Laravel      │────▶│  MySQL    │
-│  (Vue 3 +    │     │  + Inertia    │     │  + Redis  │
-│   Tailwind)  │◀────│  + Reverb     │◀────│  + MinIO  │
-└─────────────┘     └──────────────┘     └───────────┘
-       ▲                   │
-       │  WebSocket (WS)   │
-       └───────────────────┘
+┌─────────────────┐     ┌──────────────────┐     ┌───────────┐
+│   Browser        │────▶│  Laravel 13       │────▶│  MySQL    │
+│  (Vue 3 +        │     │  + Inertia.js     │     │  + Redis  │
+│   Tailwind 4 +   │◀────│  + Reverb         │◀────│  + MinIO  │
+│   Flowbite +     │     └──────────────────┘     └───────────┘
+│   FA 7 +         │              │
+│   useTheme())    │              │ WebSocket (WS)
+└─────────────────┘              │
+       ▲                         ▼
+       │  localStorage     ┌──────────┐
+       │  (theme pref)     │ Reverb   │
+       └───────────────────│ Server   │
+                           └──────────┘
 ```
 
 ## 7. MVP Prioritas
@@ -65,3 +85,4 @@ Membangun **ERP berbasis web** yang:
 5. Insentif Karyawan
 6. Laporan Harian & Bulanan
 7. Dashboard Realtime (via Reverb)
+8. **UI/UX Modern** (Dark/Light/Auto mode, Responsif, SPA)

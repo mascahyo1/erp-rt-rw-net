@@ -125,14 +125,108 @@
 
 ---
 
-## 11. Non-Functional Requirements
+## 11. UI/UX Design System
+
+### 11.1 Color Mode (Dark / Light / Auto)
+| Mode | Deskripsi | Implementasi |
+|---|---|---|
+| 🌞 **Light Mode** | Tema terang default. Background putih/abu-abu, teks gelap. | Tailwind `light` class (default). |
+| 🌙 **Dark Mode** | Tema gelap untuk kenyamanan mata di malam hari. Background gray-900, teks putih/abu. | Tailwind `dark:` prefix. Toggle via class `dark` di `<html>`. |
+| 🖥️ **Auto (OS Default)** | Mengikuti preferensi sistem operasi pengguna. | CSS `prefers-color-scheme` media query. Tailwind `@media (prefers-color-scheme: dark)` via `darkMode: 'media'`. |
+
+**Mekanisme penyimpanan preferensi:**
+- Simpan pilihan user di `localStorage` key `theme` dengan nilai: `light`, `dark`, atau `system`.
+- Saat pertama kali akses (tidak ada localStorage) → default ke `system`.
+- Listener `matchMedia('(prefers-color-scheme: dark)')` untuk mendeteksi perubahan OS secara real-time.
+- Toggle switch di **navbar** (ikon ☀️/🌙) dan opsi di **halaman profil**.
+- Flowbite menyediakan komponen `DarkThemeToggle` yang bisa langsung dipakai.
+
+**Contoh implementasi di `app.js`:**
+```js
+// On mount
+const theme = localStorage.getItem('theme') || 'system';
+if (theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+}
+```
+
+### 11.2 Responsivitas (Mobile-First)
+| Breakpoint | Lebar | Target Device |
+|---|---|---|
+| Default | < 640px | Smartphone (mobile-first) |
+| `sm` | ≥ 640px | Smartphone landscape |
+| `md` | ≥ 768px | Tablet |
+| `lg` | ≥ 1024px | Laptop kecil |
+| `xl` | ≥ 1280px | Desktop |
+| `2xl` | ≥ 1536px | Desktop besar |
+
+**Perilaku responsif per komponen:**
+| Komponen | Mobile (< 768px) | Desktop (≥ 768px) |
+|---|---|---|
+| **Sidebar** | Off-screen (slide overlay dari kiri), hamburger toggle | Fixed, lebar 260px, bisa collapse ke 64px (ikon only) |
+| **Tabel Data** | Swipe horizontal card (setiap row jadi card vertikal) | Tabel normal |
+| **Form** | Full width, label di atas input | Bisa grid 2-3 kolom, label di samping |
+| **Modal** | Full screen (bottom sheet style) | Centered, max-width 500-800px |
+| **Dashboard Widget** | 1 kolom (stack) | 2-4 kolom grid |
+| **Navbar** | Logo + hamburger + user avatar | Logo + menu horizontal + search bar + user dropdown |
+| **Filter/Search** | Expandable dropdown | Inline horizontal |
+
+### 11.3 SPA Experience (via Inertia.js)
+- **Tidak ada full page reload** — semua navigasi via XHR/fetch.
+- **Loading progress bar** — NProgress style, warna sky-500, muncul di atas halaman saat request Inertia.
+- **Preserve scroll position** — dikelola otomatis oleh Inertia (`preserveState`).
+- **Partial reloads** — hanya reload komponen yang berubah (`only: ['users']`).
+- **Prefetch** — prefetch link saat hover (opsional via `@prefetch` directive Inertia).
+- **Title dinamis** — `<Head title="...">` berubah sesuai halaman.
+- **Back/Forward** — browser navigation tetap berfungsi (Inertia menggunakan History API).
+- **Error handling** — modal error toast saat validasi gagal, tidak perlu reload halaman.
+
+### 11.4 Modern Aesthetic
+| Elemen | Spesifikasi |
+|---|---|
+| **Warna Primer** | Gradasi sky-500 → indigo-600 (`from-sky-500 to-indigo-600`) |
+| **Gradasi Background** | Subtle radial gradient blob dengan opacity 10-20%, posisi absolute di belakang konten |
+| **Glassmorphism** | `bg-white/80 backdrop-blur-md` untuk navbar & card overlay |
+| **Border radius** | Konsisten: tombol & card `rounded-xl` (12px), modal `rounded-2xl` (16px), input `rounded-lg` (8px) |
+| **Shadow Hierarchy** | 3 level: `shadow-sm` (card default), `shadow-md` (card hover), `shadow-xl` (modal/dropdown), `shadow-2xl` (mockup hero) |
+| **Skeleton Loading** | Placeholder shimmer animation saat data loading. Komponen `SkeletonLoader.vue` (pulsing gradient) |
+| **Micro-interactions** | Hover scale (1.02), active press (0.98), focus ring (ring-2 ring-sky-500 ring-offset-2) |
+| **Toast Notifikasi** | Slide-in dari kanan atas, durasi 4 detik, 4 varian: success (emerald), error (red), warning (amber), info (sky) |
+| **Empty State** | Ilustrasi SVG + teks panduan + CTA button saat data kosong |
+| **Transition** | Semua transisi 200-300ms ease-in-out (`transition-all duration-200`) |
+
+### 11.5 Tipografi
+| Penggunaan | Font | Weight | Ukuran |
+|---|---|---|---|
+| Heading 1 (hero) | Inter | Extrabold (800) | 36-60px |
+| Heading 2 (section) | Inter | Bold (700) | 30-36px |
+| Heading 3 (card title) | Inter | Semibold (600) | 18-20px |
+| Body | Inter | Regular (400) | 14-16px |
+| Caption / Label | Inter | Medium (500) | 12-14px |
+| Kode / Angka | JetBrains Mono | Regular (400) | 12-14px |
+
+### 11.6 Aksesibilitas (A11y)
+- **WCAG 2.1 AA** compliance minimal.
+- **Kontras warna**: ratio minimal 4.5:1 untuk teks normal, 3:1 untuk teks besar.
+- **Focus indicators**: `focus:ring-2 focus:ring-sky-500 focus:ring-offset-2` untuk semua elemen interaktif.
+- **Keyboard navigation**: semua menu, modal, dropdown bisa diakses via Tab, Esc, Enter, Arrow keys.
+- **ARIA labels**: `aria-label`, `aria-expanded`, `aria-controls`, `role` atribut pada komponen Flowbite.
+- **Screen reader**: semantic HTML + `.sr-only` class untuk teks bantu.
+- **Skip to content**: link tersembunyi di awal halaman untuk skip navigasi.
+
+---
+
+## 12. Non-Functional Requirements
 | Aspek | Spesifikasi |
 |---|---|
-| Responsivitas | Mobile-first, UI adaptif (Tailwind responsive) |
-| Performa | Lazy load data via Inertia partial reloads; Redis cache |
-| Keamanan | CSRF, XSS, SQL Injection (Laravel built-in); Rate limiting API; Signed URL S3 |
-| Audit Trail | Semua aksi user tercatat (spatie/laravel-activitylog) |
-| Backup | Otomatis backup database + file S3 terjadwal |
+| **Responsivitas** | Mobile-first, UI adaptif (Tailwind responsive). LCP < 2.5s di mobile. |
+| **Theme Support** | Dark / Light / Auto (OS default). Tersimpan di localStorage. Toggle via navbar. |
+| **SPA Performance** | Inertia lazy loading + partial reloads. Vite code splitting. First load < 3s, subsequent < 300ms. |
+| **Browser Support** | Chrome 100+, Firefox 100+, Safari 16+, Edge 100+. Tidak mendukung IE. |
+| **Keamanan** | CSRF, XSS, SQL Injection (Laravel built-in); Rate limiting API; Signed URL S3; CSP header. |
+| **Audit Trail** | Semua aksi user tercatat (spatie/laravel-activitylog). Log: user, aksi, model, timestamp, IP, user agent. |
+| **Backup** | Otomatis backup database + file S3 terjadwal. Retensi 30 hari. |
+| **PWA Ready** (opsional) | Service worker untuk offline caching static assets. Manifest.json untuk installable app.
 
 ---
 
@@ -152,11 +246,50 @@
 
 ### Frontend
 - **Vue 3.5+** (Composition API + `<script setup>`)
-- **Inertia.js 2** — Bridge Laravel ↔ Vue, SSR-ready
-- **Tailwind CSS 4.2** — Utility-first CSS framework (Vite plugin)
-- **Flowbite 4.0** — Tailwind component library (modals, tables, forms, sidebar, navbar)
+- **Inertia.js 2** — Bridge Laravel ↔ Vue, SSR-ready, SPA experience tanpa full page reload
+- **Tailwind CSS 4.2** — Utility-first CSS framework (Vite plugin), `dark:` variant untuk dark mode
+- **Flowbite 4.0** — Tailwind component library (modals, tables, forms, sidebar, navbar, `DarkThemeToggle`)
 - **Font Awesome 7** — SVG icon library (64,647 ikon, 14 icon packs)
 - **Ziggy** — Laravel named routes di JavaScript
+- **Inter + JetBrains Mono** — Font family modern untuk body & monospace
+- **useTheme Composable** — Vue composable untuk manage dark/light/auto theme + localStorage persistence
+
+### Theme System Detail
+```
+┌─────────────────────────────────────────────────┐
+│                  useTheme()                       │
+│                                                   │
+│  State: theme = 'light' | 'dark' | 'system'      │
+│                                                   │
+│  Logic:                                           │
+│  1. Baca localStorage('theme') → state           │
+│  2. Jika 'system' → cek prefers-color-scheme      │
+│  3. Toggle class 'dark' di <html>                │
+│  4. Listen matchMedia change event               │
+│  5. Watch state → update localStorage + DOM      │
+│                                                   │
+│  Methods:                                         │
+│  - setTheme(mode) → simpan + apply               │
+│  - toggleTheme() → light ↔ dark                  │
+│  - isDark → computed boolean                     │
+│  - themeIcon → computed: 'sun' | 'moon' | 'auto' │
+└─────────────────────────────────────────────────┘
+```
+
+### SPA Architecture (Inertia.js)
+```
+┌──────────┐   click link    ┌──────────────┐   XHR/fetch   ┌──────────┐
+│  Browser  │ ───────────────▶│  Inertia.js   │ ─────────────▶│ Laravel  │
+│  (Vue)    │◀───────────────│  (client)      │◀─────────────│ (server) │
+└──────────┘   JSON response └──────────────┘   JSON props  └──────────┘
+     │                              │
+     │  - No full page reload      │
+     │  - Progress bar (NProgress) │
+     │  - Scroll preservation      │
+     │  - History API (back/fwd)   │
+     │  - Partial reloads          │
+     └──────────────────────────────┘
+```
 
 ### Infrastructure
 - **MySQL 8.4 / MariaDB 11** — Primary database

@@ -2,52 +2,471 @@
 import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
-    canLogin: {
-        type: Boolean,
-    },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
-        type: String,
-        required: true,
-    },
-    phpVersion: {
-        type: String,
-        required: true,
-    },
+    canLogin: Boolean,
+    canRegister: Boolean,
+    laravelVersion: String,
+    phpVersion: String,
 });
-
-function handleImageError() {
-    document.getElementById('screenshot-container')?.classList.add('!hidden');
-    document.getElementById('docs-card')?.classList.add('!row-span-1');
-    document.getElementById('docs-card-content')?.classList.add('!flex-row');
-    document.getElementById('background')?.classList.add('!hidden');
-}
 </script>
 
 <template>
-    <Head title="Welcome" />
-    <div class="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
-        <img
-            id="background"
-            class="absolute -left-20 top-0 max-w-[877px]"
-            src="https://laravel.com/assets/img/welcome/background.svg"
-        />
-        <div
-            class="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white"
-        >
-            <div class="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-                <header
-                    class="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3"
+    <Head title="Selamat Datang" />
+
+    <div class="min-h-screen bg-white dark:bg-gray-900">
+        <!-- ===== NAVBAR ===== -->
+        <nav class="fixed top-0 z-50 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md dark:border-gray-700 dark:bg-gray-900/80">
+            <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-8">
+                <!-- Logo -->
+                <Link href="/" class="flex items-center gap-2">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600">
+                        <i class="fas fa-wifi text-lg text-white"></i>
+                    </div>
+                    <span class="text-xl font-bold text-gray-900 dark:text-white">
+                        RT<span class="text-sky-500">/</span>RW Net
+                    </span>
+                </Link>
+
+                <!-- Desktop Menu -->
+                <div class="hidden items-center gap-8 lg:flex">
+                    <a href="#fitur" class="text-sm font-medium text-gray-600 transition hover:text-sky-600 dark:text-gray-300 dark:hover:text-sky-400">Fitur</a>
+                    <a href="#cara-kerja" class="text-sm font-medium text-gray-600 transition hover:text-sky-600 dark:text-gray-300 dark:hover:text-sky-400">Cara Kerja</a>
+                    <a href="#harga" class="text-sm font-medium text-gray-600 transition hover:text-sky-600 dark:text-gray-300 dark:hover:text-sky-400">Harga</a>
+                    <a href="#kontak" class="text-sm font-medium text-gray-600 transition hover:text-sky-600 dark:text-gray-300 dark:hover:text-sky-400">Kontak</a>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="hidden items-center gap-3 lg:flex">
+                    <Link
+                        v-if="canLogin"
+                        :href="route('login')"
+                        class="rounded-lg px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                        Masuk
+                    </Link>
+                    <Link
+                        v-if="canRegister"
+                        :href="route('register')"
+                        class="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-sky-500/25 transition hover:shadow-lg hover:shadow-sky-500/30 hover:from-sky-600 hover:to-indigo-700"
+                    >
+                        Mulai Gratis
+                    </Link>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button
+                    data-collapse-toggle="mobile-menu"
+                    type="button"
+                    class="inline-flex items-center justify-center rounded-lg p-2 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 lg:hidden"
+                    aria-controls="mobile-menu"
+                    aria-expanded="false"
                 >
-                    <div class="flex lg:col-start-2 lg:justify-center">
-                        <svg
-                            class="h-12 w-auto text-white lg:h-16 lg:text-[#FF2D20]"
-                            viewBox="0 0 62 65"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
+                    <span class="sr-only">Buka menu</span>
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden border-t border-gray-200 px-4 pb-4 dark:border-gray-700 lg:hidden">
+                <a href="#fitur" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">Fitur</a>
+                <a href="#cara-kerja" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">Cara Kerja</a>
+                <a href="#harga" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">Harga</a>
+                <a href="#kontak" class="block rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">Kontak</a>
+                <div class="mt-3 flex flex-col gap-2 border-t border-gray-200 pt-3 dark:border-gray-700">
+                    <Link
+                        v-if="canLogin"
+                        :href="route('login')"
+                        class="rounded-lg px-3 py-2 text-center text-sm font-semibold text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                    >
+                        Masuk
+                    </Link>
+                    <Link
+                        v-if="canRegister"
+                        :href="route('register')"
+                        class="rounded-lg bg-gradient-to-r from-sky-500 to-indigo-600 px-3 py-2.5 text-center text-sm font-semibold text-white"
+                    >
+                        Mulai Gratis
+                    </Link>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ===== HERO SECTION ===== -->
+        <section class="relative overflow-hidden pt-24 lg:pt-32">
+            <!-- Background decoration -->
+            <div class="absolute inset-0 -z-10">
+                <div class="absolute -left-40 -top-40 h-[500px] w-[500px] rounded-full bg-sky-400/20 blur-[100px] dark:bg-sky-600/10"></div>
+                <div class="absolute -right-40 -bottom-40 h-[500px] w-[500px] rounded-full bg-indigo-400/20 blur-[100px] dark:bg-indigo-600/10"></div>
+            </div>
+
+            <div class="mx-auto max-w-7xl px-4 pb-20 lg:flex lg:items-center lg:gap-12 lg:px-8">
+                <!-- Left: Text -->
+                <div class="max-w-2xl lg:flex-1">
+                    <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-4 py-1.5 text-sm font-medium text-sky-700 dark:border-sky-800 dark:bg-sky-900/50 dark:text-sky-300">
+                        <i class="fas fa-rocket text-xs"></i>
+                        ERP Modern untuk Bisnis Internet Anda
+                    </div>
+
+                    <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
+                        Kelola Bisnis
+                        <span class="bg-gradient-to-r from-sky-500 to-indigo-600 bg-clip-text text-transparent">RT/RW Net</span>
+                        Jadi Lebih Mudah
+                    </h1>
+
+                    <p class="mt-6 text-lg leading-relaxed text-gray-600 dark:text-gray-400">
+                        Dari pencatatan manual ke digital. Kelola pelanggan, tagihan, pembayaran, insentif karyawan,
+                        dan laporan keuangan — semua dalam satu dashboard. Dukung multi-perusahaan dengan akses yang fleksibel.
+                    </p>
+
+                    <div class="mt-8 flex flex-wrap gap-4">
+                        <Link
+                            v-if="canRegister"
+                            :href="route('register')"
+                            class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 px-7 py-3.5 text-base font-semibold text-white shadow-lg shadow-sky-500/25 transition hover:shadow-xl hover:shadow-sky-500/30 hover:from-sky-600 hover:to-indigo-700"
                         >
+                            <i class="fas fa-play-circle"></i>
+                            Mulai Sekarang Gratis
+                        </Link>
+                        <a
+                            href="#fitur"
+                            class="inline-flex items-center gap-2 rounded-xl border border-gray-300 px-7 py-3.5 text-base font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+                        >
+                            <i class="fas fa-circle-info"></i>
+                            Pelajari Fitur
+                        </a>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="mt-10 flex flex-wrap gap-8">
+                        <div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-white">100%</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Digital</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-white">24/7</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Akses Realtime</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-white">Multi</div>
+                            <div class="text-sm text-gray-500 dark:text-gray-400">Perusahaan</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Illustration -->
+                <div class="mt-12 hidden lg:mt-0 lg:flex lg:flex-1 lg:justify-end">
+                    <div class="relative">
+                        <!-- Dashboard Mockup -->
+                        <div class="w-[500px] rounded-2xl border border-gray-200 bg-white p-3 shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+                            <!-- Browser Bar -->
+                            <div class="mb-3 flex items-center gap-2 px-1">
+                                <div class="h-3 w-3 rounded-full bg-red-400"></div>
+                                <div class="h-3 w-3 rounded-full bg-yellow-400"></div>
+                                <div class="h-3 w-3 rounded-full bg-green-400"></div>
+                                <div class="ml-3 flex-1 rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-400 dark:bg-gray-700">app.rt-rw-net.id</div>
+                            </div>
+                            <!-- Content -->
+                            <div class="space-y-3">
+                                <!-- Stats Row -->
+                                <div class="grid grid-cols-3 gap-2">
+                                    <div class="rounded-lg bg-gradient-to-br from-sky-50 to-sky-100 p-3 dark:from-sky-900/30 dark:to-sky-800/30">
+                                        <div class="text-xs font-medium text-sky-600 dark:text-sky-400"><i class="fas fa-users mr-1"></i> Pelanggan</div>
+                                        <div class="mt-1 text-xl font-bold text-gray-900 dark:text-white">1,248</div>
+                                    </div>
+                                    <div class="rounded-lg bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 dark:from-emerald-900/30 dark:to-emerald-800/30">
+                                        <div class="text-xs font-medium text-emerald-600 dark:text-emerald-400"><i class="fas fa-money-bill mr-1"></i> Pendapatan</div>
+                                        <div class="mt-1 text-xl font-bold text-gray-900 dark:text-white">Rp 42M</div>
+                                    </div>
+                                    <div class="rounded-lg bg-gradient-to-br from-amber-50 to-amber-100 p-3 dark:from-amber-900/30 dark:to-amber-800/30">
+                                        <div class="text-xs font-medium text-amber-600 dark:text-amber-400"><i class="fas fa-clock mr-1"></i> Piutang</div>
+                                        <div class="mt-1 text-xl font-bold text-gray-900 dark:text-white">Rp 5.2M</div>
+                                    </div>
+                                </div>
+                                <!-- Table -->
+                                <div class="rounded-lg bg-gray-50 p-3 dark:bg-gray-900">
+                                    <div class="mb-2 text-xs font-semibold text-gray-500">Tagihan Terbaru</div>
+                                    <div class="space-y-1.5">
+                                        <div v-for="i in 4" :key="i" class="flex items-center justify-between rounded bg-white px-3 py-2 text-xs shadow-sm dark:bg-gray-800">
+                                            <div class="flex items-center gap-2">
+                                                <div class="h-6 w-6 rounded-full bg-sky-100 dark:bg-sky-900"></div>
+                                                <span class="font-medium text-gray-700 dark:text-gray-300">Pelanggan {{ i }}</span>
+                                            </div>
+                                            <span class="rounded-full bg-emerald-100 px-2 py-0.5 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">Lunas</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Floating element -->
+                        <div class="absolute -bottom-6 -left-6 rounded-xl border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                            <div class="flex items-center gap-2">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+                                    <i class="fas fa-check text-emerald-600 dark:text-emerald-400 text-sm"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-semibold text-gray-900 dark:text-white">Insentif Bulan Ini</div>
+                                    <div class="text-sm font-bold text-emerald-600 dark:text-emerald-400">Rp 2.450.000</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FEATURES SECTION ===== -->
+        <section id="fitur" class="bg-gray-50 py-20 dark:bg-gray-800/50">
+            <div class="mx-auto max-w-7xl px-4 lg:px-8">
+                <div class="mx-auto max-w-2xl text-center">
+                    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+                        Semua yang Anda Butuhkan dalam
+                        <span class="bg-gradient-to-r from-sky-500 to-indigo-600 bg-clip-text text-transparent">Satu Platform</span>
+                    </h2>
+                    <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
+                        Fitur lengkap untuk mengelola bisnis RT/RW Net dari hulu ke hilir.
+                    </p>
+                </div>
+
+                <div class="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    <!-- Feature 1 -->
+                    <div class="group rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-sky-200 hover:shadow-lg hover:shadow-sky-500/5 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-sky-800">
+                        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 shadow-lg shadow-sky-500/25">
+                            <i class="fas fa-user-group text-xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Manajemen Pelanggan</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            Data pelanggan lengkap, histori paket, status aktif/nonaktif, dan pencarian cepat.
+                        </p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="group rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-sky-200 hover:shadow-lg hover:shadow-sky-500/5 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-sky-800">
+                        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 shadow-lg shadow-emerald-500/25">
+                            <i class="fas fa-file-invoice text-xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Tagihan Otomatis</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            Generate invoice otomatis tiap bulan. Tracking status: belum bayar, menunggu konfirmasi, lunas, kadaluarsa.
+                        </p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="group rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-sky-200 hover:shadow-lg hover:shadow-sky-500/5 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-sky-800">
+                        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 shadow-lg shadow-amber-500/25">
+                            <i class="fas fa-wallet text-xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Pembayaran Tunai & Non-Tunai</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            Input pembayaran cash, upload bukti transfer, verifikasi otomatis. Semua tercatat rapi.
+                        </p>
+                    </div>
+
+                    <!-- Feature 4 -->
+                    <div class="group rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-sky-200 hover:shadow-lg hover:shadow-sky-500/5 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-sky-800">
+                        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg shadow-purple-500/25">
+                            <i class="fas fa-hand-holding-dollar text-xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Insentif Karyawan</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            Hitung otomatis insentif penagih (flat / persentase). Approval & pencairan transparan.
+                        </p>
+                    </div>
+
+                    <!-- Feature 5 -->
+                    <div class="group rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-sky-200 hover:shadow-lg hover:shadow-sky-500/5 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-sky-800">
+                        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 shadow-lg shadow-rose-500/25">
+                            <i class="fas fa-chart-pie text-xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Laporan Lengkap</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            Laporan harian, mingguan, bulanan, tahunan. Export PDF & Excel. Dashboard realtime.
+                        </p>
+                    </div>
+
+                    <!-- Feature 6 -->
+                    <div class="group rounded-2xl border border-gray-200 bg-white p-6 transition hover:border-sky-200 hover:shadow-lg hover:shadow-sky-500/5 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-sky-800">
+                        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 shadow-lg shadow-indigo-500/25">
+                            <i class="fas fa-building text-xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900 dark:text-white">Multi-Perusahaan</h3>
+                        <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            Kelola banyak perusahaan dalam satu akun. RBAC granular dengan permission dinamis.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== HOW IT WORKS ===== -->
+        <section id="cara-kerja" class="py-20">
+            <div class="mx-auto max-w-7xl px-4 lg:px-8">
+                <div class="mx-auto max-w-2xl text-center">
+                    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white sm:text-4xl">
+                        Bagaimana Cara Kerjanya?
+                    </h2>
+                    <p class="mt-4 text-lg text-gray-600 dark:text-gray-400">
+                        Empat langkah mudah untuk memulai digitalisasi bisnis RT/RW Net Anda.
+                    </p>
+                </div>
+
+                <div class="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                    <!-- Step 1 -->
+                    <div class="relative text-center">
+                        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-bold text-white shadow-lg shadow-sky-500/25">
+                            1
+                        </div>
+                        <h3 class="mt-5 text-lg font-bold text-gray-900 dark:text-white">Daftar Akun</h3>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Buat akun perusahaan Anda dalam 2 menit. Gratis, tanpa kartu kredit.</p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="relative text-center">
+                        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-bold text-white shadow-lg shadow-sky-500/25">
+                            2
+                        </div>
+                        <h3 class="mt-5 text-lg font-bold text-gray-900 dark:text-white">Input Data</h3>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Masukkan data pelanggan, paket, dan karyawan. Impor dari Excel juga bisa.</p>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="relative text-center">
+                        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-bold text-white shadow-lg shadow-sky-500/25">
+                            3
+                        </div>
+                        <h3 class="mt-5 text-lg font-bold text-gray-900 dark:text-white">Jalankan Operasional</h3>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Generate tagihan, catat pembayaran, track status, hitung insentif — otomatis.</p>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="relative text-center">
+                        <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-bold text-white shadow-lg shadow-sky-500/25">
+                            4
+                        </div>
+                        <h3 class="mt-5 text-lg font-bold text-gray-900 dark:text-white">Pantau & Analisa</h3>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Dashboard realtime & laporan lengkap untuk keputusan bisnis yang lebih baik.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== CTA SECTION ===== -->
+        <section class="relative overflow-hidden bg-gradient-to-br from-sky-600 to-indigo-700 py-20">
+            <div class="absolute inset-0 -z-10">
+                <div class="absolute -left-20 -top-20 h-[300px] w-[300px] rounded-full bg-white/10 blur-[80px]"></div>
+                <div class="absolute -right-20 -bottom-20 h-[300px] w-[300px] rounded-full bg-white/10 blur-[80px]"></div>
+            </div>
+
+            <div class="mx-auto max-w-4xl px-4 text-center lg:px-8">
+                <h2 class="text-3xl font-extrabold text-white sm:text-4xl">
+                    Siap Digitalisasi Bisnis RT/RW Net Anda?
+                </h2>
+                <p class="mx-auto mt-4 max-w-2xl text-lg text-sky-100">
+                    Bergabunglah dengan ratusan penyedia RT/RW Net yang sudah beralih dari pencatatan manual ke sistem digital. Mulai gratis, upgrade sesuai kebutuhan.
+                </p>
+                <div class="mt-8 flex flex-wrap justify-center gap-4">
+                    <Link
+                        v-if="canRegister"
+                        :href="route('register')"
+                        class="inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-bold text-indigo-700 shadow-lg transition hover:bg-gray-100"
+                    >
+                        <i class="fas fa-rocket"></i>
+                        Mulai Gratis Sekarang
+                    </Link>
+                    <a
+                        href="#kontak"
+                        class="inline-flex items-center gap-2 rounded-xl border-2 border-white/30 px-8 py-4 text-base font-bold text-white transition hover:bg-white/10"
+                    >
+                        <i class="fas fa-headset"></i>
+                        Hubungi Kami
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== FOOTER ===== -->
+        <footer id="kontak" class="border-t border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+            <div class="mx-auto max-w-7xl px-4 py-12 lg:px-8">
+                <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                    <!-- Brand -->
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-indigo-600">
+                                <i class="fas fa-wifi text-lg text-white"></i>
+                            </div>
+                            <span class="text-xl font-bold text-gray-900 dark:text-white">
+                                RT<span class="text-sky-500">/</span>RW Net
+                            </span>
+                        </div>
+                        <p class="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                            Platform ERP modern untuk penyedia layanan internet RT/RW. Dari pencatatan manual ke digital.
+                        </p>
+                    </div>
+
+                    <!-- Fitur Links -->
+                    <div>
+                        <h4 class="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-white">Fitur</h4>
+                        <ul class="mt-4 space-y-2">
+                            <li><a href="#" class="text-sm text-gray-600 transition hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400">Manajemen Pelanggan</a></li>
+                            <li><a href="#" class="text-sm text-gray-600 transition hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400">Penagihan Otomatis</a></li>
+                            <li><a href="#" class="text-sm text-gray-600 transition hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400">Insentif Karyawan</a></li>
+                            <li><a href="#" class="text-sm text-gray-600 transition hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400">Laporan & Dashboard</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Perusahaan Links -->
+                    <div>
+                        <h4 class="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-white">Perusahaan</h4>
+                        <ul class="mt-4 space-y-2">
+                            <li><a href="#" class="text-sm text-gray-600 transition hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400">Tentang Kami</a></li>
+                            <li><a href="#" class="text-sm text-gray-600 transition hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400">Harga</a></li>
+                            <li><a href="#" class="text-sm text-gray-600 transition hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400">Blog</a></li>
+                            <li><a href="#" class="text-sm text-gray-600 transition hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400">Karir</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Kontak -->
+                    <div>
+                        <h4 class="text-sm font-bold uppercase tracking-wider text-gray-900 dark:text-white">Kontak</h4>
+                        <ul class="mt-4 space-y-2">
+                            <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <i class="fas fa-envelope w-4 text-sky-500"></i> support@rt-rw-net.id
+                            </li>
+                            <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <i class="fas fa-phone w-4 text-sky-500"></i> (021) 1234-5678
+                            </li>
+                            <li class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                                <i class="fas fa-map-marker-alt w-4 text-sky-500"></i> Jakarta, Indonesia
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Bottom -->
+                <div class="mt-10 flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-6 dark:border-gray-700 sm:flex-row">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                        &copy; {{ new Date().getFullYear() }} RT/RW Net. All rights reserved.
+                    </p>
+                    <div class="flex gap-4">
+                        <a href="#" class="text-gray-400 transition hover:text-sky-500 dark:hover:text-sky-400">
+                            <i class="fab fa-facebook text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 transition hover:text-sky-500 dark:hover:text-sky-400">
+                            <i class="fab fa-twitter text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 transition hover:text-sky-500 dark:hover:text-sky-400">
+                            <i class="fab fa-instagram text-lg"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 transition hover:text-sky-500 dark:hover:text-sky-400">
+                            <i class="fab fa-youtube text-lg"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+</template>
+
                             <path
                                 d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z"
                                 fill="currentColor"
