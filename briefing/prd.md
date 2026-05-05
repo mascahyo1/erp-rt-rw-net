@@ -139,8 +139,8 @@
 ## 12. Tech Stack Detail
 
 ### Backend
-- **Laravel 12** — Full-stack framework
-- **Laravel Reverb** — WebSocket server (real-time events)
+- **Laravel 13** — Full-stack framework (latest stable, dirilis Q1 2026)
+- **Laravel Reverb 1.10** — WebSocket server (real-time events)
 - **Laravel Echo** — Client-side WebSocket listener
 - **Laravel Queue** (Redis) — Background job processing
 - **Laravel Scheduler** — Cron untuk generate invoice, backup
@@ -151,17 +151,17 @@
 - **laravel/sanctum** — (opsional) Mobile API auth
 
 ### Frontend
-- **Vue 3** (Composition API + `<script setup>`)
-- **Inertia.js** — Bridge Laravel ↔ Vue, SSR-ready
-- **Tailwind CSS 4** — Utility-first CSS framework
-- **Flowbite** — Tailwind component library (modals, tables, forms, sidebar, navbar)
-- **Font Awesome 6** — SVG icon library
+- **Vue 3.5+** (Composition API + `<script setup>`)
+- **Inertia.js 2** — Bridge Laravel ↔ Vue, SSR-ready
+- **Tailwind CSS 4.2** — Utility-first CSS framework (Vite plugin)
+- **Flowbite 4.0** — Tailwind component library (modals, tables, forms, sidebar, navbar)
+- **Font Awesome 7** — SVG icon library (64,647 ikon, 14 icon packs)
 - **Ziggy** — Laravel named routes di JavaScript
 
 ### Infrastructure
-- **MySQL 8 / MariaDB 10.11** — Primary database
+- **MySQL 8.4 / MariaDB 11** — Primary database
 - **Redis 7** — Cache + Queue driver
 - **MinIO** — S3-compatible object storage (self-hosted)
 - **Laragon** — Local development environment (Windows)
-- **Nginx + PHP-FPM 8.3** — Production server
+- **Nginx + PHP-FPM 8.4** — Production server
 - **Supervisor** — Queue worker process manager

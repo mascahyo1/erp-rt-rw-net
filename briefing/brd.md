@@ -35,15 +35,15 @@ Membangun **ERP berbasis web** yang:
 
 | Layer | Teknologi | Keterangan |
 |---|---|---|
-| Backend | **Laravel 12** | REST API, ORM Eloquent, Queue Job |
-| Frontend | **Vue 3** + **Inertia.js** | SPA-like tanpa perlu REST API terpisah; server-side routing Laravel + client-side Vue |
-| CSS Framework | **Tailwind CSS 4** | Utility-first, JIT compiler |
-| UI Components | **Flowbite** | Komponen UI siap pakai berbasis Tailwind |
-| Ikon | **Font Awesome 6** | Icon library via SVG/JS |
-| Real-time | **Laravel Reverb** | WebSocket server native Laravel (real-time notifikasi, status penagihan live) |
+| Backend | **Laravel 13** | REST API, ORM Eloquent, Queue Job |
+| Frontend | **Vue 3.5+** + **Inertia.js 2** | SPA-like tanpa perlu REST API terpisah; server-side routing Laravel + client-side Vue |
+| CSS Framework | **Tailwind CSS 4.2** | Utility-first, JIT compiler via Vite plugin |
+| UI Components | **Flowbite 4.0** | Komponen UI siap pakai berbasis Tailwind |
+| Ikon | **Font Awesome 7** | 64K+ ikon, SVG/JS, 14 icon packs |
+| Real-time | **Laravel Reverb 1.10** | WebSocket server native Laravel (real-time notifikasi, status penagihan live) |
 | Storage | **S3 / S3 Compatible** (MinIO) | Upload bukti transfer, dokumen pelanggan |
-| Database | **MySQL 8 / MariaDB** | Relasional, transaksi ACID |
-| Queue | **Redis** | Antrean job (generate invoice, kalkulasi insentif, notifikasi) |
+| Database | **MySQL 8.4 / MariaDB 11** | Relasional, transaksi ACID |
+| Queue | **Redis 7** | Antrean job (generate invoice, kalkulasi insentif, notifikasi) |
 
 ## 6. Arsitektur Singkat
 ```
