@@ -1,7 +1,7 @@
 landing page prefix url /
--tombol login operator saas
--tombol login perusahaan
--tombol login 
+-tombol login operator saas di navbar
+-tombol login perusahaan di navbar
+-tombol login / daftar pelanggan
 -home
 -tentang kami
 -hubungi kami
