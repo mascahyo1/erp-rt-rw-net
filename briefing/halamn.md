@@ -1,4 +1,7 @@
-landing page
+landing page prefix url /
+-tombol login operator saas
+-tombol login perusahaan
+-tombol login 
 -home
 -tentang kami
 -hubungi kami
@@ -7,7 +10,8 @@ landing page
 -login operator saas
 -login operator perusahaan
 
-authenticated operator saas
+authenticated operator saas prefix url ./operator-saas/
+-login
 -dashboard
 -admin perusahaan
 -perusahaan
@@ -16,7 +20,8 @@ authenticated operator saas
 -admin saas
 -admin role saas
 
--authenticated operator perusahaan
+authenticated prefix ./operator-perusahaan/
+-login
 -dashboard
 -karyawan
 -customer
