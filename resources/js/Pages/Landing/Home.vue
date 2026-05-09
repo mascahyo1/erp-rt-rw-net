@@ -26,9 +26,9 @@ defineOptions({ layout: LandingLayout });
             Dibangun khusus untuk bisnis RT/RW Net skala kecil hingga besar.
           </p>
           <div class="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="/login-perusahaan" class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
+            <Link href="/login-perusahaan" class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
               <i class="fas fa-rocket mr-2"></i> Mulai Sekarang
-            </a>
+            </Link>
             <Link href="/tentang-kami" class="inline-flex items-center justify-center px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl border border-gray-300 dark:border-gray-700 hover:border-sky-500 dark:hover:border-sky-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
               <i class="fas fa-info-circle mr-2"></i> Pelajari Lebih Lanjut
             </Link>
@@ -133,12 +133,12 @@ defineOptions({ layout: LandingLayout });
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Siap Mengelola Bisnis RT/RW Net Anda?</h2>
         <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Daftar sekarang dan dapatkan free trial 30 hari.</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="/login-pelanggan" class="px-8 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
+          <Link href="/login-pelanggan" class="px-8 py-3 bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all">
             <i class="fas fa-user-plus mr-2"></i> Daftar / Login Pelanggan
-          </a>
-          <a href="/hubungi-kami" class="px-8 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl border border-gray-300 dark:border-gray-700 hover:border-sky-500 dark:hover:border-sky-500 transition-colors">
+          </Link>
+          <Link href="/hubungi-kami" class="px-8 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl border border-gray-300 dark:border-gray-700 hover:border-sky-500 dark:hover:border-sky-500 transition-colors">
             <i class="fas fa-envelope mr-2"></i> Hubungi Kami
-          </a>
+          </Link>
         </div>
       </div>
     </section>

@@ -6,13 +6,23 @@ defineOptions({ layout: LandingLayout });
 
 <template>
   <div>
-    <!-- Header -->
-    <section class="py-16 md:py-20 bg-gradient-to-br from-sky-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-950 dark:to-indigo-950/30 transition-colors">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white">Hubungi Kami</h1>
-        <p class="mt-4 text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Punya pertanyaan atau butuh bantuan? Tim kami siap membantu Anda.
-        </p>
+    <!-- Hero -->
+    <section class="relative overflow-hidden bg-gradient-to-br from-sky-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-950 dark:to-indigo-950/30 transition-colors">
+      <!-- Background blobs -->
+      <div class="absolute -top-40 -right-40 w-96 h-96 bg-sky-300/20 dark:bg-sky-500/10 rounded-full blur-3xl"></div>
+      <div class="absolute -bottom-32 -left-32 w-80 h-80 bg-indigo-300/20 dark:bg-indigo-500/10 rounded-full blur-3xl"></div>
+
+      <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
+        <div class="text-center max-w-3xl mx-auto">
+          <!-- Icon -->
+          <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center mb-6 shadow-lg shadow-sky-500/25">
+            <i class="fas fa-headset text-white text-3xl"></i>
+          </div>
+          <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">Hubungi Kami</h1>
+          <p class="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
+            Punya pertanyaan atau butuh bantuan? Tim kami siap membantu Anda kapan saja.
+          </p>
+        </div>
       </div>
     </section>
 
@@ -23,8 +33,8 @@ defineOptions({ layout: LandingLayout });
 
           <!-- Info Cards -->
           <div class="space-y-6">
-            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <div class="w-12 h-12 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center shrink-0">
+            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-md transition-all group">
+              <div class="w-12 h-12 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fas fa-phone text-sky-600 dark:text-sky-400"></i>
               </div>
               <div>
@@ -33,8 +43,8 @@ defineOptions({ layout: LandingLayout });
               </div>
             </div>
 
-            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <div class="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all group">
+              <div class="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fas fa-envelope text-emerald-600 dark:text-emerald-400"></i>
               </div>
               <div>
@@ -43,8 +53,8 @@ defineOptions({ layout: LandingLayout });
               </div>
             </div>
 
-            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <div class="w-12 h-12 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center shrink-0">
+            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-violet-300 dark:hover:border-violet-700 hover:shadow-md transition-all group">
+              <div class="w-12 h-12 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fas fa-location-dot text-violet-600 dark:text-violet-400"></i>
               </div>
               <div>
@@ -53,8 +63,8 @@ defineOptions({ layout: LandingLayout });
               </div>
             </div>
 
-            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-              <div class="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-md transition-all group">
+              <div class="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fas fa-clock text-amber-600 dark:text-amber-400"></i>
               </div>
               <div>
@@ -66,7 +76,7 @@ defineOptions({ layout: LandingLayout });
           </div>
 
           <!-- Form (static display) -->
-          <div class="lg:col-span-2 p-8 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
+          <div class="lg:col-span-2 p-8 rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm">
             <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Kirim Pesan</h2>
             <form class="space-y-5" @submit.prevent="">
               <div class="grid sm:grid-cols-2 gap-5">

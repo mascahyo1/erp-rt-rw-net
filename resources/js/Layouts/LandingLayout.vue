@@ -109,19 +109,19 @@ function closeMobileMenu() {
             </button>
 
             <!-- Operator SaaS -->
-            <a href="/login-operator-saas" class="px-3 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+            <Link href="/login-operator-saas" class="px-3 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
               <i class="fas fa-cloud mr-1.5"></i> Operator SaaS
-            </a>
+            </Link>
 
             <!-- Perusahaan -->
-            <a href="/login-perusahaan" class="px-3 py-2 text-sm font-medium rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-colors">
+            <Link href="/login-perusahaan" class="px-3 py-2 text-sm font-medium rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-colors">
               <i class="fas fa-building mr-1.5"></i> Perusahaan
-            </a>
+            </Link>
 
             <!-- Pelanggan -->
-            <a href="/login-pelanggan" class="px-3 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+            <Link href="/login-pelanggan" class="px-3 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
               <i class="fas fa-user mr-1.5"></i> Pelanggan
-            </a>
+            </Link>
           </div>
 
           <!-- Mobile hamburger + theme -->
@@ -154,15 +154,15 @@ function closeMobileMenu() {
           </Link>
 
           <div class="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2 space-y-1">
-            <a href="/login-operator-saas" class="block px-3 py-2 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
+            <Link href="/login-operator-saas" class="block px-3 py-2 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
               <i class="fas fa-cloud w-5 mr-2"></i> Login Operator SaaS
-            </a>
-            <a href="/login-perusahaan" class="block px-3 py-2 rounded-lg text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/30">
+            </Link>
+            <Link href="/login-perusahaan" class="block px-3 py-2 rounded-lg text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/30">
               <i class="fas fa-building w-5 mr-2"></i> Login Perusahaan
-            </a>
-            <a href="/login-pelanggan" class="block px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+            </Link>
+            <Link href="/login-pelanggan" class="block px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
               <i class="fas fa-user w-5 mr-2"></i> Login / Daftar Pelanggan
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -172,7 +172,9 @@ function closeMobileMenu() {
     MAIN CONTENT
     ======================== -->
     <main>
-      <slot />
+      <Transition name="page" mode="out-in">
+        <slot />
+      </Transition>
     </main>
 
     <!-- ========================
@@ -209,9 +211,9 @@ function closeMobileMenu() {
           <div>
             <h4 class="font-semibold text-sm text-gray-900 dark:text-white uppercase tracking-wider mb-4">Login</h4>
             <ul class="space-y-2">
-              <li><a href="/login-operator-saas" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Operator SaaS</a></li>
-              <li><a href="/login-perusahaan" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Perusahaan</a></li>
-              <li><a href="/login-pelanggan" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Pelanggan</a></li>
+              <li><Link href="/login-operator-saas" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Operator SaaS</Link></li>
+              <li><Link href="/login-perusahaan" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Perusahaan</Link></li>
+              <li><Link href="/login-pelanggan" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Pelanggan</Link></li>
             </ul>
           </div>
 

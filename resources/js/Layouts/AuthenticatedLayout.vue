@@ -191,7 +191,9 @@ const showingNavigationDropdown = ref(false);
 
             <!-- Page Content -->
             <main>
-                <slot />
+                <Transition name="page" mode="out-in">
+                    <slot />
+                </Transition>
             </main>
         </div>
     </div>

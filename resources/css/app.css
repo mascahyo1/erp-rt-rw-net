@@ -13,6 +13,20 @@
     }
 }
 
+/* Page transition */
+.page-enter-active,
+.page-leave-active {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.page-enter-from {
+    opacity: 0;
+    transform: translateY(16px);
+}
+.page-leave-to {
+    opacity: 0;
+    transform: translateY(-16px);
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
