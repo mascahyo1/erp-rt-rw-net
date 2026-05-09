@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import { Link } from '@inertiajs/vue3';
 import LandingLayout from "@/Layouts/LandingLayout.vue";
 
 defineOptions({ layout: LandingLayout });
@@ -113,12 +114,12 @@ const activeTab = ref("login");
                   <a href="#" class="text-emerald-600 dark:text-emerald-400 hover:underline">Lupa password?</a>
                 </div>
 
-                <button
-                  type="submit"
-                  class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all"
+                <Link
+                  href="/customer/dashboard"
+                  class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center"
                 >
                   <i class="fas fa-sign-in-alt mr-2"></i> Masuk
-                </button>
+                </Link>
               </form>
 
               <!-- Register Form -->
@@ -164,12 +165,12 @@ const activeTab = ref("login");
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all"
+                <Link
+                  href="/customer/dashboard"
+                  class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center"
                 >
                   <i class="fas fa-user-plus mr-2"></i> Daftar
-                </button>
+                </Link>
               </form>
             </div>
           </div>

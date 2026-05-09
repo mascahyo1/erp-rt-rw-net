@@ -146,6 +146,37 @@ Route::get('/operator-perusahaan/konfigurasi-perusahaan', function () {
     return Inertia::render('OperatorPerusahaan/KonfigurasiPerusahaan');
 });
 
+// ========================
+// Customer Routes
+// ========================
+Route::get('/login-pelanggan', function () {
+    return Inertia::render('Landing/LoginPelanggan');
+});
+
+Route::get('/customer/dashboard', function () {
+    return Inertia::render('Customer/Dashboard');
+});
+
+Route::get('/customer/login-register', function () {
+    return Inertia::render('Customer/LoginRegister');
+});
+
+Route::get('/customer/profil-saya', function () {
+    return Inertia::render('Customer/ProfilSaya');
+});
+
+Route::get('/customer/paket-saya', function () {
+    return Inertia::render('Customer/PaketSaya');
+});
+
+Route::get('/customer/tagihan-saya', function () {
+    return Inertia::render('Customer/TagihanSaya');
+});
+
+Route::get('/customer/riwayat-pembayaran', function () {
+    return Inertia::render('Customer/RiwayatPembayaran');
+});
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
