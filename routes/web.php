@@ -64,8 +64,16 @@ Route::get('/operator-saas/perusahaan', function () {
     return Inertia::render('OperatorSaas/Perusahaan');
 });
 
+Route::get('/operator-saas/role-perusahaan', function () {
+    return Inertia::render('OperatorSaas/RolePerusahaan');
+});
+
 Route::get('/operator-saas/pemetaan-admin-perusahaan', function () {
-    return Inertia::render('OperatorSaas/PemetaanAdminPerusahaan');
+    return Inertia::render('OperatorSaas/RoleAdminPerusahaan');
+});
+
+Route::get('/operator-saas/role-admin-perusahaan', function () {
+    return Inertia::render('OperatorSaas/RoleAdminPerusahaan');
 });
 
 Route::get('/operator-saas/role-saas', function () {
