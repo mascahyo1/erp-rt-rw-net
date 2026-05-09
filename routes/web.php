@@ -46,6 +46,41 @@ Route::get('/login-pelanggan', function () {
 });
 
 // ========================
+// Operator SaaS Routes
+// ========================
+Route::get('/operator-saas/login', function () {
+    return Inertia::render('OperatorSaas/Login');
+});
+
+Route::get('/operator-saas/dashboard', function () {
+    return Inertia::render('OperatorSaas/Dashboard');
+});
+
+Route::get('/operator-saas/admin-perusahaan', function () {
+    return Inertia::render('OperatorSaas/AdminPerusahaan');
+});
+
+Route::get('/operator-saas/perusahaan', function () {
+    return Inertia::render('OperatorSaas/Perusahaan');
+});
+
+Route::get('/operator-saas/pemetaan-admin-perusahaan', function () {
+    return Inertia::render('OperatorSaas/PemetaanAdminPerusahaan');
+});
+
+Route::get('/operator-saas/role-saas', function () {
+    return Inertia::render('OperatorSaas/RoleSaaS');
+});
+
+Route::get('/operator-saas/admin-saas', function () {
+    return Inertia::render('OperatorSaas/AdminSaaS');
+});
+
+Route::get('/operator-saas/admin-role-saas', function () {
+    return Inertia::render('OperatorSaas/AdminRoleSaaS');
+});
+
+// ========================
 // Dashboard (existing)
 // ========================
 Route::get('/dashboard', function () {

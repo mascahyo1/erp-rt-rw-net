@@ -1,4 +1,5 @@
 <script setup>
+import { Link } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 
 defineOptions({ layout: LandingLayout });
@@ -83,12 +84,12 @@ defineOptions({ layout: LandingLayout });
                   <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Lupa password?</a>
                 </div>
 
-                <button
-                  type="submit"
-                  class="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all"
+                <Link
+                  href="/operator-saas/dashboard"
+                  class="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center"
                 >
                   <i class="fas fa-sign-in-alt mr-2"></i> Masuk
-                </button>
+                </Link>
               </form>
             </div>
           </div>

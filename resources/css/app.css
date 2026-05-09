@@ -3,6 +3,9 @@
 @plugin "flowbite/plugin";
 @source "../node_modules/flowbite";
 
+/* Class-based dark mode untuk toggle manual */
+@variant dark (&:where(.dark, .dark *));
+
 /* Font Awesome */
 @import "@fortawesome/fontawesome-free/css/all.css";
 
