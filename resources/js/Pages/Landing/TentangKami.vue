@@ -1,4 +1,5 @@
 <script setup>
+import { Link } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 
 defineOptions({ layout: LandingLayout });
@@ -27,8 +28,23 @@ defineOptions({ layout: LandingLayout });
       </div>
     </section>
 
+
     <!-- Visi & Misi -->
-    <section class="py-16 bg-white dark:bg-gray-950 transition-colors">
+    <section class="pt-8 pb-16 bg-white dark:bg-gray-950 transition-colors">
+    <!-- Breadcrumbs -->
+    <div class="bg-white dark:bg-gray-950  transition-colors">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <nav class="flex items-center gap-1.5 text-sm">
+          <Link href="/" class="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            <i class="fas fa-home"></i>
+          </Link>
+          <i class="fas fa-chevron-right text-[10px] text-gray-400 dark:text-gray-500"></i>
+          <Link href="/" class="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Home</Link>
+          <i class="fas fa-chevron-right text-[10px] text-gray-400 dark:text-gray-500"></i>
+          <span class="text-gray-900 dark:text-white font-medium">Tentang Kami</span>
+        </nav>
+      </div>
+    </div>
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid md:grid-cols-2 gap-12">
           <!-- Visi -->

@@ -269,7 +269,7 @@ onUnmounted(() => {
       </header>
 
       <!-- Page Content -->
-      <main class="flex-1 p-6">
+      <main class="flex-1 py-6 px-4 sm:px-6 lg:px-8 w-full max-w-full overflow-x-hidden">
         <Transition name="page" mode="out-in">
           <slot />
         </Transition>
