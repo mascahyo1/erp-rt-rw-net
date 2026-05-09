@@ -76,6 +76,10 @@ Route::get('/operator-saas/role-admin-perusahaan', function () {
     return Inertia::render('OperatorSaas/RoleAdminPerusahaan');
 });
 
+Route::get('/operator-saas/konfigurasi', function () {
+    return Inertia::render('OperatorSaas/Konfigurasi');
+});
+
 Route::get('/operator-saas/role-saas', function () {
     return Inertia::render('OperatorSaas/RoleSaaS');
 });

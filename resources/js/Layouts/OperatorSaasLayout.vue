@@ -31,6 +31,7 @@ const menuItems = [
   { label: 'Perusahaan', href: '/operator-saas/perusahaan', icon: 'fa-building' },
   { label: 'Role Perusahaan', href: '/operator-saas/role-perusahaan', icon: 'fa-tags' },
   { label: 'Role Admin Perusahaan', href: '/operator-saas/role-admin-perusahaan', icon: 'fa-user-gear' },
+  { label: 'Konfigurasi', href: '/operator-saas/konfigurasi', icon: 'fa-sliders' },
   { label: 'Role SaaS', href: '/operator-saas/role-saas', icon: 'fa-user-tag' },
   { label: 'Admin SaaS', href: '/operator-saas/admin-saas', icon: 'fa-user-shield' },
   { label: 'Admin Role SaaS', href: '/operator-saas/admin-role-saas', icon: 'fa-users-cog' },
