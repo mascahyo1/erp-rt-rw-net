@@ -28,11 +28,8 @@ defineOptions({ layout: LandingLayout });
       </div>
     </section>
 
-
-    <!-- Visi & Misi -->
-    <section class="pt-8 pb-16 bg-white dark:bg-gray-950 transition-colors">
     <!-- Breadcrumbs -->
-    <div class="bg-white dark:bg-gray-950  transition-colors">
+    <div class="bg-white dark:bg-gray-950  transition-colors pt-8">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <nav class="flex items-center gap-1.5 text-sm">
           <Link href="/" class="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
@@ -45,6 +42,10 @@ defineOptions({ layout: LandingLayout });
         </nav>
       </div>
     </div>
+    
+    <!-- Visi & Misi -->
+    <section class="pb-16 bg-white dark:bg-gray-950 transition-colors">
+
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid md:grid-cols-2 gap-12">
           <!-- Visi -->

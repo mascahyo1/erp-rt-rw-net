@@ -70,7 +70,7 @@ function closeMobileMenu() {
     <!-- ========================
     NAVBAR
     ======================== -->
-    <nav class="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
+    <nav class="sticky top-0 z-50 bg-gradient-to-r from-indigo-50 via-sky-50 to-white dark:from-indigo-950 dark:via-indigo-900/50 dark:to-slate-900 backdrop-blur-xl shadow-sm transition-colors duration-300">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
 
@@ -141,7 +141,7 @@ function closeMobileMenu() {
       </div>
 
       <!-- Mobile Menu -->
-      <div v-show="mobileMenuOpen" class="md:hidden border-t border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-950/95 backdrop-blur-md">
+      <div v-show="mobileMenuOpen" class="md:hidden bg-gradient-to-r from-indigo-50 via-sky-50 to-white dark:from-indigo-950 dark:via-indigo-900/50 dark:to-slate-900 backdrop-blur-xl shadow-sm">
         <div class="px-4 py-3 space-y-1">
           <Link href="/" @click="closeMobileMenu" class="block px-3 py-2 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
             <i class="fas fa-home w-5 mr-2"></i> Home
@@ -180,7 +180,7 @@ function closeMobileMenu() {
     <!-- ========================
     FOOTER
     ======================== -->
-    <footer class="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <footer class="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-slate-300">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
 
@@ -190,46 +190,46 @@ function closeMobileMenu() {
               <div class="w-9 h-9 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <i class="fas fa-wifi text-white text-sm"></i>
               </div>
-              <span class="font-bold text-lg text-gray-900 dark:text-white">RT/RW Net</span>
+              <span class="font-bold text-lg text-white">RT/RW Net</span>
             </div>
-            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p class="text-sm text-slate-400 leading-relaxed">
               Solusi ERP modern untuk bisnis RT/RW Net Anda. Kelola pelanggan, tagihan, dan pembayaran dalam satu platform.
             </p>
           </div>
 
           <!-- Menu -->
           <div>
-            <h4 class="font-semibold text-sm text-gray-900 dark:text-white uppercase tracking-wider mb-4">Menu</h4>
+            <h4 class="font-semibold text-sm text-white uppercase tracking-wider mb-4">Menu</h4>
             <ul class="space-y-2">
-              <li><Link href="/" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Home</Link></li>
-              <li><Link href="/tentang-kami" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Tentang Kami</Link></li>
-              <li><Link href="/hubungi-kami" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Hubungi Kami</Link></li>
+              <li><Link href="/" class="text-sm text-slate-400 hover:text-sky-400 transition-colors">Home</Link></li>
+              <li><Link href="/tentang-kami" class="text-sm text-slate-400 hover:text-sky-400 transition-colors">Tentang Kami</Link></li>
+              <li><Link href="/hubungi-kami" class="text-sm text-slate-400 hover:text-sky-400 transition-colors">Hubungi Kami</Link></li>
             </ul>
           </div>
 
           <!-- Login -->
           <div>
-            <h4 class="font-semibold text-sm text-gray-900 dark:text-white uppercase tracking-wider mb-4">Login</h4>
+            <h4 class="font-semibold text-sm text-white uppercase tracking-wider mb-4">Login</h4>
             <ul class="space-y-2">
-              <li><Link href="/login-operator-saas" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Operator SaaS</Link></li>
-              <li><Link href="/login-perusahaan" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Perusahaan</Link></li>
-              <li><Link href="/login-pelanggan" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Pelanggan</Link></li>
+              <li><Link href="/login-operator-saas" class="text-sm text-slate-400 hover:text-sky-400 transition-colors">Operator SaaS</Link></li>
+              <li><Link href="/login-perusahaan" class="text-sm text-slate-400 hover:text-sky-400 transition-colors">Perusahaan</Link></li>
+              <li><Link href="/login-pelanggan" class="text-sm text-slate-400 hover:text-sky-400 transition-colors">Pelanggan</Link></li>
             </ul>
           </div>
 
           <!-- Legal -->
           <div>
-            <h4 class="font-semibold text-sm text-gray-900 dark:text-white uppercase tracking-wider mb-4">Legal</h4>
+            <h4 class="font-semibold text-sm text-white uppercase tracking-wider mb-4">Legal</h4>
             <ul class="space-y-2">
-              <li><Link href="/syarat-dan-ketentuan" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Syarat & Ketentuan</Link></li>
-              <li><Link href="/kebijakan-privasi" class="text-sm text-gray-600 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">Kebijakan Privasi</Link></li>
+              <li><Link href="/syarat-dan-ketentuan" class="text-sm text-slate-400 hover:text-sky-400 transition-colors">Syarat & Ketentuan</Link></li>
+              <li><Link href="/kebijakan-privasi" class="text-sm text-slate-400 hover:text-sky-400 transition-colors">Kebijakan Privasi</Link></li>
             </ul>
           </div>
         </div>
 
         <!-- Bottom -->
-        <div class="mt-10 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
-          <p class="text-sm text-gray-500 dark:text-gray-500">
+        <div class="mt-10 pt-6 border-t border-slate-700/50 text-center">
+          <p class="text-sm text-slate-500">
             &copy; {{ new Date().getFullYear() }} RT/RW Net. All rights reserved.
           </p>
         </div>
