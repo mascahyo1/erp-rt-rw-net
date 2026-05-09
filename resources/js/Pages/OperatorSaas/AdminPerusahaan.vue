@@ -35,6 +35,42 @@ function applyStatusFilter(status) {
   currentPage.value = 1;
 }
 
+// ── Bulk Action ──
+const selectedIds = ref([]);
+const selectAll = ref(false);
+
+function toggleSelectAll() {
+  if (selectAll.value) {
+    selectedIds.value = paginatedAdmins.value.map(a => a.id);
+  } else {
+    selectedIds.value = [];
+  }
+}
+
+function toggleSelect(id) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx === -1) {
+    selectedIds.value.push(id);
+  } else {
+    selectedIds.value.splice(idx, 1);
+  }
+  selectAll.value = selectedIds.value.length === paginatedAdmins.value.length;
+}
+
+function bulkDelete() {
+  admins.value = admins.value.filter(a => !selectedIds.value.includes(a.id));
+  selectedIds.value = [];
+  selectAll.value = false;
+}
+
+function bulkSetStatus(status) {
+  admins.value.forEach(a => {
+    if (selectedIds.value.includes(a.id)) a.status = status;
+  });
+  selectedIds.value = [];
+  selectAll.value = false;
+}
+
 // ── Multi Sort ──
 const sortFields = ref([]); // [{ field, dir }]
 
@@ -65,7 +101,7 @@ function sortOrder(field) {
 // ── Pagination ──
 const currentPage = ref(1);
 const perPage = ref(5);
-const perPageOptions = [5, 10, 25, 50];
+const perPageOptions = [5, 10, 25, 50, 100];
 
 function changePerPage(n) {
   perPage.value = n;
@@ -323,47 +359,79 @@ function goToPage(page) {
         </div>
       </div>
 
+      <!-- Bulk Action Bar -->
+      <div
+        v-if="selectedIds.length > 0"
+        class="flex items-center justify-between px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl shadow-sm"
+      >
+        <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300">
+          <i class="fas fa-check-circle mr-1.5"></i> {{ selectedIds.length }} data dipilih
+        </span>
+        <div class="flex items-center gap-2">
+          <button
+            @click="bulkSetStatus('Aktif')"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+          >
+            <i class="fas fa-check mr-1"></i> Aktifkan
+          </button>
+          <button
+            @click="bulkSetStatus('Nonaktif')"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+          >
+            <i class="fas fa-ban mr-1"></i> Nonaktifkan
+          </button>
+          <button
+            @click="bulkDelete()"
+            class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+          >
+            <i class="fas fa-trash-alt mr-1"></i> Hapus
+          </button>
+        </div>
+      </div>
+
       <!-- Table -->
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
           <table class="w-full text-sm min-w-[700px]">
             <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th @click="sort('id')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors w-20">
-                  <span class="inline-flex items-center gap-1.5">
-                    No
-                    <span class="inline-flex flex-col items-center leading-none">
-                      <span v-if="sortOrder('id')" class="text-[10px] text-indigo-500 font-bold -mb-0.5">{{ sortOrder('id') }}</span>
-                      <i :class="['fas', sortIcon('id'), 'text-xs']"></i>
-                    </span>
-                  </span>
+                <th class="px-4 py-3 w-10">
+                  <input
+                    v-model="selectAll"
+                    type="checkbox"
+                    @change="toggleSelectAll"
+                    class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                  />
                 </th>
                 <th @click="sort('nama')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors">
-                  <span class="inline-flex items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1">
                     Nama
-                    <span class="inline-flex flex-col items-center leading-none">
-                      <span v-if="sortOrder('nama')" class="text-[10px] text-indigo-500 font-bold -mb-0.5">{{ sortOrder('nama') }}</span>
-                      <i :class="['fas', sortIcon('nama'), 'text-xs']"></i>
+                    <span v-if="sortOrder('nama')" class="inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400">
+                      <i :class="['fas', sortIcon('nama'), 'text-[10px]']"></i>
+                      <span class="text-[10px] font-bold leading-none">{{ sortOrder('nama') }}</span>
                     </span>
+                    <i v-else class="fas fa-sort text-[10px] text-gray-400 dark:text-gray-500"></i>
                   </span>
                 </th>
                 <th @click="sort('email')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors">
-                  <span class="inline-flex items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1">
                     Email
-                    <span class="inline-flex flex-col items-center leading-none">
-                      <span v-if="sortOrder('email')" class="text-[10px] text-indigo-500 font-bold -mb-0.5">{{ sortOrder('email') }}</span>
-                      <i :class="['fas', sortIcon('email'), 'text-xs']"></i>
+                    <span v-if="sortOrder('email')" class="inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400">
+                      <i :class="['fas', sortIcon('email'), 'text-[10px]']"></i>
+                      <span class="text-[10px] font-bold leading-none">{{ sortOrder('email') }}</span>
                     </span>
+                    <i v-else class="fas fa-sort text-[10px] text-gray-400 dark:text-gray-500"></i>
                   </span>
                 </th>
                 <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Telepon</th>
                 <th @click="sort('status')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors">
-                  <span class="inline-flex items-center gap-1.5">
+                  <span class="inline-flex items-center gap-1">
                     Status
-                    <span class="inline-flex flex-col items-center leading-none">
-                      <span v-if="sortOrder('status')" class="text-[10px] text-indigo-500 font-bold -mb-0.5">{{ sortOrder('status') }}</span>
-                      <i :class="['fas', sortIcon('status'), 'text-xs']"></i>
+                    <span v-if="sortOrder('status')" class="inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400">
+                      <i :class="['fas', sortIcon('status'), 'text-[10px]']"></i>
+                      <span class="text-[10px] font-bold leading-none">{{ sortOrder('status') }}</span>
                     </span>
+                    <i v-else class="fas fa-sort text-[10px] text-gray-400 dark:text-gray-500"></i>
                   </span>
                 </th>
                 <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-400 w-32">Aksi</th>
@@ -371,18 +439,23 @@ function goToPage(page) {
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
               <tr v-if="paginatedAdmins.length === 0">
-                <td colspan="6" class="px-4 py-16 text-center text-gray-500 dark:text-gray-400">
+                <td colspan="7" class="px-4 py-16 text-center text-gray-500 dark:text-gray-400">
                   <i class="fas fa-user-tie text-3xl mb-2 block opacity-40"></i>
                   Tidak ada data admin perusahaan.
                 </td>
               </tr>
               <tr
-                v-for="(admin, index) in paginatedAdmins"
+                v-for="admin in paginatedAdmins"
                 :key="admin.id"
                 class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
               >
-                <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                  {{ (currentPage - 1) * perPage + index + 1 }}
+                <td class="px-4 py-3">
+                  <input
+                    :checked="selectedIds.includes(admin.id)"
+                    type="checkbox"
+                    @change="toggleSelect(admin.id)"
+                    class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                  />
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center gap-2.5">
@@ -436,25 +509,25 @@ function goToPage(page) {
             <select
               :value="perPage"
               @change="changePerPage(Number($event.target.value))"
-              class="px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              class="min-w-[65px] px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
             >
               <option v-for="n in perPageOptions" :key="n" :value="n">{{ n }}</option>
             </select>
             <span>dari {{ filteredAdmins.length }} data</span>
           </div>
 
-          <div v-if="totalPages > 1" class="flex items-center gap-1 flex-wrap justify-center sm:justify-start">
+          <div class="flex items-center gap-1 flex-wrap justify-center sm:justify-start">
             <button
               @click="goToPage(1)"
               :disabled="currentPage === 1"
-              class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <i class="fas fa-chevron-double-left text-xs"></i>
             </button>
             <button
               @click="goToPage(currentPage - 1)"
               :disabled="currentPage === 1"
-              class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <i class="fas fa-chevron-left text-xs"></i>
             </button>
@@ -474,14 +547,14 @@ function goToPage(page) {
             <button
               @click="goToPage(currentPage + 1)"
               :disabled="currentPage === totalPages"
-              class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <i class="fas fa-chevron-right text-xs"></i>
             </button>
             <button
               @click="goToPage(totalPages)"
               :disabled="currentPage === totalPages"
-              class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <i class="fas fa-chevron-double-right text-xs"></i>
             </button>

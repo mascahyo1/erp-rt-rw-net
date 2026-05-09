@@ -52,6 +52,7 @@ Gunakan `OperatorSaasLayout` (prefix `/operator-saas/`) untuk halaman operator S
 - [ ] **Whitespace nowrap** — setiap `<td>` & `<th>` yang isinya pendek (email, status, telepon, aksi) diberi `whitespace-nowrap` agar tidak wrap dan memicu scroll horizontal yang rapi.
 - [ ] **Empty state** — saat 0 data tampilkan icon + teks "Tidak ada data...".
 - [ ] **Avatar inisial** — kolom nama menampilkan avatar bulat dengan inisial huruf pertama.
+- [ ] **Checkbox + Bulk Action** — kolom pertama checkbox untuk multi-select. Tampilkan bulk action bar saat ada item dipilih: Aktifkan, Nonaktifkan, Hapus. No urut dihapus (tidak perlu).
 
 ### 3. Multi-Column Sort
 - [ ] Klik header kolom: tambahkan sort field dengan arah `asc`.

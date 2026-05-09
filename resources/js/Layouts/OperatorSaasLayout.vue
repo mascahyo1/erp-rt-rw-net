@@ -186,7 +186,7 @@ onUnmounted(() => {
     <!-- Main Content Area -->
     <div
       :class="[
-        'flex-1 flex flex-col min-h-screen transition-all duration-300',
+        'flex-1 flex flex-col min-w-0 min-h-screen transition-all duration-300',
         sidebarVisible
           ? (sidebarExpanded ? 'lg:ml-64' : 'lg:ml-16')
           : 'lg:ml-0'
