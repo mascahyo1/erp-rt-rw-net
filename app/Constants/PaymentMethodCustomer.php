@@ -2,7 +2,7 @@
 
 namespace App\Constants;
 
-class PaymentMethod
+class PaymentMethodCustomer
 {
     private $list = [];
 
