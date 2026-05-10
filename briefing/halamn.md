@@ -42,7 +42,8 @@ authenticated customer prefix ./customer/ crud front end saja
 -riwayat pembayaran
 
 web karyawan prefix /karyawan crud front end saja
--login
+di landing page tambahaan tombol login karyawan
+-login ada input perusahaan
 -dashboard
 -profil saya
 -customer

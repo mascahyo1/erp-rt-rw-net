@@ -122,6 +122,11 @@ function closeMobileMenu() {
             <Link href="/login-pelanggan" class="px-3 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
               <i class="fas fa-user mr-1.5"></i> Pelanggan
             </Link>
+
+            <!-- Karyawan -->
+            <Link href="/login-karyawan" class="px-3 py-2 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">
+              <i class="fas fa-user-tie mr-1.5"></i> Karyawan
+            </Link>
           </div>
 
           <!-- Mobile hamburger + theme -->
@@ -162,6 +167,9 @@ function closeMobileMenu() {
             </Link>
             <Link href="/login-pelanggan" class="block px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
               <i class="fas fa-user w-5 mr-2"></i> Login / Daftar Pelanggan
+            </Link>
+            <Link href="/login-karyawan" class="block px-3 py-2 rounded-lg text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30">
+              <i class="fas fa-user-tie w-5 mr-2"></i> Login Karyawan
             </Link>
           </div>
         </div>
