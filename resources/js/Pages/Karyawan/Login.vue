@@ -1,8 +1,10 @@
 <script setup>
+import { ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
+import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 defineOptions({ layout: LandingLayout });
-const perusahaanList = ['PT Net Sejahtera', 'CV Digital Media', 'UD Net Mandiri', 'PT Teknologi Nusantara', 'CV Media Connect'];
+const selectedCompany = ref(null);
 </script>
 <template>
   <div>
@@ -24,7 +26,7 @@ const perusahaanList = ['PT Net Sejahtera', 'CV Digital Media', 'UD Net Mandiri'
               <form class="space-y-4">
                 <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email / Username</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-envelope text-gray-400 text-sm"></i></div><input type="text" placeholder="email@perusahaan.id" class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors" /></div></div>
                 <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label><div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-lock text-gray-400 text-sm"></i></div><input type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" class="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors" /></div></div>
-                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-gray-400 text-xs font-normal">(pilih perusahaan)</span></label><select class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors"><option value="">— Pilih Perusahaan —</option><option v-for="p in perusahaanList" :key="p" :value="p">{{ p }}</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label><CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." /></div>
                 <Link href="/karyawan/dashboard" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center"><i class="fas fa-sign-in-alt mr-2"></i> Masuk</Link>
               </form>
             </div>

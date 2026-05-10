@@ -51,9 +51,11 @@ onMounted(() => {
   applyTheme();
   mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
   mediaQuery.addEventListener('change', applyTheme);
+  document.addEventListener('click', closeDropdown);
 });
 onUnmounted(() => {
   mediaQuery?.removeEventListener('change', applyTheme);
+  document.removeEventListener('click', closeDropdown);
 });
 
 // ========================
@@ -62,6 +64,20 @@ onUnmounted(() => {
 const mobileMenuOpen = ref(false);
 function closeMobileMenu() {
   mobileMenuOpen.value = false;
+}
+
+// ========================
+// Masuk Dropdown
+// ========================
+const dropdownOpen = ref(false);
+const dropdownRef = ref(null);
+function toggleDropdown() {
+  dropdownOpen.value = !dropdownOpen.value;
+}
+function closeDropdown(e) {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target)) {
+    dropdownOpen.value = false;
+  }
 }
 </script>
 
@@ -108,25 +124,33 @@ function closeMobileMenu() {
               <i :class="['fas', themeIcon, 'text-lg']"></i>
             </button>
 
-            <!-- Operator SaaS -->
-            <Link href="/login-operator-saas" class="px-3 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
-              <i class="fas fa-cloud mr-1.5"></i> Operator SaaS
-            </Link>
-
-            <!-- Perusahaan -->
-            <Link href="/login-perusahaan" class="px-3 py-2 text-sm font-medium rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-colors">
-              <i class="fas fa-building mr-1.5"></i> Perusahaan
-            </Link>
-
-            <!-- Pelanggan -->
-            <Link href="/login-pelanggan" class="px-3 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
-              <i class="fas fa-user mr-1.5"></i> Pelanggan
-            </Link>
-
-            <!-- Karyawan -->
-            <Link href="/login-karyawan" class="px-3 py-2 text-sm font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">
-              <i class="fas fa-user-tie mr-1.5"></i> Karyawan
-            </Link>
+            <!-- Masuk Dropdown -->
+            <div ref="dropdownRef" class="relative">
+              <button
+                @click.stop="toggleDropdown"
+                class="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
+              >
+                <i class="fas fa-sign-in-alt"></i> Masuk
+                <i :class="['fas', 'fa-chevron-down', 'text-xs', 'transition-transform', dropdownOpen ? 'rotate-180' : '']"></i>
+              </button>
+              <Transition name="dropdown">
+                <div v-show="dropdownOpen" class="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 py-1 z-50">
+                  <Link href="/login-operator-saas" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
+                    <i class="fas fa-cloud w-5 text-center"></i> Operator SaaS
+                  </Link>
+                  <Link href="/login-perusahaan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/30 transition-colors">
+                    <i class="fas fa-building w-5 text-center"></i> Perusahaan
+                  </Link>
+                  <Link href="/login-pelanggan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors">
+                    <i class="fas fa-user w-5 text-center"></i> Pelanggan
+                  </Link>
+                  <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                  <Link href="/login-karyawan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors">
+                    <i class="fas fa-user-tie w-5 text-center"></i> Karyawan
+                  </Link>
+                </div>
+              </Transition>
+            </div>
           </div>
 
           <!-- Mobile hamburger + theme -->
@@ -158,19 +182,24 @@ function closeMobileMenu() {
             <i class="fas fa-envelope w-5 mr-2"></i> Hubungi Kami
           </Link>
 
-          <div class="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2 space-y-1">
-            <Link href="/login-operator-saas" class="block px-3 py-2 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30">
-              <i class="fas fa-cloud w-5 mr-2"></i> Login Operator SaaS
-            </Link>
-            <Link href="/login-perusahaan" class="block px-3 py-2 rounded-lg text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/30">
-              <i class="fas fa-building w-5 mr-2"></i> Login Perusahaan
-            </Link>
-            <Link href="/login-pelanggan" class="block px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
-              <i class="fas fa-user w-5 mr-2"></i> Login / Daftar Pelanggan
-            </Link>
-            <Link href="/login-karyawan" class="block px-3 py-2 rounded-lg text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30">
-              <i class="fas fa-user-tie w-5 mr-2"></i> Login Karyawan
-            </Link>
+          <div class="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+            <div class="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              <i class="fas fa-sign-in-alt"></i> Masuk
+            </div>
+            <div class="ml-2 space-y-0.5">
+              <Link href="/login-operator-saas" @click="closeMobileMenu" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
+                <i class="fas fa-cloud w-5 text-center"></i> Operator SaaS
+              </Link>
+              <Link href="/login-perusahaan" @click="closeMobileMenu" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/30 transition-colors">
+                <i class="fas fa-building w-5 text-center"></i> Perusahaan
+              </Link>
+              <Link href="/login-pelanggan" @click="closeMobileMenu" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors">
+                <i class="fas fa-user w-5 text-center"></i> Pelanggan
+              </Link>
+              <Link href="/login-karyawan" @click="closeMobileMenu" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors">
+                <i class="fas fa-user-tie w-5 text-center"></i> Karyawan
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -245,3 +274,20 @@ function closeMobileMenu() {
     </footer>
   </div>
 </template>
+
+<style scoped>
+.dropdown-enter-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+.dropdown-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+.dropdown-enter-from {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
+}
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-4px) scale(0.97);
+}
+</style>

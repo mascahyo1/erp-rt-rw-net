@@ -2,10 +2,12 @@
 import { ref } from "vue";
 import { Link } from '@inertiajs/vue3';
 import LandingLayout from "@/Layouts/LandingLayout.vue";
+import CompanySearchInput from "@/Components/CompanySearchInput.vue";
 
 defineOptions({ layout: LandingLayout });
 
 const activeTab = ref("login");
+const selectedCompany = ref(null);
 </script>
 
 <template>
@@ -79,6 +81,10 @@ const activeTab = ref("login");
               <!-- Login Form -->
               <form v-if="activeTab === 'login'" class="space-y-4" @submit.prevent="">
                 <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                  <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                </div>
+                <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
                   <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -124,6 +130,10 @@ const activeTab = ref("login");
 
               <!-- Register Form -->
               <form v-if="activeTab === 'register'" class="space-y-4" @submit.prevent="">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                  <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Lengkap</label>
                   <input

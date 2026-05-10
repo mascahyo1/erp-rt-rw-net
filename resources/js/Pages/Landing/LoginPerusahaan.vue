@@ -1,8 +1,12 @@
 <script setup>
+import { ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
+import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 
 defineOptions({ layout: LandingLayout });
+
+const selectedCompany = ref(null);
 </script>
 
 <template>
@@ -48,6 +52,10 @@ defineOptions({ layout: LandingLayout });
               </div>
 
               <form class="space-y-4" @submit.prevent="">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                  <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
                   <div class="relative">
