@@ -32,6 +32,8 @@ authenticated prefix ./operator-perusahaan/
 -role perusahaan
 -admin role perusahaan
 -konfigurasi perusahaan
+-role web karyawan
+-admin role web karyawan
 
 authenticated customer prefix ./customer/ crud front end saja
 -login / register tambah input perusahaan redirect ke dashboard 

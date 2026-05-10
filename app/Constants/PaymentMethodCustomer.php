@@ -16,11 +16,19 @@ class PaymentMethodCustomer
                     'methods' => [
                         [
                             'slug' => 'tunai',
-                            'name' => 'Tunai'
+                            'name' => 'Tunai',
+                            'show_to_customer' => false,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => true,
                         ],
                         [
                             'slug' => 'bank_transfer',
-                            'name' => 'Bank Transfer'
+                            'name' => 'Bank Transfer',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => true,
                         ]
                     ]
                 ],
@@ -30,35 +38,67 @@ class PaymentMethodCustomer
                     'methods' => [
                         [
                             'slug' => 'gopay',
-                            'name' => 'Gopay'
+                            'name' => 'Gopay',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => false,
                         ],
                         [
                             'slug' => 'gopay_dynamic_qris',
-                            'name' => 'Gopay Dynamic QRIS'
+                            'name' => 'Gopay Dynamic QRIS',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => false,
                         ],
                         [
                             'slug' => 'cimb_niaga_va',
-                            'name' => 'Bank CIMB Niaga VA'
+                            'name' => 'Bank CIMB Niaga VA',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => false,
                         ],
                         [
                             'slug' => 'bsi_va',
-                            'name' => 'Bank BSI VA'
+                            'name' => 'Bank BSI VA',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => false,
                         ],
                         [
                             'slug' => 'bni_va',
-                            'name' => 'Bank BNI VA'
+                            'name' => 'Bank BNI VA',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => false,
                         ],
                         [
                             'slug' => 'bri_va',
-                            'name' => 'Bank BRI VA'
+                            'name' => 'Bank BRI VA',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => false,
                         ],
                         [
                             'slug' => 'permata_va',
-                            'name' => 'Bank Permata VA'
+                            'name' => 'Bank Permata VA',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => false,
                         ],
                         [
                             'slug' => 'mandiri_va',
-                            'name' => 'Bank Mandiri VA'
+                            'name' => 'Bank Mandiri VA',
+                            'show_to_customer' => true,
+                            'show_to_admin_perusahaan' => true,
+                            'show_to_web_karyawan' => true,
+                            'wajib_input_bukti_pembayaran' => false,
                         ]
                     
                     ]

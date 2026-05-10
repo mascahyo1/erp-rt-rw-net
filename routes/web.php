@@ -154,6 +154,18 @@ Route::get('/operator-perusahaan/konfigurasi-perusahaan', function () {
     return Inertia::render('OperatorPerusahaan/KonfigurasiPerusahaan');
 });
 
+Route::get('/operator-perusahaan/profil-saya', function () {
+    return Inertia::render('OperatorPerusahaan/ProfilSaya');
+});
+
+Route::get('/operator-perusahaan/role-web-karyawan', function () {
+    return Inertia::render('OperatorPerusahaan/RoleWebKaryawan');
+});
+
+Route::get('/operator-perusahaan/admin-role-web-karyawan', function () {
+    return Inertia::render('OperatorPerusahaan/AdminRoleWebKaryawan');
+});
+
 // ========================
 // Customer Routes
 // ========================
