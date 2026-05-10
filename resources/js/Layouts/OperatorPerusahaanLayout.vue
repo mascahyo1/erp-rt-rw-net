@@ -22,6 +22,8 @@ const menuItems = [
   { label: 'Customer', href: '/operator-perusahaan/customer', icon: 'fa-users' },
   { label: 'Langganan Customer', href: '/operator-perusahaan/langganan-customer', icon: 'fa-link' },
   { label: 'Tagihan', href: '/operator-perusahaan/tagihan', icon: 'fa-file-invoice' },
+  { label: 'Insentif', href: '/operator-perusahaan/insentif', icon: 'fa-coins' },
+  { label: 'Riwayat Insentif', href: '/operator-perusahaan/riwayat-insentif', icon: 'fa-receipt' },
   { label: 'Riwayat Pembayaran', href: '/operator-perusahaan/riwayat-pembayaran', icon: 'fa-history' },
   { label: 'Admin Perusahaan', href: '/operator-perusahaan/admin-perusahaan', icon: 'fa-user-tie' },
   { label: 'Role Perusahaan', href: '/operator-perusahaan/role-perusahaan', icon: 'fa-tags' },

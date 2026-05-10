@@ -130,6 +130,14 @@ Route::get('/operator-perusahaan/riwayat-pembayaran', function () {
     return Inertia::render('OperatorPerusahaan/RiwayatPembayaran');
 });
 
+Route::get('/operator-perusahaan/insentif', function () {
+    return Inertia::render('OperatorPerusahaan/Insentif');
+});
+
+Route::get('/operator-perusahaan/riwayat-insentif', function () {
+    return Inertia::render('OperatorPerusahaan/RiwayatInsentif');
+});
+
 Route::get('/operator-perusahaan/admin-perusahaan', function () {
     return Inertia::render('OperatorPerusahaan/AdminPerusahaan');
 });
