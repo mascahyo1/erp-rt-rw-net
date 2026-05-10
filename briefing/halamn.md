@@ -40,3 +40,13 @@ authenticated customer prefix ./customer/ crud front end saja
 -paket saya
 -tagihan saya
 -riwayat pembayaran
+
+web karyawan prefix /karyawan crud front end saja
+-login
+-dashboard
+-profil saya
+-customer
+-langganan customer
+-tagihan
+-insentif saya
+-riwayat pembayaran
