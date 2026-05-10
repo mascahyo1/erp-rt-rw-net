@@ -173,6 +173,34 @@ Route::get('/customer/tagihan-saya', function () {
     return Inertia::render('Customer/TagihanSaya');
 });
 
+Route::get('/customer/tagihan-saya/detail', function () {
+    return Inertia::render('Customer/TagihanDetail');
+});
+
+Route::get('/customer/paket-saya', function () {
+    return Inertia::render('Customer/PaketSaya');
+});
+
+Route::get('/customer/paket-saya/tambah', function () {
+    return Inertia::render('Customer/PaketTambah');
+});
+
+Route::get('/customer/paket-saya/detail', function () {
+    return Inertia::render('Customer/PaketDetail');
+});
+
+Route::get('/customer/riwayat-pembayaran', function () {
+    return Inertia::render('Customer/RiwayatPembayaran');
+});
+
+Route::get('/customer/riwayat-pembayaran/tambah', function () {
+    return Inertia::render('Customer/PembayaranTambah');
+});
+
+Route::get('/customer/riwayat-pembayaran/detail', function () {
+    return Inertia::render('Customer/PembayaranDetail');
+});
+
 Route::get('/customer/riwayat-pembayaran', function () {
     return Inertia::render('Customer/RiwayatPembayaran');
 });

@@ -1,17 +1,21 @@
 <script setup>
 import { ref } from 'vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 defineOptions({ layout: CustomerLayout });
 
 const customer = ref({ nama: 'Pak Sugeng', email: 'sugeng@email.com', alamat: 'Jl. Mawar No. 5, RT 02/RW 01', kode_negara: '+62', no_telp: '81234567890', perusahaan: 'PT Net Sejahtera', paket: 'Silver 20Mbps', status: 'Aktif', created_at: '2025-01-20' });
 const editMode = ref(false); const form = ref({ ...customer.value }); const formErrors = ref({}); const saved = ref(false);
 const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
+const passwordForm = ref({ password_lama: '', password_baru: '', password_konfirmasi: '' }); const passwordErrors = ref({}); const passwordSaved = ref(false);
+
 function enterEdit() { form.value = { ...customer.value }; formErrors.value = {}; saved.value = false; editMode.value = true; }
 function cancelEdit() { editMode.value = false; }
 function validateForm() { const e = {}; if (!form.value.nama.trim()) e.nama = 'Nama wajib diisi'; if (!form.value.email.trim()) e.email = 'Email wajib diisi'; formErrors.value = e; return Object.keys(e).length === 0; }
 function saveEdit() { if (!validateForm()) return; customer.value = { ...form.value }; editMode.value = false; saved.value = true; setTimeout(() => saved.value = false, 3000); }
 function statusBadge(s) { return s === 'Aktif' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; }
+
+function ubahPassword() { const e = {}; if (!passwordForm.value.password_lama.trim()) e.password_lama = 'Password lama wajib diisi'; if (!passwordForm.value.password_baru.trim()) e.password_baru = 'Password baru wajib diisi'; else if (passwordForm.value.password_baru.length < 6) e.password_baru = 'Minimal 6 karakter'; if (passwordForm.value.password_baru !== passwordForm.value.password_konfirmasi) e.password_konfirmasi = 'Konfirmasi password tidak cocok'; passwordErrors.value = e; if (Object.keys(e).length > 0) return; passwordForm.value = { password_lama: '', password_baru: '', password_konfirmasi: '' }; passwordSaved.value = true; setTimeout(() => passwordSaved.value = false, 3000); }
 </script>
 
 <template>
@@ -19,6 +23,7 @@ function statusBadge(s) { return s === 'Aktif' ? 'bg-emerald-100 text-emerald-70
     <Head title="Profil Saya | Pelanggan" />
     <slot name="header">Profil Saya</slot>
     <div class="space-y-6">
+      <nav class="flex items-center gap-1.5 text-sm"><Link href="/customer/dashboard" class="text-gray-500 dark:text-gray-400 hover:text-emerald-600 transition-colors"><i class="fas fa-home"></i></Link><i class="fas fa-chevron-right text-[10px] text-gray-400 dark:text-gray-500"></i><Link href="/customer/dashboard" class="text-gray-500 dark:text-gray-400 hover:text-emerald-600 transition-colors">Dashboard</Link><i class="fas fa-chevron-right text-[10px] text-gray-400 dark:text-gray-500"></i><span class="text-gray-900 dark:text-white font-medium">Profil Saya</span></nav>
       <div class="flex items-center justify-between"><div><p class="text-sm text-gray-500 dark:text-gray-400">Informasi akun dan data diri Anda.</p></div><button v-if="!editMode" @click="enterEdit" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"><i class="fas fa-edit mr-1.5"></i> Edit Profil</button></div>
       <div v-if="saved" class="px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm text-emerald-700 dark:text-emerald-400"><i class="fas fa-check-circle mr-1.5"></i> Profil berhasil diperbarui.</div>
       <div v-if="!editMode" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden p-6 sm:p-8">
@@ -33,6 +38,21 @@ function statusBadge(s) { return s === 'Aktif' ? 'bg-emerald-100 text-emerald-70
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat</label><textarea v-model="form.alamat" rows="2" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors resize-none"></textarea></div>
         <div class="flex justify-end gap-2 pt-2"><button type="button" @click="cancelEdit" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button type="submit" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"><i class="fas fa-save mr-1.5"></i> Simpan</button></div>
       </form></div>
+
+      <!-- Ubah Password -->
+      <div v-if="!editMode" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 sm:p-8">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1"><i class="fas fa-lock mr-2 text-emerald-500"></i>Ubah Password</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-5">Ganti password akun Anda secara berkala untuk keamanan.</p>
+        <div v-if="passwordSaved" class="mb-4 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm text-emerald-700 dark:text-emerald-400"><i class="fas fa-check-circle mr-1.5"></i> Password berhasil diubah.</div>
+        <form class="max-w-md space-y-4" @submit.prevent="ubahPassword">
+          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password Lama <span class="text-red-500">*</span></label><input v-model="passwordForm.password_lama" type="password" placeholder="Password saat ini" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', passwordErrors.password_lama ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500']" /><p v-if="passwordErrors.password_lama" class="text-red-500 text-xs mt-1">{{ passwordErrors.password_lama }}</p></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password Baru <span class="text-red-500">*</span></label><input v-model="passwordForm.password_baru" type="password" placeholder="Min. 6 karakter" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', passwordErrors.password_baru ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500']" /><p v-if="passwordErrors.password_baru" class="text-red-500 text-xs mt-1">{{ passwordErrors.password_baru }}</p></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Konfirmasi <span class="text-red-500">*</span></label><input v-model="passwordForm.password_konfirmasi" type="password" placeholder="Ulangi password" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', passwordErrors.password_konfirmasi ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500']" /><p v-if="passwordErrors.password_konfirmasi" class="text-red-500 text-xs mt-1">{{ passwordErrors.password_konfirmasi }}</p></div>
+          </div>
+          <div class="flex justify-end"><button type="submit" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"><i class="fas fa-key mr-1.5"></i> Ubah Password</button></div>
+        </form>
+      </div>
     </div>
   </div>
 </template>

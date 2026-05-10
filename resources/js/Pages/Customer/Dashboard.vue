@@ -1,6 +1,6 @@
 <script setup>
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 defineOptions({ layout: CustomerLayout });
 </script>
 
@@ -8,6 +8,7 @@ defineOptions({ layout: CustomerLayout });
   <div>
     <Head title="Dashboard | Pelanggan" />
     <div class="space-y-6">
+      <nav class="flex items-center gap-1.5 text-sm"><Link href="/customer/dashboard" class="text-gray-500 dark:text-gray-400 hover:text-emerald-600 transition-colors"><i class="fas fa-home"></i></Link><i class="fas fa-chevron-right text-[10px] text-gray-400 dark:text-gray-500"></i><span class="text-gray-900 dark:text-white font-medium">Dashboard</span></nav>
       <slot name="header">Dashboard</slot>
       <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-8 md:p-10 shadow-lg">
         <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>

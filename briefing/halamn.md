@@ -33,8 +33,8 @@ authenticated prefix ./operator-perusahaan/
 -admin role perusahaan
 -konfigurasi perusahaan
 
-authenticated customer prefix ./customer/
--login / register tambah input perusahaan
+authenticated customer prefix ./customer/ crud front end saja
+-login / register tambah input perusahaan redirect ke dashboard 
 -dashboard
 -profil saya
 -paket saya
