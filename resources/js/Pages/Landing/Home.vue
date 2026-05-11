@@ -37,6 +37,61 @@ defineOptions({ layout: LandingLayout });
       </div>
     </section>
 
+    <!-- LOGIN / DAFTAR -->
+    <section class="py-20 md:py-28 bg-gradient-to-br from-sky-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-950 dark:to-indigo-950/30 transition-colors">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-14">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Akses Platform</h2>
+          <p class="mt-3 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">Pilih portal sesuai peran Anda untuk masuk atau mendaftar.</p>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Link href="/login-pelanggan" class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg hover:scale-[1.03] transition-all duration-300 text-center">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+              <i class="fas fa-user text-white text-2xl"></i>
+            </div>
+            <h3 class="font-semibold text-lg text-gray-900 dark:text-white mb-1.5">Pelanggan</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Cek tagihan, riwayat pembayaran, dan status layanan internet Anda.</p>
+            <span class="inline-flex items-center gap-1 mt-4 text-sm font-medium text-emerald-600 dark:text-emerald-400 group-hover:gap-2 transition-all">
+              Login / Daftar <i class="fas fa-arrow-right text-xs"></i>
+            </span>
+          </Link>
+
+          <Link href="/login-operator-saas" class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-indigo-300 dark:hover:border-indigo-700 hover:shadow-lg hover:scale-[1.03] transition-all duration-300 text-center">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+              <i class="fas fa-cloud text-white text-2xl"></i>
+            </div>
+            <h3 class="font-semibold text-lg text-gray-900 dark:text-white mb-1.5">Operator SaaS</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Kelola semua perusahaan, admin, role, dan konfigurasi sistem secara terpusat.</p>
+            <span class="inline-flex items-center gap-1 mt-4 text-sm font-medium text-indigo-600 dark:text-indigo-400 group-hover:gap-2 transition-all">
+              Login <i class="fas fa-arrow-right text-xs"></i>
+            </span>
+          </Link>
+
+          <Link href="/login-perusahaan" class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 hover:shadow-lg hover:scale-[1.03] transition-all duration-300 text-center">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+              <i class="fas fa-building text-white text-2xl"></i>
+            </div>
+            <h3 class="font-semibold text-lg text-gray-900 dark:text-white mb-1.5">Perusahaan</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Dashboard perusahaan: kelola pelanggan, tagihan, paket, dan insentif karyawan.</p>
+            <span class="inline-flex items-center gap-1 mt-4 text-sm font-medium text-sky-600 dark:text-sky-400 group-hover:gap-2 transition-all">
+              Login <i class="fas fa-arrow-right text-xs"></i>
+            </span>
+          </Link>
+
+          <Link href="/login-karyawan" class="group p-6 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-amber-300 dark:hover:border-amber-700 hover:shadow-lg hover:scale-[1.03] transition-all duration-300 text-center">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg">
+              <i class="fas fa-user-tie text-white text-2xl"></i>
+            </div>
+            <h3 class="font-semibold text-lg text-gray-900 dark:text-white mb-1.5">Karyawan</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">Akses data pelanggan, tagihan, input pembayaran, dan lihat insentif Anda.</p>
+            <span class="inline-flex items-center gap-1 mt-4 text-sm font-medium text-amber-600 dark:text-amber-400 group-hover:gap-2 transition-all">
+              Login <i class="fas fa-arrow-right text-xs"></i>
+            </span>
+          </Link>
+        </div>
+      </div>
+    </section>
+
     <!-- FEATURES -->
     <section class="py-20 md:py-28 bg-white dark:bg-gray-950 transition-colors">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
