@@ -28,6 +28,7 @@ const menuItems = [
   { label: 'Admin Perusahaan', href: '/operator-perusahaan/admin-perusahaan', icon: 'fa-user-tie' },
   { label: 'Role Perusahaan', href: '/operator-perusahaan/role-perusahaan', icon: 'fa-tags' },
   { label: 'Admin Role Perusahaan', href: '/operator-perusahaan/admin-role-perusahaan', icon: 'fa-user-gear' },
+  { label: 'Karyawan', href: '/operator-perusahaan/karyawan', icon: 'fa-users' },
   { label: 'Role Web Karyawan', href: '/operator-perusahaan/role-web-karyawan', icon: 'fa-globe' },
   { label: 'Admin Role Web Karyawan', href: '/operator-perusahaan/admin-role-web-karyawan', icon: 'fa-user-lock' },
   { label: 'Konfigurasi Perusahaan', href: '/operator-perusahaan/konfigurasi-perusahaan', icon: 'fa-sliders' },

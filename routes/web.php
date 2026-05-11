@@ -150,6 +150,10 @@ Route::get('/operator-perusahaan/admin-role-perusahaan', function () {
     return Inertia::render('OperatorPerusahaan/AdminRolePerusahaan');
 });
 
+Route::get('/operator-perusahaan/karyawan', function () {
+    return Inertia::render('OperatorPerusahaan/Karyawan');
+});
+
 Route::get('/operator-perusahaan/konfigurasi-perusahaan', function () {
     return Inertia::render('OperatorPerusahaan/KonfigurasiPerusahaan');
 });
