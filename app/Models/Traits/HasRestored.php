@@ -12,18 +12,17 @@ trait HasRestored
     public static function bootHasRestored(): void
     {
         static::restoring(function ($model) {
-            $model->{$model->getDeletedByColumn()} = null;
-            $model->{$model->getRestoredAtColumn()} = now();
+            $model->deleted_by_type = null;
+            $model->deleted_by_id = null;
+            $model->restored_at = now();
 
             if ($user = auth()->user()) {
-                $model->{$model->getRestoredByTypeColumn()} = $user->getMorphClass();
-                $model->{$model->getRestoredByIdColumn()} = $user->getKey();
+                $model->restored_by_type = $user->getMorphClass();
+                $model->restored_by_id = $user->getKey();
             }
         });
 
         static::restored(function ($model) {
-            $model->saveQuietly();
-
             if (method_exists($model, 'onRestored')) {
                 $model->onRestored();
             }
