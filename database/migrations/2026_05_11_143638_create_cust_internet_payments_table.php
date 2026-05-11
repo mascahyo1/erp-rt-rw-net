@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('cust_internet_invc_id')->constrained('cust_internet_invcs')->onDelete('restrict');
             $table->decimal('amount_paid', 15, 2);
-            $table->enum('status', ['paid', 'unpaid', 'overdue', 'cancelled', 'rejected'])->default('unpaid');
+            $table->enum('status', ['paid', 'pending', 'cancelled', 'rejected', 'expired'])->default('pending');
             $table->string('provider');
             $table->string('payment_method');
             $table->string('proof_file')->nullable();
