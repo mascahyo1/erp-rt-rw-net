@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -9,12 +7,7 @@ use Inertia\Inertia;
 // Landing Page Routes
 // ========================
 Route::get('/', function () {
-    return Inertia::render('Landing/Home', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return Inertia::render('Landing/Home');
 });
 
 Route::get('/tentang-kami', function () {
@@ -91,13 +84,6 @@ Route::get('/operator-saas/admin-saas', function () {
 Route::get('/operator-saas/admin-role-saas', function () {
     return Inertia::render('OperatorSaas/AdminRoleSaaS');
 });
-
-// ========================
-// Dashboard (existing)
-// ========================
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 // ========================
 // Operator Perusahaan Routes
@@ -264,10 +250,4 @@ Route::get('/customer/riwayat-pembayaran', function () {
     return Inertia::render('Customer/RiwayatPembayaran');
 });
 
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
 
-require __DIR__.'/auth.php';
