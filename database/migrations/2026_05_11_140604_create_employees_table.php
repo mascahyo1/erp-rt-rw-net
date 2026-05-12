@@ -29,6 +29,8 @@ return new class extends Migration
             $table->unique(['company_id', 'email'])->index('emp_unique_email');
             $table->unique(['company_id', 'phone_country_code', 'phone_number'])->index('emp_unique_phone');
             $table->timestamps();
+            $table->blameable();
+            $table->softDelete();
         });
     }
 

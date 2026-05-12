@@ -20,6 +20,8 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->blameable();
+            $table->softDelete();
         });
     }
 

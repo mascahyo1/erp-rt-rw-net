@@ -28,6 +28,8 @@ return new class extends Migration
             $table->decimal('billing_amount', 20, 2)->default(0);
 
             $table->timestamps();
+            $table->blameable();
+            $table->softDelete();
         });
     }
 

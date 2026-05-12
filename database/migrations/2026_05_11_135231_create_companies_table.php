@@ -20,8 +20,9 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->text('address')->nullable();
             $table->text('description')->nullable();
-            $table->blameable();
             $table->timestamps();
+            $table->blameable();
+            $table->softDelete();
         });
     }
 

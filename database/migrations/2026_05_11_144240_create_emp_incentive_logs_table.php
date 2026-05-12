@@ -24,6 +24,8 @@ return new class extends Migration
             $table->enum('status_payment', ['unpaid', 'paid'])->default('unpaid');
             $table->text('description_payment')->nullable();
             $table->timestamps();
+            $table->blameable();
+            $table->softDelete();
         });
     }
 

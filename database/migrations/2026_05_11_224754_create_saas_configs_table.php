@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('value');
             $table->text('descripton')->nullable();
             $table->timestamps();
+            $table->blameable();
         });
     }
 

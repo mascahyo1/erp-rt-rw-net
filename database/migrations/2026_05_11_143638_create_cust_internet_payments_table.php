@@ -23,6 +23,8 @@ return new class extends Migration
             $table->text('status_description')->nullable();
             $table->text('status_reason')->nullable();
             $table->timestamps();
+            $table->blameable();
+            $table->softDelete();
         });
     }
 
