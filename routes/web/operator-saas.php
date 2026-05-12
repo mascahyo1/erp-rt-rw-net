@@ -7,7 +7,7 @@ Route::get('/operator-saas/login', function () {
     return Inertia::render('OperatorSaas/Login');
 });
 
-Route::middleware('auth:web')->group(function () {
+Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
     Route::get('/operator-saas/dashboard', function () {
         return Inertia::render('OperatorSaas/Dashboard');
     })->name('operator-saas.dashboard');
