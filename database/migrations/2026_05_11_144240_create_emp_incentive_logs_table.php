@@ -18,7 +18,7 @@ return new class extends Migration
             $table->decimal('amount', 20, 2);
             $table->date('date');
             $table->string('proof_file')->nullable();
-            $table->confirmable();
+            $table->approvable();
             $table->timestamps();
             $table->blameable();
             $table->softDelete();
