@@ -18,11 +18,7 @@ return new class extends Migration
             $table->decimal('amount', 20, 2);
             $table->date('date');
             $table->string('proof_file')->nullable();
-            $table->enum('status_approval', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->text('description_approval')->nullable();
-            $table->string('payment_proof_file')->nullable();
-            $table->enum('status_payment', ['unpaid', 'paid'])->default('unpaid');
-            $table->text('description_payment')->nullable();
+            $table->confirmable();
             $table->timestamps();
             $table->blameable();
             $table->softDelete();
