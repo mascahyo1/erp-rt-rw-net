@@ -32,42 +32,34 @@ class Blueprint extends BaseBlueprint
         $this->dropMorphs('restored_by');
         $this->dropColumn(['deleted_at', 'restored_at']);
     }
+
     public function approvable(): void
     {
         $this->morphs('submitted_by');
         $this->text('submission_reason')->nullable();
-
-        $this->enum('approval_status', [
+        $this->string('submission_proof_file')->nullable();
+        $this->enum('review_status', [
             'pending',
             'approved',
             'rejected',
         ])->default('pending');
 
-        $this->timestamp('approved_at')->nullable();
-        $this->nullableMorphs('approved_by');
-        $this->text('approval_reason')->nullable();
+        $this->timestamp('reviewed_at')->nullable();
+        $this->nullableMorphs('reviewed_by');
+        $this->timestamp('review_attachment')->nullable();
+        $this->text('review_reason')->nullable();
     }
 
     public function dropApprovable(): void
     {
         $this->dropMorphs('submitted_by');
-        $this->dropMorphs('approved_by');
+        $this->dropMorphs('reviewed_by');
 
         $this->dropColumn([
             'submission_reason',
             'approval_status',
-            'approved_at',
-            'approval_reason',
+            'reviewed_at',
+            'review_reason',
         ]);
-    }
-
-    public function attachableFile()
-    {
-        $this->string('file_path');
-        $this->string('file_name');
-        $this->string('file_extension');
-        $this->string('file_mime');
-        $this->string('file_size');
-        $this->string('file_description');
     }
 }

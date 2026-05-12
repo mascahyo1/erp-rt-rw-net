@@ -17,7 +17,6 @@ return new class extends Migration
             $table->foreignUuid('cust_internet_invcs_id')->constrained('cust_internet_invcs')->onDelete('restrict');
             $table->decimal('amount', 20, 2);
             $table->date('date');
-            $table->string('proof_file')->nullable();
             $table->approvable();
             $table->timestamps();
             $table->blameable();
