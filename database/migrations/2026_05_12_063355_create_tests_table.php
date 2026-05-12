@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('model_has_roles', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->foreignUuid('role_id')->constrained('roles')->onDelete('restrict');
-            $table->morphs('model');
+        Schema::create('tests', function (Blueprint $table) {
+            $table->id();
             $table->timestamps();
         });
     }
@@ -24,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('model_has_roles');
+        Schema::dropIfExists('tests');
     }
 };
