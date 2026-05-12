@@ -40,6 +40,26 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'admin-saas' => [
+            'driver' => 'session',
+            'provider' => 'admin-saas',
+        ],
+
+        'admin-company' => [
+            'driver' => 'session',
+            'provider' => 'admin-company',
+        ],
+
+        'customer' => [
+            'driver' => 'session',
+            'provider' => 'customer',
+        ],
+
+        'employee' => [
+            'driver' => 'session',
+            'provider' => 'employee',
+        ],
     ],
 
     /*
@@ -51,7 +71,7 @@ return [
     | users are actually retrieved out of your database or other storage
     | system used by the application. Typically, Eloquent is utilized.
     |
-    | If you have multiple user tables or models you may configure multiple
+    | You may use multiple user tables or models by configuring multiple
     | providers to represent the model / table. These providers may then
     | be assigned to any extra authentication guards you have defined.
     |
@@ -65,10 +85,25 @@ return [
             'model' => env('AUTH_MODEL', \App\Models\AdminSaas::class),
         ],
 
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
-        // ],
+        'admin-saas' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\AdminSaas::class,
+        ],
+
+        'admin-company' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\AdminCompany::class,
+        ],
+
+        'customer' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\Customer::class,
+        ],
+
+        'employee' => [
+            'driver' => 'eloquent',
+            'model' => \App\Models\Employee::class,
+        ],
     ],
 
     /*

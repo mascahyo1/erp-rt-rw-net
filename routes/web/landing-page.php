@@ -32,10 +32,21 @@ Route::post('/login-operator-saas', [AuthenticatedSessionController::class, 'sto
 Route::post('/logout-operator-saas', [AuthenticatedSessionController::class, 'destroy'])
     ->name('operator-saas.logout');
 
-Route::get('/login-perusahaan', function () {
-    return Inertia::render('Landing/LoginPerusahaan');
-});
+Route::get('/login-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionController::class, 'create'])
+    ->name('operator-perusahaan.login');
 
-Route::get('/login-pelanggan', function () {
-    return Inertia::render('Landing/LoginPelanggan');
-});
+Route::post('/login-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionController::class, 'store']);
+
+Route::post('/logout-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionController::class, 'destroy'])
+    ->name('operator-perusahaan.logout');
+
+Route::get('/login-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'create'])
+    ->name('customer.login');
+
+Route::post('/login-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'store']);
+
+Route::post('/logout-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'destroy'])
+    ->name('customer.logout');
+
+Route::post('/logout-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionController::class, 'destroy'])
+    ->name('employee.logout');

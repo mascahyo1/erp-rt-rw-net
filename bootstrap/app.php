@@ -19,7 +19,21 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        $middleware->redirectGuestsTo('/login-operator-saas');
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if ($request->is('operator-perusahaan/*') || $request->is('login-perusahaan*')) {
+                return route('operator-perusahaan.login');
+            }
+
+            if ($request->is('customer/*') || $request->is('login-pelanggan*')) {
+                return route('customer.login');
+            }
+
+            if ($request->is('karyawan/*') || $request->is('login-karyawan*')) {
+                return route('employee.login');
+            }
+
+            return route('operator-saas.login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
