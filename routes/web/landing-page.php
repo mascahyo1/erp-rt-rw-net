@@ -13,15 +13,35 @@ Route::get('/tentang-kami', function () {
 });
 
 Route::get('/hubungi-kami', function () {
-    return Inertia::render('Landing/HubungiKami');
+    $configs = \App\Models\SaasConfig::whereIn('key', [
+        'contact.phone', 'contact.email', 'contact.address', 'contact.hours_weekday', 'contact.hours_saturday',
+    ])->pluck('value', 'key');
+
+    return Inertia::render('Landing/HubungiKami', [
+        'contact' => [
+            'phone' => $configs['contact.phone'] ?? '+62 812-3456-7890',
+            'email' => $configs['contact.email'] ?? 'support@rtrwnet.id',
+            'address' => $configs['contact.address'] ?? 'Jl. Teknologi No. 10, Jakarta Selatan',
+            'hours_weekday' => $configs['contact.hours_weekday'] ?? 'Senin — Jumat: 08:00 — 20:00 WIB',
+            'hours_saturday' => $configs['contact.hours_saturday'] ?? 'Sabtu: 09:00 — 15:00 WIB',
+        ],
+    ]);
 });
 
 Route::get('/syarat-dan-ketentuan', function () {
-    return Inertia::render('Landing/SyaratKetentuan');
+    $sections = \App\Models\SaasConfig::where('key', 'terms')->value('value');
+
+    return Inertia::render('Landing/SyaratKetentuan', [
+        'sections' => json_decode($sections, true) ?: [],
+    ]);
 });
 
 Route::get('/kebijakan-privasi', function () {
-    return Inertia::render('Landing/KebijakanPrivasi');
+    $sections = \App\Models\SaasConfig::where('key', 'privacy')->value('value');
+
+    return Inertia::render('Landing/KebijakanPrivasi', [
+        'sections' => json_decode($sections, true) ?: [],
+    ]);
 });
 
 Route::get('/login-operator-saas', [AuthenticatedSessionController::class, 'create'])

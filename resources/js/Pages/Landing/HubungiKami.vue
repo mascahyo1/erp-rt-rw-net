@@ -3,6 +3,10 @@ import { Link } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 
 defineOptions({ layout: LandingLayout });
+
+defineProps({
+  contact: Object,
+});
 </script>
 
 <template>
@@ -55,7 +59,7 @@ defineOptions({ layout: LandingLayout });
               </div>
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-white">Telepon</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">+62 812-3456-7890</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ contact.phone }}</p>
               </div>
             </div>
 
@@ -65,7 +69,7 @@ defineOptions({ layout: LandingLayout });
               </div>
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-white">Email</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">support@rtrwnet.id</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ contact.email }}</p>
               </div>
             </div>
 
@@ -75,7 +79,7 @@ defineOptions({ layout: LandingLayout });
               </div>
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-white">Alamat</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Jl. Teknologi No. 10, Jakarta Selatan, DKI Jakarta 12950</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ contact.address }}</p>
               </div>
             </div>
 
@@ -85,8 +89,8 @@ defineOptions({ layout: LandingLayout });
               </div>
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-white">Jam Operasional</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Senin — Jumat: 08:00 — 20:00 WIB</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">Sabtu: 09:00 — 15:00 WIB</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ contact.hours_weekday }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ contact.hours_saturday }}</p>
               </div>
             </div>
           </div>

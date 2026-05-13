@@ -1,10 +1,9 @@
 <script setup>
 import { Link } from '@inertiajs/vue3';
 
-const contact = {
-  email: 'support@erprtrw.net',
-  phone: '+62 851-2345-6789',
-};
+defineProps({
+  contact: Object,
+});
 </script>
 
 <template>

@@ -47,8 +47,19 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
+            try {
+                $configs = \App\Models\SaasConfig::whereIn('key', ['company.email', 'company.phone'])
+                    ->pluck('value', 'key');
+            } catch (\Throwable) {
+                $configs = collect();
+            }
+
             return Inertia::render("Errors/{$status}", [
                 'status' => $status,
+                'contact' => [
+                    'email' => $configs['company.email'] ?? 'support@erprtrw.net',
+                    'phone' => $configs['company.phone'] ?? '+62 851-2345-6789',
+                ],
             ])
                 ->toResponse($request)
                 ->setStatusCode($status);
