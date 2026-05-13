@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminSaasController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\SaasConfigController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -45,9 +46,16 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
         return Inertia::render('OperatorSaas/RoleAdminPerusahaan');
     });
 
-    Route::get('/operator-saas/konfigurasi', function () {
-        return Inertia::render('OperatorSaas/Konfigurasi');
-    });
+    Route::get('/operator-saas/konfigurasi', [SaasConfigController::class, 'index'])
+        ->name('operator-saas.konfigurasi.index');
+    Route::post('/operator-saas/konfigurasi', [SaasConfigController::class, 'store'])
+        ->name('operator-saas.konfigurasi.store');
+    Route::put('/operator-saas/konfigurasi/{saasConfig}', [SaasConfigController::class, 'update'])
+        ->name('operator-saas.konfigurasi.update');
+    Route::delete('/operator-saas/konfigurasi/{saasConfig}', [SaasConfigController::class, 'destroy'])
+        ->name('operator-saas.konfigurasi.destroy');
+    Route::post('/operator-saas/konfigurasi/bulk-delete', [SaasConfigController::class, 'bulkDelete'])
+        ->name('operator-saas.konfigurasi.bulk-delete');
 
     Route::get('/operator-saas/role-saas', function () {
         return Inertia::render('OperatorSaas/RoleSaaS');
