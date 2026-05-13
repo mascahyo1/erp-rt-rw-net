@@ -34,7 +34,6 @@ class AdminCompany extends Authenticatable
     {
         return [
             'is_active' => 'boolean',
-            'password'   => 'hashed',
         ];
     }
 

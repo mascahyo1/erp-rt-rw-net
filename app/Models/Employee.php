@@ -39,7 +39,6 @@ class Employee extends Authenticatable
     {
         return [
             'is_active' => 'boolean',
-            'password'   => 'hashed',
         ];
     }
 

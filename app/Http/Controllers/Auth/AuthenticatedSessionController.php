@@ -46,8 +46,6 @@ class AuthenticatedSessionController extends Controller
 
         Auth::guard('web')->login($user, $request->boolean('remember'));
 
-        $request->session()->regenerate();
-
         return redirect()->route('operator-saas.dashboard');
     }
 

@@ -30,8 +30,6 @@ class EmployeeSessionController extends Controller
             ]);
         }
 
-        $request->session()->regenerate();
-
         return redirect()->route('employee.dashboard');
     }
 

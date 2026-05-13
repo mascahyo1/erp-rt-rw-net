@@ -30,8 +30,6 @@ class CustomerSessionController extends Controller
             ]);
         }
 
-        $request->session()->regenerate();
-
         return redirect()->route('customer.dashboard');
     }
 

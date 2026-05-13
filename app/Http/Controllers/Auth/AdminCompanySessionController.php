@@ -30,8 +30,6 @@ class AdminCompanySessionController extends Controller
             ]);
         }
 
-        $request->session()->regenerate();
-
         return redirect()->route('operator-perusahaan.dashboard');
     }
 
