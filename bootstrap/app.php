@@ -48,7 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             try {
-                $configs = \App\Models\SaasConfig::whereIn('key', ['company.email', 'company.phone'])
+                $configs = \App\Models\SaasConfig::whereIn('key', ['company.email', 'company.phone', 'contact.whatsapp'])
                     ->pluck('value', 'key');
             } catch (\Throwable) {
                 $configs = collect();
@@ -59,6 +59,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'contact' => [
                     'email' => $configs['company.email'] ?? 'support@erprtrw.net',
                     'phone' => $configs['company.phone'] ?? '+62 851-2345-6789',
+                    'whatsapp' => $configs['contact.whatsapp'] ?? '+62 812-3456-7890',
                 ],
             ])
                 ->toResponse($request)

@@ -65,6 +65,16 @@ defineProps({
 
             <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all group">
               <div class="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <i class="fab fa-whatsapp text-emerald-600 dark:text-emerald-400"></i>
+              </div>
+              <div>
+                <h3 class="font-semibold text-gray-900 dark:text-white">WhatsApp</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ contact.whatsapp }}</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4 p-5 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-md transition-all group">
+              <div class="w-12 h-12 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <i class="fas fa-envelope text-emerald-600 dark:text-emerald-400"></i>
               </div>
               <div>
@@ -89,8 +99,7 @@ defineProps({
               </div>
               <div>
                 <h3 class="font-semibold text-gray-900 dark:text-white">Jam Operasional</h3>
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ contact.hours_weekday }}</p>
-                <p class="text-sm text-gray-600 dark:text-gray-400">{{ contact.hours_saturday }}</p>
+                <p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">{{ contact.working_schedule }}</p>
               </div>
             </div>
           </div>

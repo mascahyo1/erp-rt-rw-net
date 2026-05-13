@@ -71,6 +71,10 @@ defineProps({
                   <i class="fas fa-phone text-orange-500"></i>
                   {{ contact.phone }}
                 </a>
+                <a :href="'https://wa.me/' + contact.whatsapp.replace(/[^0-9]/g, '')" target="_blank" class="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                  <i class="fab fa-whatsapp text-emerald-500"></i>
+                  {{ contact.whatsapp }}
+                </a>
               </div>
             </div>
           </div>

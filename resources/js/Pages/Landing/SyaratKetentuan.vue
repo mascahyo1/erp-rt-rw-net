@@ -5,7 +5,7 @@ import LandingLayout from '@/Layouts/LandingLayout.vue';
 defineOptions({ layout: LandingLayout });
 
 defineProps({
-  sections: Array,
+  emailTerms: String,
 });
 </script>
 
@@ -51,12 +51,119 @@ defineProps({
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="space-y-6 text-gray-700 dark:text-gray-300 lg:columns-2 lg:gap-8 [&>*]:break-inside-avoid">
 
-          <div v-for="(s, i) in sections" :key="i" class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
-              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">{{ i + 1 }}</span>
-              {{ s.title }}
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">1</span>
+              Penerimaan Persyaratan
             </h2>
-            <div v-html="s.body"></div>
+            <p class="text-sm leading-relaxed">
+              Dengan mengakses atau menggunakan layanan RT/RW Net ERP ("Layanan"), Anda setuju untuk terikat oleh Syarat dan Ketentuan ini.
+              Jika Anda tidak setuju dengan bagian mana pun dari syarat dan ketentuan ini, Anda tidak boleh menggunakan Layanan kami.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">2</span>
+              Definisi
+            </h2>
+            <ul class="list-disc list-inside text-sm leading-relaxed space-y-1">
+              <li><strong>"Platform"</strong> adalah aplikasi ERP RT/RW Net berbasis web.</li>
+              <li><strong>"Tenant"</strong> adalah perusahaan atau entitas yang menggunakan Platform.</li>
+              <li><strong>"Pengguna"</strong> adalah individu yang memiliki akun dan mengakses Platform.</li>
+              <li><strong>"Pelanggan"</strong> adalah pelanggan akhir dari Tenant (pelanggan RT/RW Net).</li>
+            </ul>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">3</span>
+              Akun dan Keamanan
+            </h2>
+            <p class="text-sm leading-relaxed mb-2">
+              Anda bertanggung jawab untuk menjaga kerahasiaan informasi login akun Anda dan untuk semua aktivitas yang terjadi di bawah akun Anda.
+              Anda setuju untuk segera memberi tahu kami tentang penggunaan tidak sah atas akun Anda atau pelanggaran keamanan lainnya.
+            </p>
+            <p class="text-sm leading-relaxed">
+              Platform tidak akan bertanggung jawab atas kerugian apa pun yang timbul dari penggunaan akun Anda yang tidak sah.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">4</span>
+              Penggunaan Layanan
+            </h2>
+            <p class="text-sm leading-relaxed">
+              Anda setuju untuk menggunakan Layanan hanya untuk tujuan yang sah dan sesuai dengan ketentuan yang berlaku.
+              Anda tidak diperbolehkan menyalahgunakan Layanan untuk aktivitas ilegal, penipuan, atau yang merugikan pihak lain.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">5</span>
+              Harga dan Pembayaran
+            </h2>
+            <p class="text-sm leading-relaxed">
+              Biaya berlangganan Layanan ditentukan berdasarkan paket yang dipilih. Semua pembayaran dilakukan di muka dan tidak dapat dikembalikan
+              kecuali ditentukan lain. Platform berhak mengubah harga dengan pemberitahuan 30 hari sebelumnya.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">6</span>
+              Kekayaan Intelektual
+            </h2>
+            <p class="text-sm leading-relaxed">
+              Semua konten, kode, desain, dan materi dalam Platform adalah milik Platform atau pemberi lisensinya dan dilindungi oleh
+              hukum kekayaan intelektual. Anda tidak diperbolehkan menyalin, memodifikasi, atau mendistribusikan konten Platform tanpa izin.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">7</span>
+              Batasan Tanggung Jawab
+            </h2>
+            <p class="text-sm leading-relaxed">
+              Platform disediakan "apa adanya" tanpa jaminan apa pun, tersurat maupun tersirat.
+              Kami tidak bertanggung jawab atas kerugian langsung, tidak langsung, insidental, atau konsekuensial yang timbul dari penggunaan Layanan.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">8</span>
+              Perubahan Ketentuan
+            </h2>
+            <p class="text-sm leading-relaxed">
+              Kami berhak mengubah Syarat dan Ketentuan ini kapan saja. Perubahan akan diumumkan melalui Platform atau email.
+              Penggunaan Layanan setelah perubahan berarti Anda menerima ketentuan yang diperbarui.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">9</span>
+              Hukum yang Berlaku
+            </h2>
+            <p class="text-sm leading-relaxed">
+              Syarat dan Ketentuan ini diatur oleh hukum Republik Indonesia. Setiap sengketa akan diselesaikan di pengadilan negeri
+              yang berwenang di wilayah Jakarta Selatan.
+            </p>
+          </div>
+
+          <div class="p-6 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 hover:border-sky-300 dark:hover:border-sky-700 transition-colors">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-3">
+              <span class="w-9 h-9 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center text-sky-600 dark:text-sky-400 text-sm font-bold shrink-0">10</span>
+              Kontak
+            </h2>
+            <p class="text-sm leading-relaxed">
+              Jika Anda memiliki pertanyaan tentang Syarat dan Ketentuan ini, silakan hubungi kami di
+              <a :href="'mailto:' + emailTerms" class="text-sky-600 dark:text-sky-400 underline">{{ emailTerms }}</a>.
+            </p>
           </div>
         </div>
       </div>
