@@ -17,6 +17,7 @@ const toast = useToast();
 // ── Search & Filter State (synced from props.filters) ──
 const searchInput = ref(props.filters?.search || '');
 const statusFilter = ref(props.filters?.status || '');
+const terhapusFilter = ref(props.filters?.terhapus || 'tidak');
 const sortField = ref(props.filters?.sort_field || '');
 const sortDir = ref(props.filters?.sort_dir || 'asc');
 const perPage = ref(props.filters?.per_page && !isNaN(props.filters.per_page) ? Number(props.filters.per_page) : 10);
@@ -26,10 +27,10 @@ function buildQuery(overrides = {}) {
   const params = { ...overrides };
   if (params.search === undefined) params.search = searchInput.value || undefined;
   if (params.status === undefined) params.status = statusFilter.value || undefined;
+  if (params.terhapus === undefined) params.terhapus = terhapusFilter.value || undefined;
   if (params.sort_field === undefined) params.sort_field = sortField.value || undefined;
   if (params.sort_dir === undefined) params.sort_dir = sortDir.value || undefined;
   if (params.per_page === undefined) params.per_page = perPage.value;
-  // Clean up undefined values
   Object.keys(params).forEach(k => {
     if (params[k] === undefined) delete params[k];
   });
@@ -45,17 +46,38 @@ function fetchData(overrides = {}) {
 }
 
 function applySearch() {
-  fetchData({ search: searchInput.value || undefined, page: 1 });
+  fetchData({
+    search: searchInput.value || undefined,
+    status: statusFilter.value || undefined,
+    terhapus: terhapusFilter.value,
+    page: 1,
+  });
 }
 
 function clearSearch() {
   searchInput.value = '';
-  fetchData({ search: undefined, page: 1 });
+  fetchData({
+    search: undefined,
+    status: statusFilter.value || undefined,
+    terhapus: terhapusFilter.value,
+    page: 1,
+  });
 }
 
-function applyStatusFilter(status) {
-  statusFilter.value = status;
-  fetchData({ status: status || undefined, page: 1 });
+function applyFilters() {
+  fetchData({
+    search: searchInput.value || undefined,
+    status: statusFilter.value || undefined,
+    terhapus: terhapusFilter.value,
+    page: 1,
+  });
+}
+
+function resetFilters() {
+  searchInput.value = '';
+  statusFilter.value = '';
+  terhapusFilter.value = 'tidak';
+  fetchData({ search: undefined, status: undefined, terhapus: 'tidak', page: 1 });
 }
 
 // ── Sort ──
@@ -163,7 +185,20 @@ function bulkSetStatus(status) {
       toast.success(`${count} admin berhasil ${status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan'}.`);
     },
     onError: () => {
-      toast.error('Gagal mengubah status admin. Silakan coba lagi.');
+      toast.error('Gagal menghapus admin. Silakan coba lagi.');
+    },
+  });
+}
+
+function restoreAdmin(admin) {
+  router.post(`/operator-saas/admin-saas/${admin.id}/restore`, {}, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.success(`Admin "${admin.nama}" berhasil dipulihkan.`);
+    },
+    onError: () => {
+      toast.error('Gagal memulihkan admin. Silakan coba lagi.');
     },
   });
 }
@@ -308,22 +343,45 @@ function confirmDelete() {
 
       <!-- Filters Bar -->
       <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <div class="relative w-full sm:w-72">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div>
-            <input v-model="searchInput" type="text" placeholder="Cari admin..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors" @keydown.enter="applySearch" />
-            <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
-              <button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors" title="Clear"><i class="fas fa-times text-xs"></i></button>
-              <button @click="applySearch" class="px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" title="Cari"><i class="fas fa-search text-xs"></i></button>
-            </div>
-          </div>
-          <div class="flex gap-1 flex-wrap">
-            <button v-for="s in [{v:'',l:'Semua'},{v:'Aktif',l:'Aktif'},{v:'Nonaktif',l:'Nonaktif'}]" :key="s.v" @click="applyStatusFilter(s.v)" :class="['px-3 py-2 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap', statusFilter === s.v ? (s.v === 'Aktif' ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400' : s.v === 'Nonaktif' ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-400' : 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-400') : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700']">
-              <i v-if="s.v === 'Aktif'" class="fas fa-check-circle mr-1"></i><i v-else-if="s.v === 'Nonaktif'" class="fas fa-times-circle mr-1"></i>{{ s.l }}
-            </button>
+        <div class="relative w-full sm:w-72">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div>
+          <input v-model="searchInput" type="text" placeholder="Cari admin..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors" @keydown.enter="applySearch" />
+          <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
+            <button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors" title="Clear"><i class="fas fa-times text-xs"></i></button>
+            <button @click="applySearch" class="px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" title="Cari"><i class="fas fa-search text-xs"></i></button>
           </div>
         </div>
-        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><span>{{ props.admins?.total || 0 }} data</span><button v-if="statusFilter || searchInput" @click="searchInput = ''; applyStatusFilter('')" class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline">Reset filter</button></div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><span>{{ props.admins?.total || 0 }} data</span><button v-if="statusFilter || terhapusFilter !== 'tidak' || searchInput" @click="resetFilters" class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline">Reset filter</button></div>
+      </div>
+
+      <!-- Filter Card -->
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="min-w-[160px]">
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Status</label>
+            <select
+              v-model="statusFilter"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
+            >
+              <option value="">Semua</option>
+              <option value="Aktif">Ya (Aktif)</option>
+              <option value="Nonaktif">Tidak (Nonaktif)</option>
+            </select>
+          </div>
+          <div class="min-w-[160px]">
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Terhapus</label>
+            <select
+              v-model="terhapusFilter"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
+            >
+              <option value="tidak">Tidak</option>
+              <option value="ya">Ya</option>
+            </select>
+          </div>
+          <button @click="applyFilters" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+            <i class="fas fa-filter mr-1.5"></i>Filter
+          </button>
+        </div>
       </div>
 
       <!-- Bulk Action Bar -->
@@ -379,17 +437,27 @@ function confirmDelete() {
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
               <tr v-if="adminsList.length === 0"><td colspan="6" class="px-4 py-16 text-center text-gray-500 dark:text-gray-400"><i class="fas fa-user-shield text-3xl mb-2 block opacity-40"></i>Tidak ada data admin SaaS.</td></tr>
-              <tr v-for="a in adminsList" :key="a.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                <td class="px-4 py-3"><input :checked="selectedIds.includes(a.id)" type="checkbox" @change="toggleSelect(a.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" /></td>
-                <td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shrink-0">{{ a.nama.charAt(0) }}</div><span class="font-medium text-gray-900 dark:text-white whitespace-nowrap">{{ a.nama }}</span></div></td>
-                <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ a.email }}</td>
-                <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ formatTelepon(a) }}</td>
-                <td class="px-4 py-3 whitespace-nowrap"><span :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(a.status)]">{{ a.status }}</span></td>
+              <tr v-for="a in adminsList" :key="a.id" :class="['transition-colors', a.dihapus ? 'bg-red-50/30 dark:bg-red-900/10 opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30']">
+                <td class="px-4 py-3">
+                  <input v-if="!a.dihapus" :checked="selectedIds.includes(a.id)" type="checkbox" @change="toggleSelect(a.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                </td>
+                <td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shrink-0">{{ a.nama.charAt(0) }}</div><span class="font-medium text-gray-900 dark:text-white whitespace-nowrap" :class="{ 'line-through': a.dihapus }">{{ a.nama }}</span></div></td>
+                <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap" :class="{ 'line-through': a.dihapus }">{{ a.email }}</td>
+                <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap" :class="{ 'line-through': a.dihapus }">{{ formatTelepon(a) }}</td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span v-if="a.dihapus" class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Terhapus</span>
+                  <span v-else :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(a.status)]">{{ a.status }}</span>
+                </td>
                 <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center justify-end gap-1">
                     <button @click="openDetail(a)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Detail"><i class="fas fa-eye text-sm"></i></button>
-                    <button @click="openEdit(a)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-sky-600 dark:hover:text-sky-400 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
-                    <button @click="openDelete(a)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Hapus"><i class="fas fa-trash-alt text-sm"></i></button>
+                    <template v-if="a.dihapus">
+                      <button @click="restoreAdmin(a)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" title="Pulihkan"><i class="fas fa-undo-alt text-sm"></i></button>
+                    </template>
+                    <template v-else>
+                      <button @click="openEdit(a)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-sky-600 dark:hover:text-sky-400 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                      <button @click="openDelete(a)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Hapus"><i class="fas fa-trash-alt text-sm"></i></button>
+                    </template>
                   </div>
                 </td>
               </tr>
@@ -422,28 +490,77 @@ function confirmDelete() {
       <Transition name="modal">
         <div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDetailModal = false">
           <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-eye mr-2 text-indigo-500"></i>Detail Admin</h3>
               <button @click="showDetailModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
-            <div class="px-6 py-5 space-y-4">
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-5 modal-scroll">
               <div class="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
                 <div class="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white text-2xl font-bold shrink-0">{{ selectedAdmin?.nama?.charAt(0) }}</div>
                 <div>
                   <h4 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedAdmin?.nama }}</h4>
-                  <span :class="['inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(selectedAdmin?.status)]">{{ selectedAdmin?.status }}</span>
+                  <span v-if="selectedAdmin?.dihapus" class="inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Terhapus</span>
+                  <span v-else :class="['inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(selectedAdmin?.status)]">{{ selectedAdmin?.status }}</span>
                 </div>
               </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email</label><p class="text-sm text-gray-900 dark:text-white mt-1">{{ selectedAdmin?.email }}</p></div>
-                <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kode Negara</label><p class="text-sm text-gray-900 dark:text-white mt-1">{{ selectedAdmin?.kode_negara }}</p></div>
-                <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">No. Telepon</label><p class="text-sm text-gray-900 dark:text-white mt-1">{{ selectedAdmin?.no_telp }}</p></div>
-                <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal Dibuat</label><p class="text-sm text-gray-900 dark:text-white mt-1">{{ selectedAdmin?.created_at }}</p></div>
+
+              <!-- Section: Info Dasar -->
+              <div>
+                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Informasi Akun</h5>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Email</label><p class="text-sm text-gray-900 dark:text-white mt-0.5">{{ selectedAdmin?.email }}</p></div>
+                  <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Kode Negara</label><p class="text-sm text-gray-900 dark:text-white mt-0.5">{{ selectedAdmin?.kode_negara }}</p></div>
+                  <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400">No. Telepon</label><p class="text-sm text-gray-900 dark:text-white mt-0.5">{{ selectedAdmin?.no_telp }}</p></div>
+                </div>
+              </div>
+
+              <!-- Section: Riwayat -->
+              <div>
+                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Riwayat</h5>
+                <div class="space-y-2.5">
+                  <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-plus text-emerald-600 dark:text-emerald-400 text-xs"></i></div>
+                    <div>
+                      <p class="text-sm text-gray-900 dark:text-white">Dibuat</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedAdmin?.created_at }}</p>
+                      <p v-if="selectedAdmin?.created_by" class="text-xs text-gray-400 dark:text-gray-500">oleh {{ selectedAdmin?.created_by }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-pen text-sky-600 dark:text-sky-400 text-xs"></i></div>
+                    <div>
+                      <p class="text-sm text-gray-900 dark:text-white">Terakhir diperbarui</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedAdmin?.updated_at }}</p>
+                      <p v-if="selectedAdmin?.updated_by" class="text-xs text-gray-400 dark:text-gray-500">oleh {{ selectedAdmin?.updated_by }}</p>
+                    </div>
+                  </div>
+                  <template v-if="selectedAdmin?.dihapus">
+                    <div class="flex items-start gap-3">
+                      <div class="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-trash-alt text-red-600 dark:text-red-400 text-xs"></i></div>
+                      <div>
+                        <p class="text-sm text-gray-900 dark:text-white">Dihapus</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedAdmin?.deleted_at }}</p>
+                        <p v-if="selectedAdmin?.deleted_by" class="text-xs text-gray-400 dark:text-gray-500">oleh {{ selectedAdmin?.deleted_by }}</p>
+                      </div>
+                    </div>
+                  </template>
+                  <template v-if="selectedAdmin?.restored_at">
+                    <div class="flex items-start gap-3">
+                      <div class="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-undo-alt text-emerald-600 dark:text-emerald-400 text-xs"></i></div>
+                      <div>
+                        <p class="text-sm text-gray-900 dark:text-white">Dipulihkan</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedAdmin?.restored_at }}</p>
+                        <p v-if="selectedAdmin?.restored_by" class="text-xs text-gray-400 dark:text-gray-500">oleh {{ selectedAdmin?.restored_by }}</p>
+                      </div>
+                    </div>
+                  </template>
+                </div>
               </div>
             </div>
-            <div class="flex justify-end gap-2 px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-              <button @click="showDetailModal = false; openEdit(selectedAdmin)" class="px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i class="fas fa-edit mr-1.5"></i> Edit</button>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button v-if="!selectedAdmin?.dihapus" @click="showDetailModal = false; openEdit(selectedAdmin)" class="px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i class="fas fa-edit mr-1.5"></i> Edit</button>
+              <button v-if="selectedAdmin?.dihapus" @click="showDetailModal = false; restoreAdmin(selectedAdmin)" class="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"><i class="fas fa-undo-alt mr-1.5"></i> Pulihkan</button>
               <button @click="showDetailModal = false" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Tutup</button>
             </div>
           </div>
@@ -456,12 +573,12 @@ function confirmDelete() {
       <Transition name="modal">
         <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false">
           <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-2xl">
+          <form @submit.prevent="saveCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-plus text-emerald-500 mr-2"></i>Tambah Admin SaaS</h3>
-              <button @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
+              <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
-            <form class="px-6 py-5 space-y-4" @submit.prevent="saveCreate">
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama <span class="text-red-500">*</span></label>
                 <input v-model="createForm.nama" type="text" placeholder="Nama lengkap" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.nama ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
@@ -494,14 +611,14 @@ function confirmDelete() {
                   <option value="Nonaktif">Nonaktif</option>
                 </select>
               </div>
-              <div class="flex justify-end gap-2 pt-2">
-                <button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
-                <button type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
-                  <i class="fas fa-save mr-1.5"></i>Simpan
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+              <button type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
+                <i class="fas fa-save mr-1.5"></i>Simpan
+              </button>
+            </div>
+          </form>
         </div>
       </Transition>
     </Teleport>
@@ -511,12 +628,12 @@ function confirmDelete() {
       <Transition name="modal">
         <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showEditModal = false">
           <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-2xl">
+          <form @submit.prevent="saveEdit" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-edit text-sky-500 mr-2"></i>Edit Admin SaaS</h3>
-              <button @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
+              <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
-            <form class="px-6 py-5 space-y-4" @submit.prevent="saveEdit">
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama <span class="text-red-500">*</span></label>
                 <input v-model="editForm.nama" type="text" placeholder="Nama lengkap" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.nama ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
@@ -549,14 +666,14 @@ function confirmDelete() {
                   <option value="Nonaktif">Nonaktif</option>
                 </select>
               </div>
-              <div class="flex justify-end gap-2 pt-2">
-                <button type="button" @click="showEditModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
-                <button type="submit" :disabled="editForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
-                  <i class="fas fa-check mr-1.5"></i>Update
-                </button>
-              </div>
-            </form>
-          </div>
+            </div>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button type="button" @click="showEditModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+              <button type="submit" :disabled="editForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
+                <i class="fas fa-check mr-1.5"></i>Update
+              </button>
+            </div>
+          </form>
         </div>
       </Transition>
     </Teleport>
@@ -572,7 +689,7 @@ function confirmDelete() {
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hapus Admin?</h3>
               <p class="text-sm text-gray-500 dark:text-gray-400">Anda akan menghapus <strong class="text-gray-700 dark:text-gray-300">{{ selectedAdmin?.nama }}</strong>. Data yang dihapus tidak dapat dikembalikan.</p>
             </div>
-            <div class="flex justify-center gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex justify-center gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
               <button @click="showDeleteModal = false" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
               <button @click="confirmDelete" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"><i class="fas fa-trash-alt mr-1.5"></i> Hapus</button>
             </div>
@@ -589,4 +706,12 @@ function confirmDelete() {
 .modal-enter-from, .modal-leave-to { opacity: 0; }
 .modal-enter-from > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
 .modal-leave-to > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
+
+.modal-scroll::-webkit-scrollbar { width: 6px; }
+.modal-scroll::-webkit-scrollbar-track { background: transparent; }
+.modal-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+.modal-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+:global(.dark .modal-scroll)::-webkit-scrollbar-thumb { background: #4b5563; }
+:global(.dark .modal-scroll)::-webkit-scrollbar-thumb:hover { background: #6b7280; }
 </style>

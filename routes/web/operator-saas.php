@@ -49,6 +49,8 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
         ->name('operator-saas.admin-saas.update');
     Route::delete('/operator-saas/admin-saas/{adminSaas}', [AdminSaasController::class, 'destroy'])
         ->name('operator-saas.admin-saas.destroy');
+    Route::post('/operator-saas/admin-saas/{id}/restore', [AdminSaasController::class, 'restore'])
+        ->name('operator-saas.admin-saas.restore');
     Route::post('/operator-saas/admin-saas/bulk-delete', [AdminSaasController::class, 'bulkDelete'])
         ->name('operator-saas.admin-saas.bulk-delete');
     Route::post('/operator-saas/admin-saas/bulk-status', [AdminSaasController::class, 'bulkToggleStatus'])

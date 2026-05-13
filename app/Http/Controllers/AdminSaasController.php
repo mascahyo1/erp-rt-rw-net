@@ -14,7 +14,11 @@ class AdminSaasController extends Controller
 {
     public function index(Request $request): Response
     {
-        $query = AdminSaas::query();
+        $query = AdminSaas::query()->with(['createdBy', 'updatedBy', 'deletedBy', 'restoredBy']);
+
+        if ($request->input('terhapus') === 'ya') {
+            $query->onlyTrashed();
+        }
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -24,12 +28,12 @@ class AdminSaasController extends Controller
         }
 
         if ($status = $request->input('status')) {
-            $query->where('is_active', $status === 'Aktif');
+            $query->where('is_active', $status === 'Aktif' || $status === 'aktif');
         }
 
         if ($sortField = $request->input('sort_field')) {
             $sortDir = $request->input('sort_dir', 'asc');
-            $allowedSorts = ['name', 'email', 'is_active', 'created_at'];
+            $allowedSorts = ['name', 'email', 'is_active', 'created_at', 'deleted_at'];
             if (in_array($sortField, $allowedSorts)) {
                 $query->orderBy($sortField, $sortDir);
             }
@@ -47,13 +51,23 @@ class AdminSaasController extends Controller
                 'kode_negara' => $admin->phone_country_code,
                 'no_telp' => $admin->phone_number,
                 'status' => $admin->is_active ? 'Aktif' : 'Nonaktif',
-                'created_at' => $admin->created_at->format('Y-m-d'),
+                'is_active' => $admin->is_active,
+                'deleted_at_raw' => $admin->deleted_at?->toISOString(),
+                'deleted_at' => $admin->deleted_at?->format('Y-m-d H:i'),
+                'dihapus' => $admin->trashed(),
+                'created_at' => $admin->created_at->format('Y-m-d H:i'),
+                'updated_at' => $admin->updated_at->format('Y-m-d H:i'),
+                'restored_at' => $admin->restored_at?->format('Y-m-d H:i'),
+                'created_by' => $admin->createdBy?->name,
+                'updated_by' => $admin->updatedBy?->name,
+                'deleted_by' => $admin->deletedBy?->name,
+                'restored_by' => $admin->restoredBy?->name,
             ];
         });
 
         return Inertia::render('OperatorSaas/AdminSaaS', [
             'admins' => $admins,
-            'filters' => $request->only(['search', 'status', 'sort_field', 'sort_dir', 'per_page']),
+            'filters' => $request->only(['search', 'status', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
         ]);
     }
 
@@ -119,6 +133,14 @@ class AdminSaasController extends Controller
         $adminSaas->delete();
 
         return back()->with('success', 'Admin SaaS berhasil dihapus.');
+    }
+
+    public function restore(string $id): RedirectResponse
+    {
+        $admin = AdminSaas::withTrashed()->findOrFail($id);
+        $admin->restore();
+
+        return back()->with('success', 'Admin SaaS berhasil dipulihkan.');
     }
 
     public function bulkDelete(Request $request): RedirectResponse

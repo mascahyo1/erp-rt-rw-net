@@ -35,6 +35,10 @@ class AdminSaas extends Authenticatable
         return [
             'is_active' => 'boolean',
             'password' => 'hashed',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'deleted_at' => 'datetime',
+            'restored_at' => 'datetime',
         ];
     }
 }
