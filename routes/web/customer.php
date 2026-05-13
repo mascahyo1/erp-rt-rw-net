@@ -9,7 +9,15 @@ Route::get('/customer/login-register', function () {
 
 Route::middleware('auth:customer')->group(function () {
     Route::get('/customer/dashboard', function () {
-        return Inertia::render('Customer/Dashboard');
+        $customer = auth()->user();
+
+        return Inertia::render('Customer/Dashboard', [
+            'stats' => [
+                'paket_aktif' => \App\Models\CustInternet::where('customer_id', $customer->id)->where('internet_status', 'active')->count(),
+                'tagihan_bulan_ini' => \App\Models\CustInternetInvc::whereHas('custInternet', fn($q) => $q->where('customer_id', $customer->id))->whereMonth('created_at', now()->month)->count(),
+                'riwayat_pembayaran' => \App\Models\CustInternetPayment::whereHas('custInternet', fn($q) => $q->where('customer_id', $customer->id))->count(),
+            ],
+        ]);
     })->name('customer.dashboard');
 
     Route::get('/customer/profil-saya', function () {

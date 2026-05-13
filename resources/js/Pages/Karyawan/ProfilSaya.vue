@@ -1,15 +1,33 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import KaryawanLayout from '@/Layouts/KaryawanLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
+
 defineOptions({ layout: KaryawanLayout });
-const karyawan = ref({ nama: 'Ahmad Fauzi', email: 'ahmad@netsejahtera.id', alamat: 'Jl. Merdeka No. 10', kode_negara: '+62', no_telp: '81234567890', jabatan: 'Kolektor', perusahaan: 'PT Net Sejahtera' });
-const editMode = ref(false); const form = ref({ ...karyawan.value }); const formErrors = ref({}); const saved = ref(false);
+
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
+
+const karyawan = computed(() => ({
+  nama: user.value?.name ?? 'Karyawan',
+  email: user.value?.email ?? '',
+  alamat: user.value?.address ?? '',
+  kode_negara: user.value?.phone_country_code ?? '+62',
+  no_telp: user.value?.phone_number ?? '',
+  jabatan: user.value?.position ?? 'Karyawan',
+  perusahaan: user.value?.company?.name ?? 'Perusahaan',
+}));
+
+const editMode = ref(false);
+const form = ref({ ...karyawan.value });
+const formErrors = ref({});
+const saved = ref(false);
 const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
+
 function enterEdit() { form.value = { ...karyawan.value }; formErrors.value = {}; saved.value = false; editMode.value = true; }
 function cancelEdit() { editMode.value = false; }
 function validateForm() { const e = {}; if (!form.value.nama.trim()) e.nama = 'Nama wajib diisi'; formErrors.value = e; return Object.keys(e).length === 0; }
-function saveEdit() { if (!validateForm()) return; karyawan.value = { ...form.value }; editMode.value = false; saved.value = true; setTimeout(() => saved.value = false, 3000); }
+function saveEdit() { if (!validateForm()) return; editMode.value = false; saved.value = true; setTimeout(() => saved.value = false, 3000); }
 </script>
 <template>
   <div><Head title="Profil Saya | Karyawan" /><slot name="header">Profil Saya</slot>

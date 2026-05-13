@@ -1,18 +1,38 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+
 defineOptions({ layout: CustomerLayout });
 
-const customer = ref({ nama: 'Pak Sugeng', email: 'sugeng@email.com', alamat: 'Jl. Mawar No. 5, RT 02/RW 01', kode_negara: '+62', no_telp: '81234567890', perusahaan: 'PT Net Sejahtera', paket: 'Silver 20Mbps', status: 'Aktif', created_at: '2025-01-20' });
-const editMode = ref(false); const form = ref({ ...customer.value }); const formErrors = ref({}); const saved = ref(false);
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
+
+const customer = computed(() => ({
+  nama: user.value?.name ?? 'Pelanggan',
+  email: user.value?.email ?? '',
+  alamat: user.value?.address ?? '',
+  kode_negara: user.value?.phone_country_code ?? '+62',
+  no_telp: user.value?.phone_number ?? '',
+  perusahaan: user.value?.company?.name ?? 'Perusahaan',
+  paket: user.value?.package_name ?? '—',
+  status: user.value?.status ?? 'Aktif',
+  created_at: user.value?.created_at ?? '—',
+}));
+
+const editMode = ref(false);
+const form = ref({ ...customer.value });
+const formErrors = ref({});
+const saved = ref(false);
 const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
-const passwordForm = ref({ password_lama: '', password_baru: '', password_konfirmasi: '' }); const passwordErrors = ref({}); const passwordSaved = ref(false);
+const passwordForm = ref({ password_lama: '', password_baru: '', password_konfirmasi: '' });
+const passwordErrors = ref({});
+const passwordSaved = ref(false);
 
 function enterEdit() { form.value = { ...customer.value }; formErrors.value = {}; saved.value = false; editMode.value = true; }
 function cancelEdit() { editMode.value = false; }
 function validateForm() { const e = {}; if (!form.value.nama.trim()) e.nama = 'Nama wajib diisi'; if (!form.value.email.trim()) e.email = 'Email wajib diisi'; formErrors.value = e; return Object.keys(e).length === 0; }
-function saveEdit() { if (!validateForm()) return; customer.value = { ...form.value }; editMode.value = false; saved.value = true; setTimeout(() => saved.value = false, 3000); }
+function saveEdit() { if (!validateForm()) return; editMode.value = false; saved.value = true; setTimeout(() => saved.value = false, 3000); }
 function statusBadge(s) { return s === 'Aktif' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; }
 
 function ubahPassword() { const e = {}; if (!passwordForm.value.password_lama.trim()) e.password_lama = 'Password lama wajib diisi'; if (!passwordForm.value.password_baru.trim()) e.password_baru = 'Password baru wajib diisi'; else if (passwordForm.value.password_baru.length < 6) e.password_baru = 'Minimal 6 karakter'; if (passwordForm.value.password_baru !== passwordForm.value.password_konfirmasi) e.password_konfirmasi = 'Konfirmasi password tidak cocok'; passwordErrors.value = e; if (Object.keys(e).length > 0) return; passwordForm.value = { password_lama: '', password_baru: '', password_konfirmasi: '' }; passwordSaved.value = true; setTimeout(() => passwordSaved.value = false, 3000); }

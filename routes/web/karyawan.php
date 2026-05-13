@@ -10,7 +10,16 @@ Route::post('/login-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionContro
 
 Route::middleware('auth:employee')->group(function () {
     Route::get('/karyawan/dashboard', function () {
-        return Inertia::render('Karyawan/Dashboard');
+        $employee = auth()->user();
+        $companyId = $employee->company_id;
+
+        return Inertia::render('Karyawan/Dashboard', [
+            'stats' => [
+                'customer_ditagih' => \App\Models\CustInternet::whereHas('customer', fn($q) => $q->where('company_id', $companyId))->where('internet_status', 'active')->count(),
+                'tagihan_bulan_ini' => \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))->whereMonth('created_at', now()->month)->count(),
+                'pembayaran_collection' => \App\Models\CustInternetPayment::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))->count(),
+            ],
+        ]);
     })->name('employee.dashboard');
 
     Route::get('/karyawan/profil-saya', function () {

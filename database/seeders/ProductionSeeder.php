@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\AdminCompany;
 use App\Models\AdminSaas;
 use App\Models\Company;
 use App\Models\SaasConfig;
@@ -37,8 +38,10 @@ class ProductionSeeder extends Seeder
             ],
         ]);
 
+        $companyId = Str::uuid();
+
         Company::query()->insert([
-            'id' => Str::uuid(),
+            'id' => $companyId,
             'name' => 'PT Net Sejahtera',
             'email' => 'info@netsejahtera.id',
             'phone_country_code' => '+62',
@@ -127,6 +130,21 @@ class ProductionSeeder extends Seeder
                 'type' => 'text',
                 'value' => 'privacy@rtrwnet.id',
                 'descripton' => 'Email kontak halaman Kebijakan Privasi',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
+
+        AdminCompany::query()->insert([
+            [
+                'id' => Str::uuid(),
+                'company_id' => $companyId,
+                'name' => 'Admin Perusahaan',
+                'email' => 'admin@netsejahtera.id',
+                'phone_country_code' => '+62',
+                'phone_number' => '82112345678',
+                'is_active' => true,
+                'password' => bcrypt('P@ssw0rd!2026'),
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

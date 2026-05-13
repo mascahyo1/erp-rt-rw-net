@@ -1,44 +1,48 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 
 defineOptions({ layout: OperatorPerusahaanLayout });
+
+const page = usePage();
+const user = computed(() => page.props.auth?.user);
+const userName = computed(() => user.value?.name ?? 'Admin Perusahaan');
+const userEmail = computed(() => user.value?.email ?? 'admin@perusahaan.com');
+const userPhone = computed(() => {
+  const code = user.value?.phone_country_code ?? '+62';
+  const number = user.value?.phone_number ?? '';
+  return number ? `${code} ${number}` : code;
+});
+const companyName = computed(() => user.value?.company?.name ?? 'Perusahaan');
+const userRole = computed(() => user.value?.role ?? 'Admin');
 
 const editMode = ref(false);
 const showPassword = ref(false);
 const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
 
-const form = ref({
-  nama: 'Admin Perusahaan',
-  email: 'admin@netsejahtera.id',
-  kode_negara: '+62',
-  no_telp: '081234567890',
+const defaultForm = () => ({
+  nama: userName.value,
+  email: userEmail.value,
+  kode_negara: user.value?.phone_country_code ?? '+62',
+  no_telp: user.value?.phone_number ?? '',
   password_lama: '',
   password_baru: '',
   password_konfirmasi: '',
 });
+
+const form = ref(defaultForm());
 const errors = ref({});
 
-const initialForm = () => ({
-  nama: 'Admin Perusahaan',
-  email: 'admin@netsejahtera.id',
-  kode_negara: '+62',
-  no_telp: '081234567890',
-  password_lama: '',
-  password_baru: '',
-  password_konfirmasi: '',
-});
-
 function startEdit() {
-  form.value = initialForm();
+  form.value = defaultForm();
   errors.value = {};
   editMode.value = true;
 }
 
 function cancelEdit() {
   editMode.value = false;
-  form.value = initialForm();
+  form.value = defaultForm();
   errors.value = {};
 }
 
@@ -78,11 +82,11 @@ function saveProfile() {
         <div class="flex items-center justify-between mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
           <div class="flex items-center gap-4">
             <div class="w-20 h-20 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-3xl font-bold shrink-0">
-              {{ editMode ? form.nama.charAt(0) : 'A' }}
+              {{ editMode ? form.nama.charAt(0) : userName.charAt(0) }}
             </div>
             <div>
-              <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ editMode ? form.nama : 'Admin Perusahaan' }}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ editMode ? form.email : 'admin@netsejahtera.id' }}</p>
+              <h3 class="text-xl font-bold text-gray-900 dark:text-white">{{ editMode ? form.nama : userName }}</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ editMode ? form.email : userEmail }}</p>
             </div>
           </div>
           <button v-if="!editMode" @click="startEdit" class="px-4 py-2 text-sm font-medium rounded-lg bg-sky-600 text-white hover:bg-sky-700 transition-colors shadow-sm">
@@ -93,23 +97,23 @@ function saveProfile() {
         <div v-if="!editMode" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Nama Lengkap</label>
-            <p class="text-sm text-gray-900 dark:text-white">Admin Perusahaan</p>
+            <p class="text-sm text-gray-900 dark:text-white">{{ userName }}</p>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Email</label>
-            <p class="text-sm text-gray-900 dark:text-white">admin@netsejahtera.id</p>
+            <p class="text-sm text-gray-900 dark:text-white">{{ userEmail }}</p>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Perusahaan</label>
-            <p class="text-sm text-gray-900 dark:text-white">PT Net Sejahtera</p>
+            <p class="text-sm text-gray-900 dark:text-white">{{ companyName }}</p>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Role</label>
-            <p class="text-sm text-gray-900 dark:text-white">Super Admin</p>
+            <p class="text-sm text-gray-900 dark:text-white">{{ userRole }}</p>
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">No. Telepon</label>
-            <p class="text-sm text-gray-900 dark:text-white">+62 81234567890</p>
+            <p class="text-sm text-gray-900 dark:text-white">{{ userPhone }}</p>
           </div>
         </div>
 
