@@ -706,12 +706,14 @@ function confirmDelete() {
 .modal-enter-from, .modal-leave-to { opacity: 0; }
 .modal-enter-from > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
 .modal-leave-to > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
+</style>
 
+<style>
 .modal-scroll::-webkit-scrollbar { width: 6px; }
 .modal-scroll::-webkit-scrollbar-track { background: transparent; }
 .modal-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
 .modal-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
 
-:global(.dark .modal-scroll)::-webkit-scrollbar-thumb { background: #4b5563; }
-:global(.dark .modal-scroll)::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+.dark .modal-scroll::-webkit-scrollbar-thumb { background: #374151; }
+.dark .modal-scroll::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 </style>
