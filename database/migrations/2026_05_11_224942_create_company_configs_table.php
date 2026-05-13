@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('company_id')->constrained('companies')->restrictOnDelete();
             $table->string('key');
-            $table->enum('type', ['text', 'description']);
+            $table->enum('type', ['text', 'file']);
             $table->text('value');
             $table->text('descripton')->nullable();
             $table->timestamps();

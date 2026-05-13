@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('saas_configs', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('key');
-            $table->enum('type', ['text', 'description']);
+            $table->enum('type', ['text', 'file']);
             $table->text('value');
             $table->text('descripton')->nullable();
             $table->timestamps();
