@@ -1,140 +1,384 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import OperatorSaasLayout from '@/Layouts/OperatorSaasLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { useToast } from '@/Composables/useToast';
+import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: OperatorSaasLayout });
 
-const permissionGroups = [
-  {
-    module: 'Admin Perusahaan',
-    permissions: [
-      { key: 'admin-perusahaan.list', label: 'Lihat Daftar' }, { key: 'admin-perusahaan.tambah', label: 'Tambah' }, { key: 'admin-perusahaan.ubah', label: 'Ubah' },
-      { key: 'admin-perusahaan.detail', label: 'Detail' }, { key: 'admin-perusahaan.hapus', label: 'Hapus' }, { key: 'admin-perusahaan.import', label: 'Import' }, { key: 'admin-perusahaan.export', label: 'Export' },
-    ]
-  },
-  {
-    module: 'Perusahaan',
-    permissions: [
-      { key: 'perusahaan.list', label: 'Lihat Daftar' }, { key: 'perusahaan.tambah', label: 'Tambah' }, { key: 'perusahaan.ubah', label: 'Ubah' },
-      { key: 'perusahaan.detail', label: 'Detail' }, { key: 'perusahaan.hapus', label: 'Hapus' }, { key: 'perusahaan.import', label: 'Import' }, { key: 'perusahaan.export', label: 'Export' },
-    ]
-  },
-  {
-    module: 'Role Perusahaan',
-    permissions: [
-      { key: 'role-perusahaan.list', label: 'Lihat Daftar' }, { key: 'role-perusahaan.tambah', label: 'Tambah' }, { key: 'role-perusahaan.ubah', label: 'Ubah' },
-      { key: 'role-perusahaan.detail', label: 'Detail' }, { key: 'role-perusahaan.hapus', label: 'Hapus' }, { key: 'role-perusahaan.import', label: 'Import' }, { key: 'role-perusahaan.export', label: 'Export' },
-    ]
-  },
-  {
-    module: 'Role Admin Perusahaan',
-    permissions: [
-      { key: 'role-admin-perusahaan.list', label: 'Lihat Daftar' }, { key: 'role-admin-perusahaan.tambah', label: 'Tambah' }, { key: 'role-admin-perusahaan.ubah', label: 'Ubah' },
-      { key: 'role-admin-perusahaan.detail', label: 'Detail' }, { key: 'role-admin-perusahaan.hapus', label: 'Hapus' }, { key: 'role-admin-perusahaan.import', label: 'Import' }, { key: 'role-admin-perusahaan.export', label: 'Export' },
-    ]
-  },
-  {
-    module: 'Konfigurasi',
-    permissions: [
-      { key: 'konfigurasi.list', label: 'Lihat Daftar' }, { key: 'konfigurasi.tambah', label: 'Tambah' }, { key: 'konfigurasi.ubah', label: 'Ubah' },
-      { key: 'konfigurasi.detail', label: 'Detail' }, { key: 'konfigurasi.hapus', label: 'Hapus' }, { key: 'konfigurasi.import', label: 'Import' }, { key: 'konfigurasi.export', label: 'Export' },
-    ]
-  },
-  {
-    module: 'Role SaaS',
-    permissions: [
-      { key: 'role-saas.list', label: 'Lihat Daftar' }, { key: 'role-saas.tambah', label: 'Tambah' }, { key: 'role-saas.ubah', label: 'Ubah' },
-      { key: 'role-saas.detail', label: 'Detail' }, { key: 'role-saas.hapus', label: 'Hapus' }, { key: 'role-saas.import', label: 'Import' }, { key: 'role-saas.export', label: 'Export' },
-    ]
-  },
-  {
-    module: 'Admin SaaS',
-    permissions: [
-      { key: 'admin-saas.list', label: 'Lihat Daftar' }, { key: 'admin-saas.tambah', label: 'Tambah' }, { key: 'admin-saas.ubah', label: 'Ubah' },
-      { key: 'admin-saas.detail', label: 'Detail' }, { key: 'admin-saas.hapus', label: 'Hapus' }, { key: 'admin-saas.import', label: 'Import' }, { key: 'admin-saas.export', label: 'Export' },
-    ]
-  },
-  {
-    module: 'Admin Role SaaS',
-    permissions: [
-      { key: 'admin-role-saas.list', label: 'Lihat Daftar' }, { key: 'admin-role-saas.tambah', label: 'Tambah' }, { key: 'admin-role-saas.ubah', label: 'Ubah' },
-      { key: 'admin-role-saas.detail', label: 'Detail' }, { key: 'admin-role-saas.hapus', label: 'Hapus' }, { key: 'admin-role-saas.import', label: 'Import' }, { key: 'admin-role-saas.export', label: 'Export' },
-    ]
-  },
-];
+const props = defineProps({
+  roles: Object,
+  permissions: Array,
+  filters: Object,
+});
 
-const allPermissionKeys = computed(() => permissionGroups.flatMap(g => g.permissions.map(p => p.key)));
+const toast = useToast();
 
-const roles = ref([
-  { id: 1, nama_role: 'Super Admin SaaS', deskripsi: 'Akses penuh ke seluruh platform', status: 'Aktif', permissions: [...allPermissionKeys.value], created_at: '2025-01-01' },
-  { id: 2, nama_role: 'Admin Support', deskripsi: 'Kelola perusahaan dan admin', status: 'Aktif', permissions: ['admin-perusahaan.list','admin-perusahaan.tambah','admin-perusahaan.ubah','admin-perusahaan.detail','admin-perusahaan.hapus','perusahaan.list','perusahaan.tambah','perusahaan.ubah','perusahaan.detail','perusahaan.hapus','role-perusahaan.list','role-admin-perusahaan.list','konfigurasi.list'], created_at: '2025-02-01' },
-  { id: 3, nama_role: 'Operator', deskripsi: 'Hanya lihat dan export data', status: 'Aktif', permissions: ['admin-perusahaan.list','admin-perusahaan.detail','admin-perusahaan.export','perusahaan.list','perusahaan.detail','perusahaan.export','role-perusahaan.list','role-admin-perusahaan.list','konfigurasi.list','role-saas.list','admin-saas.list','admin-role-saas.list'], created_at: '2025-03-01' },
-  { id: 4, nama_role: 'Auditor', deskripsi: 'Melihat semua laporan dan log', status: 'Nonaktif', permissions: ['admin-perusahaan.list','perusahaan.list','role-perusahaan.list','role-admin-perusahaan.list','konfigurasi.list','role-saas.list','admin-saas.list','admin-role-saas.list'], created_at: '2025-04-01' },
-]);
-
-const searchInput = ref('');
-const search = ref('');
-const statusFilter = ref('');
-const currentPage = ref(1);
-const perPage = ref(5);
+const searchInput = ref(props.filters?.search || '');
+const statusFilter = ref(props.filters?.status || '');
+const terhapusFilter = ref(props.filters?.terhapus || 'tidak');
+const sortField = ref(props.filters?.sort_field || '');
+const sortDir = ref(props.filters?.sort_dir || 'asc');
+const perPage = ref(props.filters?.per_page && !isNaN(props.filters.per_page) ? Number(props.filters.per_page) : 10);
 const perPageOptions = [5, 10, 25, 50, 100];
+
+function buildQuery(overrides = {}) {
+  const params = { ...overrides };
+  if (params.search === undefined) params.search = searchInput.value || undefined;
+  if (params.status === undefined) params.status = statusFilter.value || undefined;
+  if (params.terhapus === undefined) params.terhapus = terhapusFilter.value || undefined;
+  if (params.sort_field === undefined) params.sort_field = sortField.value || undefined;
+  if (params.sort_dir === undefined) params.sort_dir = sortDir.value || undefined;
+  if (params.per_page === undefined) params.per_page = perPage.value;
+  Object.keys(params).forEach(k => {
+    if (params[k] === undefined) delete params[k];
+  });
+  return params;
+}
+
+function fetchData(overrides = {}) {
+  router.get('/operator-saas/role-saas', buildQuery(overrides), {
+    preserveState: true,
+    preserveScroll: true,
+    replace: true,
+  });
+}
+
+function applySearch() {
+  fetchData({
+    search: searchInput.value || undefined,
+    status: statusFilter.value || undefined,
+    terhapus: terhapusFilter.value,
+    page: 1,
+  });
+}
+
+function clearSearch() {
+  searchInput.value = '';
+  fetchData({
+    search: undefined,
+    status: statusFilter.value || undefined,
+    terhapus: terhapusFilter.value,
+    page: 1,
+  });
+}
+
+function applyFilters() {
+  fetchData({
+    search: searchInput.value || undefined,
+    status: statusFilter.value || undefined,
+    terhapus: terhapusFilter.value,
+    page: 1,
+  });
+}
+
+function resetFilters() {
+  searchInput.value = '';
+  statusFilter.value = '';
+  terhapusFilter.value = 'tidak';
+  fetchData({ search: undefined, status: undefined, terhapus: 'tidak', page: 1 });
+}
+
+function sort(field) {
+  if (sortField.value === field) {
+    if (sortDir.value === 'asc') {
+      sortDir.value = 'desc';
+    } else {
+      sortField.value = '';
+      sortDir.value = 'asc';
+    }
+  } else {
+    sortField.value = field;
+    sortDir.value = 'asc';
+  }
+  fetchData({ sort_field: sortField.value || undefined, sort_dir: sortDir.value, page: 1 });
+}
+
+function sortIcon(field) {
+  if (sortField.value !== field) return 'fa-sort';
+  return sortDir.value === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+}
+
+function sortOrder(field) {
+  return sortField.value === field ? 1 : null;
+}
+
+const currentPage = computed(() => props.roles?.current_page || 1);
+const totalPages = computed(() => props.roles?.last_page || 1);
+
+function changePerPage(n) {
+  perPage.value = n;
+  fetchData({ per_page: n, page: 1 });
+}
+
+function goToPage(page) {
+  fetchData({ page: Math.max(1, Math.min(page, totalPages.value)) });
+}
+
+const visiblePages = computed(() => {
+  const pages = [];
+  const total = totalPages.value;
+  const current = currentPage.value;
+  let start = Math.max(1, current - 2);
+  let end = Math.min(total, current + 2);
+  if (end - start < 4) {
+    if (start === 1) end = Math.min(total, start + 4);
+    else start = Math.max(1, end - 4);
+  }
+  for (let i = start; i <= end; i++) pages.push(i);
+  return pages;
+});
+
 const selectedIds = ref([]);
 const selectAll = ref(false);
-const sortFields = ref([]);
+
+const rolesList = computed(() => props.roles?.data || []);
+
+function toggleSelectAll() {
+  if (selectAll.value) {
+    selectedIds.value = rolesList.value.filter(r => !r.dihapus).map(r => r.id);
+  } else {
+    selectedIds.value = [];
+  }
+}
+
+function toggleSelect(id) {
+  const idx = selectedIds.value.indexOf(id);
+  if (idx === -1) {
+    selectedIds.value.push(id);
+  } else {
+    selectedIds.value.splice(idx, 1);
+  }
+  selectAll.value = selectedIds.value.length === rolesList.value.filter(r => !r.dihapus).length;
+}
+
+function bulkDelete() {
+  if (selectedIds.value.length === 0) return;
+  const count = selectedIds.value.length;
+  router.post('/operator-saas/role-saas/bulk-delete', { ids: [...selectedIds.value] }, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      selectedIds.value = [];
+      selectAll.value = false;
+      toast.success(`${count} role berhasil dihapus.`);
+    },
+    onError: () => {
+      toast.error('Gagal menghapus role. Silakan coba lagi.');
+    },
+  });
+}
+
+function bulkSetStatus(status) {
+  if (selectedIds.value.length === 0) return;
+  const count = selectedIds.value.length;
+  router.post('/operator-saas/role-saas/bulk-status', { ids: [...selectedIds.value], status }, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      selectedIds.value = [];
+      selectAll.value = false;
+      toast.success(`${count} role berhasil ${status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan'}.`);
+    },
+    onError: () => {
+      toast.error('Gagal mengubah status role. Silakan coba lagi.');
+    },
+  });
+}
+
+function restoreRole(role) {
+  router.post(`/operator-saas/role-saas/${role.id}/restore`, {}, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      toast.success(`Role "${role.nama_role}" berhasil dipulihkan.`);
+    },
+    onError: () => {
+      toast.error('Gagal memulihkan role. Silakan coba lagi.');
+    },
+  });
+}
+
+function statusBadge(status) {
+  return status === 'Aktif'
+    ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+    : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+}
+
+const moduleLabels = {
+  'admin-perusahaan': 'Admin Perusahaan',
+  'perusahaan': 'Perusahaan',
+  'role-perusahaan': 'Role Perusahaan',
+  'role-admin-perusahaan': 'Role Admin Perusahaan',
+  'konfigurasi': 'Konfigurasi',
+  'role-saas': 'Role SaaS',
+  'admin-saas': 'Admin SaaS',
+  'admin-role-saas': 'Admin Role SaaS',
+};
+
+function extractModule(nama) {
+  const lastDot = nama.lastIndexOf('.');
+  return lastDot !== -1 ? nama.substring(0, lastDot) : nama;
+}
+
+function extractAction(nama) {
+  const lastDot = nama.lastIndexOf('.');
+  return lastDot !== -1 ? nama.substring(lastDot + 1) : '';
+}
+
+const actionLabels = {
+  list: 'Lihat Daftar', tambah: 'Tambah', ubah: 'Ubah',
+  detail: 'Detail', hapus: 'Hapus', import: 'Import', export: 'Export',
+};
+
+const permissionGroups = computed(() => {
+  const groups = {};
+  props.permissions?.forEach(p => {
+    const module = extractModule(p.nama);
+    if (!groups[module]) groups[module] = { module: moduleLabels[module] || module, permissions: [] };
+    groups[module].permissions.push({ id: p.id, key: p.nama, label: actionLabels[extractAction(p.nama)] || extractAction(p.nama), deskripsi: p.deskripsi });
+  });
+  return Object.values(groups);
+});
+
 const selectedRole = ref(null);
 const showCreateModal = ref(false);
 const showDetailModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
-const form = ref({ id: null, nama_role: '', deskripsi: '', status: 'Aktif', permissions: [] });
-const formErrors = ref({});
-const nextId = ref(5);
 
-function applySearch() { search.value = searchInput.value; currentPage.value = 1; }
-function clearSearch() { searchInput.value = ''; search.value = ''; currentPage.value = 1; }
-function applyStatusFilter(s) { statusFilter.value = s; currentPage.value = 1; }
-function changePerPage(n) { perPage.value = n; currentPage.value = 1; }
-function toggleSelectAll() { selectedIds.value = selectAll.value ? paginatedRoles.value.map(r => r.id) : []; }
-function toggleSelect(id) { const i = selectedIds.value.indexOf(id); i === -1 ? selectedIds.value.push(id) : selectedIds.value.splice(i, 1); selectAll.value = selectedIds.value.length === paginatedRoles.value.length; }
-function bulkDelete() { roles.value = roles.value.filter(r => !selectedIds.value.includes(r.id)); selectedIds.value = []; selectAll.value = false; }
-function bulkSetStatus(s) { roles.value.forEach(r => { if (selectedIds.value.includes(r.id)) r.status = s; }); selectedIds.value = []; selectAll.value = false; }
-function sort(field) { const e = sortFields.value.findIndex(s => s.field === field); if (e !== -1) { if (sortFields.value[e].dir === 'asc') sortFields.value[e].dir = 'desc'; else sortFields.value.splice(e, 1); } else sortFields.value.push({ field, dir: 'asc' }); }
-function sortIcon(f) { const s = sortFields.value.find(s => s.field === f); if (!s) return 'fa-sort'; return s.dir === 'asc' ? 'fa-sort-up' : 'fa-sort-down'; }
-function sortOrder(f) { const i = sortFields.value.findIndex(s => s.field === f); return i !== -1 ? i + 1 : null; }
-function statusBadge(s) { return s === 'Aktif' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; }
-function permissionCount(r) { return r?.permissions?.length || 0; }
-function isPermChecked(key) { return form.value.permissions.includes(key); }
-function togglePerm(key) { const i = form.value.permissions.indexOf(key); if (i === -1) form.value.permissions.push(key); else form.value.permissions.splice(i, 1); }
-function toggleGroupPerms(group) { const keys = group.permissions.map(p => p.key); const allChecked = keys.every(k => isPermChecked(k)); if (allChecked) { form.value.permissions = form.value.permissions.filter(k => !keys.includes(k)); } else { keys.forEach(k => { if (!isPermChecked(k)) form.value.permissions.push(k); }); } }
-function isGroupAllChecked(group) { return group.permissions.every(p => isPermChecked(p.key)); }
-function isGroupPartialChecked(group) { const c = group.permissions.filter(p => isPermChecked(p.key)).length; return c > 0 && c < group.permissions.length; }
-
-const filteredRoles = computed(() => {
-  let r = [...roles.value];
-  if (search.value) { const q = search.value.toLowerCase(); r = r.filter(x => x.nama_role.toLowerCase().includes(q)); }
-  if (statusFilter.value) r = r.filter(x => x.status === statusFilter.value);
-  if (sortFields.value.length > 0) r.sort((a, b) => { for (const s of sortFields.value) { const av = a[s.field], bv = b[s.field]; if (av != bv) return (typeof av === 'string' ? av.localeCompare(bv) : av - bv) * (s.dir === 'asc' ? 1 : -1); } return 0; });
-  return r;
+const createForm = useForm({
+  nama_role: '',
+  deskripsi: '',
+  status: 'Aktif',
+  permission_ids: [],
 });
-const totalPages = computed(() => Math.ceil(filteredRoles.value.length / perPage.value) || 1);
-const paginatedRoles = computed(() => { const s = (currentPage.value - 1) * perPage.value; return filteredRoles.value.slice(s, s + perPage.value); });
-const visiblePages = computed(() => { const p = []; const t = totalPages.value; const c = currentPage.value; let st = Math.max(1, c - 2); let en = Math.min(t, c + 2); if (en - st < 4) { if (st === 1) en = Math.min(t, st + 4); else st = Math.max(1, en - 4); } for (let i = st; i <= en; i++) p.push(i); return p; });
 
-function openCreate() { form.value = { id: null, nama_role: '', deskripsi: '', status: 'Aktif', permissions: [] }; formErrors.value = {}; showCreateModal.value = true; }
-function openDetail(r) { selectedRole.value = r; showDetailModal.value = true; }
-function openEdit(r) { form.value = { ...r, permissions: [...(r.permissions || [])] }; formErrors.value = {}; showEditModal.value = true; }
-function openDelete(r) { selectedRole.value = r; showDeleteModal.value = true; }
-function validateForm() { const e = {}; if (!form.value.nama_role.trim()) e.nama_role = 'Nama role wajib diisi'; formErrors.value = e; return Object.keys(e).length === 0; }
-function saveCreate() { if (!validateForm()) return; roles.value.unshift({ id: nextId.value++, ...form.value, created_at: new Date().toISOString().split('T')[0] }); showCreateModal.value = false; }
-function saveEdit() { if (!validateForm()) return; const i = roles.value.findIndex(r => r.id === form.value.id); if (i !== -1) roles.value[i] = { ...roles.value[i], ...form.value }; showEditModal.value = false; }
-function confirmDelete() { roles.value = roles.value.filter(r => r.id !== selectedRole.value.id); showDeleteModal.value = false; if (paginatedRoles.value.length === 0 && currentPage.value > 1) currentPage.value--; }
-function goToPage(p) { currentPage.value = Math.max(1, Math.min(p, totalPages.value)); }
+const editForm = useForm({
+  id: null,
+  nama_role: '',
+  deskripsi: '',
+  status: 'Aktif',
+  permission_ids: [],
+});
+
+function isPermChecked(form, permId) {
+  return form.permission_ids.includes(permId);
+}
+
+function togglePerm(form, permId) {
+  const idx = form.permission_ids.indexOf(permId);
+  if (idx === -1) form.permission_ids.push(permId);
+  else form.permission_ids.splice(idx, 1);
+}
+
+function toggleGroupPerms(form, group) {
+  const keys = group.permissions.map(p => p.id);
+  const allChecked = keys.every(k => form.permission_ids.includes(k));
+  if (allChecked) {
+    form.permission_ids = form.permission_ids.filter(k => !keys.includes(k));
+  } else {
+    keys.forEach(k => { if (!form.permission_ids.includes(k)) form.permission_ids.push(k); });
+  }
+}
+
+function isGroupAllChecked(form, group) {
+  return group.permissions.every(p => form.permission_ids.includes(p.id));
+}
+
+function isGroupPartialChecked(form, group) {
+  const c = group.permissions.filter(p => form.permission_ids.includes(p.id)).length;
+  return c > 0 && c < group.permissions.length;
+}
+
+function getPermissionLabelByName(name) {
+  const module = extractModule(name);
+  const action = extractAction(name);
+  const moduleLabel = moduleLabels[module] || module;
+  const actionLabel = actionLabels[action] || action;
+  return `${moduleLabel} — ${actionLabel}`;
+}
+
+function openCreate() {
+  createForm.reset();
+  createForm.clearErrors();
+  showCreateModal.value = true;
+}
+
+function openDetail(role) {
+  selectedRole.value = role;
+  showDetailModal.value = true;
+}
+
+function openEdit(role) {
+  editForm.reset();
+  editForm.clearErrors();
+  editForm.id = role.id;
+  editForm.nama_role = role.nama_role;
+  editForm.deskripsi = role.deskripsi || '';
+  editForm.status = role.status;
+  editForm.permission_ids = role.permission_ids ? [...role.permission_ids] : [];
+  showEditModal.value = true;
+}
+
+function openDelete(role) {
+  selectedRole.value = role;
+  showDeleteModal.value = true;
+}
+
+function saveCreate() {
+  createForm.post('/operator-saas/role-saas', {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      showCreateModal.value = false;
+      toast.success('Role SaaS berhasil ditambahkan.');
+    },
+    onError: () => {
+      toast.error('Validasi gagal. Periksa kembali isian form.');
+    },
+  });
+}
+
+function saveEdit() {
+  editForm.put(`/operator-saas/role-saas/${editForm.id}`, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      showEditModal.value = false;
+      toast.success('Role SaaS berhasil diperbarui.');
+    },
+    onError: () => {
+      toast.error('Validasi gagal. Periksa kembali isian form.');
+    },
+  });
+}
+
+function confirmDelete() {
+  const name = selectedRole.value?.nama_role;
+  router.delete(`/operator-saas/role-saas/${selectedRole.value?.id}`, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      showDeleteModal.value = false;
+      toast.success(`Role "${name}" berhasil dihapus.`);
+      if (rolesList.value.length === 0 && currentPage.value > 1) {
+        goToPage(currentPage.value - 1);
+      }
+    },
+    onError: () => {
+      toast.error('Gagal menghapus role. Silakan coba lagi.');
+    },
+  });
+}
 </script>
 
 <template>
   <div>
     <Head title="Role SaaS | Operator SaaS" />
+    <ToastContainer />
+
     <div class="space-y-6">
       <nav class="flex items-center gap-1.5 text-sm">
         <Link href="/operator-saas/dashboard" class="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"><i class="fas fa-home"></i></Link>
@@ -150,22 +394,44 @@ function goToPage(p) { currentPage.value = Math.max(1, Math.min(p, totalPages.va
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <div class="relative w-full sm:w-72">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div>
-            <input v-model="searchInput" type="text" placeholder="Cari role..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors" @keydown.enter="applySearch" />
-            <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
-              <button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors" title="Clear"><i class="fas fa-times text-xs"></i></button>
-              <button @click="applySearch" class="px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" title="Cari"><i class="fas fa-search text-xs"></i></button>
-            </div>
-          </div>
-          <div class="flex gap-1 flex-wrap">
-            <button v-for="s in [{v:'',l:'Semua'},{v:'Aktif',l:'Aktif'},{v:'Nonaktif',l:'Nonaktif'}]" :key="s.v" @click="applyStatusFilter(s.v)" :class="['px-3 py-2 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap', statusFilter === s.v ? (s.v === 'Aktif' ? 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-400' : s.v === 'Nonaktif' ? 'bg-red-50 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-400' : 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-400') : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700']">
-              <i v-if="s.v === 'Aktif'" class="fas fa-check-circle mr-1"></i><i v-else-if="s.v === 'Nonaktif'" class="fas fa-times-circle mr-1"></i>{{ s.l }}
-            </button>
+        <div class="relative w-full sm:w-72">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div>
+          <input v-model="searchInput" type="text" placeholder="Cari role..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors" @keydown.enter="applySearch" />
+          <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
+            <button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors" title="Clear"><i class="fas fa-times text-xs"></i></button>
+            <button @click="applySearch" class="px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" title="Cari"><i class="fas fa-search text-xs"></i></button>
           </div>
         </div>
-        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><span>{{ filteredRoles.length }} data</span><button v-if="search || statusFilter" @click="searchInput = ''; search = ''; applyStatusFilter('')" class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline">Reset filter</button></div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><span>{{ props.roles?.total || 0 }} data</span><button v-if="statusFilter || terhapusFilter !== 'tidak' || searchInput" @click="resetFilters" class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline">Reset filter</button></div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="min-w-[160px]">
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Status</label>
+            <select
+              v-model="statusFilter"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
+            >
+              <option value="">Semua</option>
+              <option value="Aktif">Ya (Aktif)</option>
+              <option value="Nonaktif">Tidak (Nonaktif)</option>
+            </select>
+          </div>
+          <div class="min-w-[160px]">
+            <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Terhapus</label>
+            <select
+              v-model="terhapusFilter"
+              class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
+            >
+              <option value="tidak">Tidak</option>
+              <option value="ya">Ya</option>
+            </select>
+          </div>
+          <button @click="applyFilters" class="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
+            <i class="fas fa-filter mr-1.5"></i>Filter
+          </button>
+        </div>
       </div>
 
       <div v-if="selectedIds.length > 0" class="flex items-center justify-between px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl shadow-sm">
@@ -183,36 +449,71 @@ function goToPage(p) { currentPage.value = Math.max(1, Math.min(p, totalPages.va
             <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" /></th>
-                <th @click="sort('nama_role')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors"><span class="inline-flex items-center gap-1">Nama Role <span v-if="sortOrder('nama_role')" class="inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400"><i :class="['fas', sortIcon('nama_role'), 'text-[10px]']"></i><span class="text-[10px] font-bold leading-none">{{ sortOrder('nama_role') }}</span></span><i v-else class="fas fa-sort text-[10px] text-gray-400 dark:text-gray-500"></i></span></th>
+                <th @click="sort('name')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors">
+                  <span class="inline-flex items-center gap-1">
+                    Nama Role
+                    <span v-if="sortOrder('name')" class="inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400">
+                      <i :class="['fas', sortIcon('name'), 'text-[10px]']"></i>
+                      <span class="text-[10px] font-bold leading-none">{{ sortOrder('name') }}</span>
+                    </span>
+                    <i v-else class="fas fa-sort text-[10px] text-gray-400 dark:text-gray-500"></i>
+                  </span>
+                </th>
                 <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Permission</th>
-                <th @click="sort('status')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors"><span class="inline-flex items-center gap-1">Status <span v-if="sortOrder('status')" class="inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400"><i :class="['fas', sortIcon('status'), 'text-[10px]']"></i><span class="text-[10px] font-bold leading-none">{{ sortOrder('status') }}</span></span><i v-else class="fas fa-sort text-[10px] text-gray-400 dark:text-gray-500"></i></span></th>
+                <th @click="sort('is_active')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors">
+                  <span class="inline-flex items-center gap-1">
+                    Status
+                    <span v-if="sortOrder('is_active')" class="inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400">
+                      <i :class="['fas', sortIcon('is_active'), 'text-[10px]']"></i>
+                      <span class="text-[10px] font-bold leading-none">{{ sortOrder('is_active') }}</span>
+                    </span>
+                    <i v-else class="fas fa-sort text-[10px] text-gray-400 dark:text-gray-500"></i>
+                  </span>
+                </th>
                 <th class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-400 w-32">Aksi</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-              <tr v-if="paginatedRoles.length === 0"><td colspan="5" class="px-4 py-16 text-center text-gray-500 dark:text-gray-400"><i class="fas fa-user-tag text-3xl mb-2 block opacity-40"></i>Tidak ada data role SaaS.</td></tr>
-              <tr v-for="r in paginatedRoles" :key="r.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                <td class="px-4 py-3"><input :checked="selectedIds.includes(r.id)" type="checkbox" @change="toggleSelect(r.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" /></td>
-                <td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shrink-0"><i class="fas fa-user-tag text-[10px]"></i></div><span class="font-medium text-gray-900 dark:text-white whitespace-nowrap">{{ r.nama_role }}</span></div></td>
-                <td class="px-4 py-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 whitespace-nowrap"><i class="fas fa-shield-alt text-[10px]"></i> {{ permissionCount(r) }} akses</span></td>
-                <td class="px-4 py-3 whitespace-nowrap"><span :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(r.status)]">{{ r.status }}</span></td>
+              <tr v-if="rolesList.length === 0"><td colspan="5" class="px-4 py-16 text-center text-gray-500 dark:text-gray-400"><i class="fas fa-user-tag text-3xl mb-2 block opacity-40"></i>Tidak ada data role SaaS.</td></tr>
+              <tr v-for="r in rolesList" :key="r.id" :class="['transition-colors', r.dihapus ? 'bg-red-50/30 dark:bg-red-900/10 opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30']">
+                <td class="px-4 py-3">
+                  <input v-if="!r.dihapus" :checked="selectedIds.includes(r.id)" type="checkbox" @change="toggleSelect(r.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                </td>
+                <td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shrink-0"><i class="fas fa-user-tag text-[10px]"></i></div><span class="font-medium text-gray-900 dark:text-white whitespace-nowrap" :class="{ 'line-through': r.dihapus }">{{ r.nama_role }}</span></div></td>
+                <td class="px-4 py-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400 whitespace-nowrap"><i class="fas fa-shield-alt text-[10px]"></i> {{ r.permission_count }} akses</span></td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span v-if="r.dihapus" class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Terhapus</span>
+                  <span v-else :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(r.status)]">{{ r.status }}</span>
+                </td>
                 <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center justify-end gap-1">
                     <button @click="openDetail(r)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" title="Detail"><i class="fas fa-eye text-sm"></i></button>
-                    <button @click="openEdit(r)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-sky-600 dark:hover:text-sky-400 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
-                    <button @click="openDelete(r)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Hapus"><i class="fas fa-trash-alt text-sm"></i></button>
+                    <template v-if="r.dihapus">
+                      <button @click="restoreRole(r)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors" title="Pulihkan"><i class="fas fa-undo-alt text-sm"></i></button>
+                    </template>
+                    <template v-else>
+                      <button @click="openEdit(r)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-sky-600 dark:hover:text-sky-400 transition-colors" title="Edit"><i class="fas fa-edit text-sm"></i></button>
+                      <button @click="openDelete(r)" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-red-600 dark:hover:text-red-400 transition-colors" title="Hapus"><i class="fas fa-trash-alt text-sm"></i></button>
+                    </template>
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
         <div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400"><span>Tampilkan</span><select :value="perPage" @change="changePerPage(Number($event.target.value))" class="min-w-[65px] px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"><option v-for="n in perPageOptions" :key="n" :value="n">{{ n }}</option></select><span>dari {{ filteredRoles.length }} data</span></div>
+          <div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <span>Tampilkan</span>
+            <select :value="perPage" @change="changePerPage(Number($event.target.value))" class="min-w-[65px] px-2 py-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none">
+              <option v-for="n in perPageOptions" :key="n" :value="n">{{ n }}</option>
+            </select>
+            <span>dari {{ props.roles?.total || 0 }} data</span>
+          </div>
           <div class="flex items-center gap-1 flex-wrap justify-center sm:justify-start">
             <button @click="goToPage(1)" :disabled="currentPage === 1" class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fas fa-chevron-double-left text-xs"></i></button>
             <button @click="goToPage(currentPage - 1)" :disabled="currentPage === 1" class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fas fa-chevron-left text-xs"></i></button>
-            <button v-for="page in visiblePages" :key="page" @click="goToPage(page)" :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors', page === currentPage ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700']">{{ page }}</button>
+            <button v-for="p in visiblePages" :key="p" @click="goToPage(p)" :class="['px-3 py-1.5 rounded-lg text-sm font-medium transition-colors', p === currentPage ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700']">{{ p }}</button>
             <button @click="goToPage(currentPage + 1)" :disabled="currentPage === totalPages" class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fas fa-chevron-right text-xs"></i></button>
             <button @click="goToPage(totalPages)" :disabled="currentPage === totalPages" class="px-2.5 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"><i class="fas fa-chevron-double-right text-xs"></i></button>
           </div>
@@ -220,30 +521,221 @@ function goToPage(p) { currentPage.value = Math.max(1, Math.min(p, totalPages.va
       </div>
     </div>
 
-    <Teleport to="body"><Transition name="modal"><div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDetailModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"><div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-eye mr-2 text-indigo-500"></i>Detail Role</h3><button @click="showDetailModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="px-6 py-5 space-y-4"><div class="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-gray-700"><div class="w-16 h-16 rounded-lg bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center text-white text-xl shrink-0"><i class="fas fa-user-tag"></i></div><div><h4 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedRole?.nama_role }}</h4><span :class="['inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(selectedRole?.status)]">{{ selectedRole?.status }}</span></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Deskripsi</label><p class="text-sm text-gray-900 dark:text-white mt-1">{{ selectedRole?.deskripsi || '—' }}</p></div><div><label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tanggal Dibuat</label><p class="text-sm text-gray-900 dark:text-white mt-1">{{ selectedRole?.created_at }}</p></div></div><div><label class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">Permission ({{ permissionCount(selectedRole) }} akses)</label><div class="grid grid-cols-1 md:grid-cols-2 gap-3"><div v-for="group in permissionGroups" :key="group.module" class="rounded-lg border border-gray-200 dark:border-gray-700 p-3"><h5 class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">{{ group.module }}</h5><div class="flex flex-wrap gap-1"><span v-for="p in group.permissions" :key="p.key" :class="['inline-flex px-2 py-0.5 rounded text-[11px] font-medium', selectedRole?.permissions?.includes(p.key) ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500']">{{ p.label }}</span></div></div></div></div></div><div class="flex justify-end gap-2 px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"><button @click="showDetailModal = false; openEdit(selectedRole)" class="px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i class="fas fa-edit mr-1.5"></i> Edit</button><button @click="showDetailModal = false" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Tutup</button></div></div></div></Transition></Teleport>
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDetailModal = false">
+          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-eye mr-2 text-indigo-500"></i>Detail Role</h3>
+              <button @click="showDetailModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-5 modal-scroll">
+              <div class="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
+                <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center text-white text-xl shrink-0"><i class="fas fa-user-tag"></i></div>
+                <div>
+                  <h4 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedRole?.nama_role }}</h4>
+                  <span v-if="selectedRole?.dihapus" class="inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Terhapus</span>
+                  <span v-else :class="['inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(selectedRole?.status)]">{{ selectedRole?.status }}</span>
+                </div>
+              </div>
 
-    <Teleport to="body"><Transition name="modal"><div v-if="showCreateModal || showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false; showEditModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"><div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-t-2xl"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i :class="['fas mr-2', showCreateModal ? 'fa-plus text-emerald-500' : 'fa-edit text-sky-500']"></i>{{ showCreateModal ? 'Tambah Role SaaS' : 'Edit Role SaaS' }}</h3><button @click="showCreateModal = false; showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><form class="px-6 py-5 space-y-4" @submit.prevent="showCreateModal ? saveCreate() : saveEdit()">
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Role <span class="text-red-500">*</span></label><input v-model="form.nama_role" type="text" placeholder="Contoh: Super Admin SaaS" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', formErrors.nama_role ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" /><p v-if="formErrors.nama_role" class="text-red-500 text-xs mt-1">{{ formErrors.nama_role }}</p></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label><textarea v-model="form.deskripsi" rows="2" placeholder="Deskripsi role (opsional)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors resize-none"></textarea></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label><select v-model="form.status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Permission <span class="text-xs text-gray-400 font-normal ml-1">({{ form.permissions.length }} dipilih)</span></label><div class="space-y-3 border border-gray-200 dark:border-gray-700 rounded-xl p-4 max-h-64 overflow-y-auto">
-        <div v-for="group in permissionGroups" :key="group.module" class="border-b border-gray-100 dark:border-gray-700 last:border-b-0 pb-3 last:pb-0">
-          <label class="flex items-center gap-2 cursor-pointer select-none py-1">
-            <input type="checkbox" :checked="isGroupAllChecked(group)" :indeterminate="isGroupPartialChecked(group)" @change="toggleGroupPerms(group)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
-            <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ group.module }}</span>
-          </label>
-          <div class="flex flex-wrap gap-1.5 ml-6 mt-1.5">
-            <label v-for="p in group.permissions" :key="p.key" class="flex items-center gap-1.5 cursor-pointer select-none">
-              <input type="checkbox" :checked="isPermChecked(p.key)" @change="togglePerm(p.key)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
-              <span class="text-xs text-gray-600 dark:text-gray-400">{{ p.label }}</span>
-            </label>
+              <div>
+                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Informasi Role</h5>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Deskripsi</label><p class="text-sm text-gray-900 dark:text-white mt-0.5">{{ selectedRole?.deskripsi || '—' }}</p></div>
+                  <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Urutan Tampil</label><p class="text-sm text-gray-900 dark:text-white mt-0.5">{{ selectedRole?.display_order }}</p></div>
+                  <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Jumlah Permission</label><p class="text-sm text-gray-900 dark:text-white mt-0.5">{{ selectedRole?.permission_count }} akses</p></div>
+                </div>
+              </div>
+
+              <div v-if="selectedRole?.permission_names?.length">
+                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Permission</h5>
+                <div class="flex flex-wrap gap-1.5">
+                  <span v-for="name in selectedRole.permission_names" :key="name" class="inline-flex px-2 py-0.5 rounded text-xs bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800">{{ getPermissionLabelByName(name) }}</span>
+                </div>
+              </div>
+
+              <div>
+                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Riwayat</h5>
+                <div class="space-y-2.5">
+                  <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-plus text-emerald-600 dark:text-emerald-400 text-xs"></i></div>
+                    <div>
+                      <p class="text-sm text-gray-900 dark:text-white">Dibuat</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedRole?.created_at }}</p>
+                      <p v-if="selectedRole?.created_by" class="text-xs text-gray-400 dark:text-gray-500">oleh {{ selectedRole?.created_by }}</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <div class="w-7 h-7 rounded-full bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-pen text-sky-600 dark:text-sky-400 text-xs"></i></div>
+                    <div>
+                      <p class="text-sm text-gray-900 dark:text-white">Terakhir diperbarui</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedRole?.updated_at }}</p>
+                      <p v-if="selectedRole?.updated_by" class="text-xs text-gray-400 dark:text-gray-500">oleh {{ selectedRole?.updated_by }}</p>
+                    </div>
+                  </div>
+                  <template v-if="selectedRole?.dihapus">
+                    <div class="flex items-start gap-3">
+                      <div class="w-7 h-7 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-trash-alt text-red-600 dark:text-red-400 text-xs"></i></div>
+                      <div>
+                        <p class="text-sm text-gray-900 dark:text-white">Dihapus</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedRole?.deleted_at }}</p>
+                      </div>
+                    </div>
+                  </template>
+                  <template v-if="selectedRole?.restored_at">
+                    <div class="flex items-start gap-3">
+                      <div class="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0 mt-0.5"><i class="fas fa-undo-alt text-emerald-600 dark:text-emerald-400 text-xs"></i></div>
+                      <div>
+                        <p class="text-sm text-gray-900 dark:text-white">Dipulihkan</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedRole?.restored_at }}</p>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button v-if="!selectedRole?.dihapus" @click="showDetailModal = false; openEdit(selectedRole)" class="px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i class="fas fa-edit mr-1.5"></i> Edit</button>
+              <button v-if="selectedRole?.dihapus" @click="showDetailModal = false; restoreRole(selectedRole)" class="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"><i class="fas fa-undo-alt mr-1.5"></i> Pulihkan</button>
+              <button @click="showDetailModal = false" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Tutup</button>
+            </div>
           </div>
         </div>
-      </div></div>
-      <div class="flex justify-end gap-2 pt-2"><button type="button" @click="showCreateModal = false; showEditModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"><i :class="['fas mr-1.5', showCreateModal ? 'fa-save' : 'fa-check']"></i>{{ showCreateModal ? 'Simpan' : 'Update' }}</button></div>
-    </form></div></div></Transition></Teleport>
+      </Transition>
+    </Teleport>
 
-    <Teleport to="body"><Transition name="modal"><div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDeleteModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"><div class="px-6 py-5 text-center"><div class="w-14 h-14 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4"><i class="fas fa-exclamation-triangle text-red-500 text-xl"></i></div><h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hapus Role?</h3><p class="text-sm text-gray-500 dark:text-gray-400">Anda akan menghapus <strong class="text-gray-700 dark:text-gray-300">{{ selectedRole?.nama_role }}</strong>. Data yang dihapus tidak dapat dikembalikan.</p></div><div class="flex justify-center gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"><button @click="showDeleteModal = false" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button @click="confirmDelete" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"><i class="fas fa-trash-alt mr-1.5"></i> Hapus</button></div></div></div></Transition></Teleport>
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false">
+          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <form @submit.prevent="saveCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-plus text-emerald-500 mr-2"></i>Tambah Role SaaS</h3>
+              <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Role <span class="text-red-500">*</span></label>
+                <input v-model="createForm.nama_role" type="text" placeholder="Contoh: Super Admin SaaS" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.nama_role ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
+                <p v-if="createForm.errors.nama_role" class="text-red-500 text-xs mt-1">{{ createForm.errors.nama_role }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label>
+                <textarea v-model="createForm.deskripsi" rows="2" placeholder="Deskripsi role (opsional)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors resize-none"></textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
+                <select v-model="createForm.status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
+                  <option value="Aktif">Aktif</option>
+                  <option value="Nonaktif">Nonaktif</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Permission <span class="text-xs text-gray-400 font-normal ml-1">({{ createForm.permission_ids.length }} dipilih)</span></label>
+                <div class="space-y-3 border border-gray-200 dark:border-gray-700 rounded-xl p-4 max-h-64 overflow-y-auto">
+                  <div v-for="group in permissionGroups" :key="group.module" class="border-b border-gray-100 dark:border-gray-700 last:border-b-0 pb-3 last:pb-0">
+                    <label class="flex items-center gap-2 cursor-pointer select-none py-1">
+                      <input type="checkbox" :checked="isGroupAllChecked(createForm, group)" :indeterminate.prop="isGroupPartialChecked(createForm, group)" @change="toggleGroupPerms(createForm, group)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                      <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ group.module }}</span>
+                    </label>
+                    <div class="flex flex-wrap gap-1.5 ml-6 mt-1.5">
+                      <label v-for="p in group.permissions" :key="p.id" class="flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" :checked="isPermChecked(createForm, p.id)" @change="togglePerm(createForm, p.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ p.label }}</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <p v-if="createForm.errors.permission_ids" class="text-red-500 text-xs mt-1">{{ createForm.errors.permission_ids }}</p>
+              </div>
+            </div>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+              <button type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
+                <i class="fas fa-save mr-1.5"></i>Simpan
+              </button>
+            </div>
+          </form>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showEditModal = false">
+          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <form @submit.prevent="saveEdit" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-edit text-sky-500 mr-2"></i>Edit Role SaaS</h3>
+              <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Role <span class="text-red-500">*</span></label>
+                <input v-model="editForm.nama_role" type="text" placeholder="Contoh: Super Admin SaaS" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.nama_role ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
+                <p v-if="editForm.errors.nama_role" class="text-red-500 text-xs mt-1">{{ editForm.errors.nama_role }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label>
+                <textarea v-model="editForm.deskripsi" rows="2" placeholder="Deskripsi role (opsional)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors resize-none"></textarea>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
+                <select v-model="editForm.status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
+                  <option value="Aktif">Aktif</option>
+                  <option value="Nonaktif">Nonaktif</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Permission <span class="text-xs text-gray-400 font-normal ml-1">({{ editForm.permission_ids.length }} dipilih)</span></label>
+                <div class="space-y-3 border border-gray-200 dark:border-gray-700 rounded-xl p-4 max-h-64 overflow-y-auto">
+                  <div v-for="group in permissionGroups" :key="group.module" class="border-b border-gray-100 dark:border-gray-700 last:border-b-0 pb-3 last:pb-0">
+                    <label class="flex items-center gap-2 cursor-pointer select-none py-1">
+                      <input type="checkbox" :checked="isGroupAllChecked(editForm, group)" :indeterminate.prop="isGroupPartialChecked(editForm, group)" @change="toggleGroupPerms(editForm, group)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                      <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ group.module }}</span>
+                    </label>
+                    <div class="flex flex-wrap gap-1.5 ml-6 mt-1.5">
+                      <label v-for="p in group.permissions" :key="p.id" class="flex items-center gap-1.5 cursor-pointer select-none">
+                        <input type="checkbox" :checked="isPermChecked(editForm, p.id)" @change="togglePerm(editForm, p.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ p.label }}</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <p v-if="editForm.errors.permission_ids" class="text-red-500 text-xs mt-1">{{ editForm.errors.permission_ids }}</p>
+              </div>
+            </div>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button type="button" @click="showEditModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+              <button type="submit" :disabled="editForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50">
+                <i class="fas fa-check mr-1.5"></i>Update
+              </button>
+            </div>
+          </form>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDeleteModal = false">
+          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div class="px-6 py-5 text-center">
+              <div class="w-14 h-14 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4"><i class="fas fa-exclamation-triangle text-red-500 text-xl"></i></div>
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hapus Role?</h3>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Anda akan menghapus <strong class="text-gray-700 dark:text-gray-300">{{ selectedRole?.nama_role }}</strong>. Data yang dihapus tidak dapat dikembalikan.</p>
+            </div>
+            <div class="flex justify-center gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+              <button @click="showDeleteModal = false" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+              <button @click="confirmDelete" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors"><i class="fas fa-trash-alt mr-1.5"></i> Hapus</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -253,4 +745,14 @@ function goToPage(p) { currentPage.value = Math.max(1, Math.min(p, totalPages.va
 .modal-enter-from, .modal-leave-to { opacity: 0; }
 .modal-enter-from > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
 .modal-leave-to > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
+</style>
+
+<style>
+.modal-scroll::-webkit-scrollbar { width: 6px; }
+.modal-scroll::-webkit-scrollbar-track { background: transparent; }
+.modal-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+.modal-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+.dark .modal-scroll::-webkit-scrollbar-thumb { background: #374151; }
+.dark .modal-scroll::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 </style>

@@ -1,8 +1,12 @@
 <?php
 
 use App\Http\Controllers\AdminCompanyController;
+use App\Http\Controllers\AdminRoleSaasController;
 use App\Http\Controllers\AdminSaasController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\RoleAdminPerusahaanController;
+use App\Http\Controllers\RolePerusahaanController;
+use App\Http\Controllers\RoleSaasController;
 use App\Http\Controllers\SaasConfigController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -16,7 +20,16 @@ Route::get('/operator-saas/perusahaan/select-search', [CompanyController::class,
 
 Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
     Route::get('/operator-saas/dashboard', function () {
-        return Inertia::render('OperatorSaas/Dashboard');
+        return Inertia::render('OperatorSaas/Dashboard', [
+            'stats' => [
+                'perusahaan_aktif' => \App\Models\Company::where('is_active', true)->count(),
+                'admin_perusahaan_aktif' => \App\Models\AdminCompany::where('is_active', true)->count(),
+                'admin_saas' => \App\Models\AdminSaas::where('is_active', true)->count(),
+                'pelanggan_aktif' => \App\Models\Customer::where('is_active', true)->count(),
+                'karyawan_aktif' => \App\Models\Employee::where('is_active', true)->count(),
+                'langganan_aktif' => \App\Models\CustInternet::where('internet_status', 'active')->count(),
+            ],
+        ]);
     })->name('operator-saas.dashboard');
 
     Route::get('/operator-saas/admin-perusahaan', [AdminCompanyController::class, 'index'])
@@ -50,17 +63,37 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
         ->name('operator-saas.perusahaan.bulk-status');
 
 
-    Route::get('/operator-saas/role-perusahaan', function () {
-        return Inertia::render('OperatorSaas/RolePerusahaan');
-    });
+    // Role Perusahaan
+    Route::get('/operator-saas/role-perusahaan', [RolePerusahaanController::class, 'index'])
+        ->name('operator-saas.role-perusahaan.index');
+    Route::post('/operator-saas/role-perusahaan', [RolePerusahaanController::class, 'store'])
+        ->name('operator-saas.role-perusahaan.store');
+    Route::put('/operator-saas/role-perusahaan/{role}', [RolePerusahaanController::class, 'update'])
+        ->name('operator-saas.role-perusahaan.update');
+    Route::delete('/operator-saas/role-perusahaan/{role}', [RolePerusahaanController::class, 'destroy'])
+        ->name('operator-saas.role-perusahaan.destroy');
+    Route::post('/operator-saas/role-perusahaan/{id}/restore', [RolePerusahaanController::class, 'restore'])
+        ->name('operator-saas.role-perusahaan.restore');
+    Route::post('/operator-saas/role-perusahaan/bulk-delete', [RolePerusahaanController::class, 'bulkDelete'])
+        ->name('operator-saas.role-perusahaan.bulk-delete');
+    Route::post('/operator-saas/role-perusahaan/bulk-status', [RolePerusahaanController::class, 'bulkToggleStatus'])
+        ->name('operator-saas.role-perusahaan.bulk-status');
 
-    Route::get('/operator-saas/pemetaan-admin-perusahaan', function () {
-        return Inertia::render('OperatorSaas/RoleAdminPerusahaan');
-    });
-
-    Route::get('/operator-saas/role-admin-perusahaan', function () {
-        return Inertia::render('OperatorSaas/RoleAdminPerusahaan');
-    });
+    // Role Admin Perusahaan
+    Route::get('/operator-saas/role-admin-perusahaan', [RoleAdminPerusahaanController::class, 'index'])
+        ->name('operator-saas.role-admin-perusahaan.index');
+    Route::post('/operator-saas/role-admin-perusahaan', [RoleAdminPerusahaanController::class, 'store'])
+        ->name('operator-saas.role-admin-perusahaan.store');
+    Route::put('/operator-saas/role-admin-perusahaan/{modelHasRole}', [RoleAdminPerusahaanController::class, 'update'])
+        ->name('operator-saas.role-admin-perusahaan.update');
+    Route::delete('/operator-saas/role-admin-perusahaan/{modelHasRole}', [RoleAdminPerusahaanController::class, 'destroy'])
+        ->name('operator-saas.role-admin-perusahaan.destroy');
+    Route::post('/operator-saas/role-admin-perusahaan/bulk-delete', [RoleAdminPerusahaanController::class, 'bulkDelete'])
+        ->name('operator-saas.role-admin-perusahaan.bulk-delete');
+    Route::get('/operator-saas/role-admin-perusahaan/admins-by-company', [RoleAdminPerusahaanController::class, 'adminsByCompany'])
+        ->name('operator-saas.role-admin-perusahaan.admins-by-company');
+    Route::get('/operator-saas/role-admin-perusahaan/roles-by-company', [RoleAdminPerusahaanController::class, 'rolesByCompany'])
+        ->name('operator-saas.role-admin-perusahaan.roles-by-company');
 
     Route::get('/operator-saas/konfigurasi', [SaasConfigController::class, 'index'])
         ->name('operator-saas.konfigurasi.index');
@@ -73,9 +106,21 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
     Route::post('/operator-saas/konfigurasi/bulk-delete', [SaasConfigController::class, 'bulkDelete'])
         ->name('operator-saas.konfigurasi.bulk-delete');
 
-    Route::get('/operator-saas/role-saas', function () {
-        return Inertia::render('OperatorSaas/RoleSaaS');
-    });
+    // Role SaaS
+    Route::get('/operator-saas/role-saas', [RoleSaasController::class, 'index'])
+        ->name('operator-saas.role-saas.index');
+    Route::post('/operator-saas/role-saas', [RoleSaasController::class, 'store'])
+        ->name('operator-saas.role-saas.store');
+    Route::put('/operator-saas/role-saas/{role}', [RoleSaasController::class, 'update'])
+        ->name('operator-saas.role-saas.update');
+    Route::delete('/operator-saas/role-saas/{role}', [RoleSaasController::class, 'destroy'])
+        ->name('operator-saas.role-saas.destroy');
+    Route::post('/operator-saas/role-saas/{id}/restore', [RoleSaasController::class, 'restore'])
+        ->name('operator-saas.role-saas.restore');
+    Route::post('/operator-saas/role-saas/bulk-delete', [RoleSaasController::class, 'bulkDelete'])
+        ->name('operator-saas.role-saas.bulk-delete');
+    Route::post('/operator-saas/role-saas/bulk-status', [RoleSaasController::class, 'bulkToggleStatus'])
+        ->name('operator-saas.role-saas.bulk-status');
 
     Route::get('/operator-saas/admin-saas', [AdminSaasController::class, 'index'])
         ->name('operator-saas.admin-saas.index');
@@ -92,7 +137,15 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
     Route::post('/operator-saas/admin-saas/bulk-status', [AdminSaasController::class, 'bulkToggleStatus'])
         ->name('operator-saas.admin-saas.bulk-status');
 
-    Route::get('/operator-saas/admin-role-saas', function () {
-        return Inertia::render('OperatorSaas/AdminRoleSaaS');
-    });
+    // Admin Role SaaS
+    Route::get('/operator-saas/admin-role-saas', [AdminRoleSaasController::class, 'index'])
+        ->name('operator-saas.admin-role-saas.index');
+    Route::post('/operator-saas/admin-role-saas', [AdminRoleSaasController::class, 'store'])
+        ->name('operator-saas.admin-role-saas.store');
+    Route::put('/operator-saas/admin-role-saas/{modelHasRole}', [AdminRoleSaasController::class, 'update'])
+        ->name('operator-saas.admin-role-saas.update');
+    Route::delete('/operator-saas/admin-role-saas/{modelHasRole}', [AdminRoleSaasController::class, 'destroy'])
+        ->name('operator-saas.admin-role-saas.destroy');
+    Route::post('/operator-saas/admin-role-saas/bulk-delete', [AdminRoleSaasController::class, 'bulkDelete'])
+        ->name('operator-saas.admin-role-saas.bulk-delete');
 });
