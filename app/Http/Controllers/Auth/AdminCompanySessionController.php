@@ -32,7 +32,7 @@ class AdminCompanySessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('operator-perusahaan.dashboard', absolute: false));
+        return redirect()->route('operator-perusahaan.dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse

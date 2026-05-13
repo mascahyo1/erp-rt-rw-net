@@ -32,7 +32,7 @@ class EmployeeSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('employee.dashboard', absolute: false));
+        return redirect()->route('employee.dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse

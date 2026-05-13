@@ -32,7 +32,7 @@ class CustomerSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('customer.dashboard', absolute: false));
+        return redirect()->route('customer.dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse

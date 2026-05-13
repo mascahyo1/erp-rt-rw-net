@@ -17,7 +17,7 @@ class AuthenticatedSessionController extends Controller
     public function create(): Response|RedirectResponse
     {
         if (Auth::guard('web')->check()) {
-            return redirect()->intended(route('operator-saas.dashboard', absolute: false));
+            return redirect()->route('operator-saas.dashboard');
         }
 
         return Inertia::render('Landing/LoginOperatorSaaS');
@@ -48,7 +48,7 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('operator-saas.dashboard', absolute: false));
+        return redirect()->route('operator-saas.dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse
