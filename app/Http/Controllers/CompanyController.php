@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -70,6 +71,24 @@ class CompanyController extends Controller
             'companies' => $companies,
             'filters' => $request->only(['search', 'status', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
         ]);
+    }
+
+    public function selectSearch(Request $request): JsonResponse
+    {
+        $search = $request->input('search');
+        $page = (int) $request->input('page', 1);
+
+        $query = Company::where('is_active', true);
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $companies = $query->orderBy('name')
+            ->paginate(20, ['id', 'name'], 'page', $page)
+            ->through(fn ($c) => ['value' => $c->id, 'label' => $c->name]);
+
+        return response()->json($companies);
     }
 
     public function store(Request $request): RedirectResponse

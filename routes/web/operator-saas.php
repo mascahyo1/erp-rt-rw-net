@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminCompanyController;
 use App\Http\Controllers\AdminSaasController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\SaasConfigController;
@@ -10,14 +11,28 @@ Route::get('/operator-saas/login', function () {
     return Inertia::render('OperatorSaas/Login');
 });
 
+Route::get('/operator-saas/perusahaan/select-search', [CompanyController::class, 'selectSearch'])
+    ->name('operator-saas.perusahaan.select-search');
+
 Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
     Route::get('/operator-saas/dashboard', function () {
         return Inertia::render('OperatorSaas/Dashboard');
     })->name('operator-saas.dashboard');
 
-    Route::get('/operator-saas/admin-perusahaan', function () {
-        return Inertia::render('OperatorSaas/AdminPerusahaan');
-    });
+    Route::get('/operator-saas/admin-perusahaan', [AdminCompanyController::class, 'index'])
+        ->name('operator-saas.admin-perusahaan.index');
+    Route::post('/operator-saas/admin-perusahaan', [AdminCompanyController::class, 'store'])
+        ->name('operator-saas.admin-perusahaan.store');
+    Route::put('/operator-saas/admin-perusahaan/{adminCompany}', [AdminCompanyController::class, 'update'])
+        ->name('operator-saas.admin-perusahaan.update');
+    Route::delete('/operator-saas/admin-perusahaan/{adminCompany}', [AdminCompanyController::class, 'destroy'])
+        ->name('operator-saas.admin-perusahaan.destroy');
+    Route::post('/operator-saas/admin-perusahaan/{id}/restore', [AdminCompanyController::class, 'restore'])
+        ->name('operator-saas.admin-perusahaan.restore');
+    Route::post('/operator-saas/admin-perusahaan/bulk-delete', [AdminCompanyController::class, 'bulkDelete'])
+        ->name('operator-saas.admin-perusahaan.bulk-delete');
+    Route::post('/operator-saas/admin-perusahaan/bulk-status', [AdminCompanyController::class, 'bulkToggleStatus'])
+        ->name('operator-saas.admin-perusahaan.bulk-status');
 
     Route::get('/operator-saas/perusahaan', [CompanyController::class, 'index'])
         ->name('operator-saas.perusahaan.index');
@@ -33,6 +48,7 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
         ->name('operator-saas.perusahaan.bulk-delete');
     Route::post('/operator-saas/perusahaan/bulk-status', [CompanyController::class, 'bulkToggleStatus'])
         ->name('operator-saas.perusahaan.bulk-status');
+
 
     Route::get('/operator-saas/role-perusahaan', function () {
         return Inertia::render('OperatorSaas/RolePerusahaan');
