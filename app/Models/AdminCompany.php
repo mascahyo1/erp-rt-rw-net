@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Models\Traits\HasBlameable;
 use App\Models\Traits\HasSoftDelete;
 use App\Models\Traits\HasUuidV7;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class AdminCompany extends Authenticatable
 {
-    use HasUuidV7, HasBlameable, HasSoftDelete;
+    use HasUuidV7, HasBlameable, HasSoftDelete, HasFactory;
 
     protected $table = 'admin_companies';
 

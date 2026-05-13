@@ -5,13 +5,14 @@ namespace App\Models;
 use App\Models\Traits\HasBlameable;
 use App\Models\Traits\HasSoftDelete;
 use App\Models\Traits\HasUuidV7;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class Customer extends Authenticatable
 {
-    use HasUuidV7, HasBlameable, HasSoftDelete, Notifiable;
+    use HasUuidV7, HasBlameable, HasSoftDelete, Notifiable, HasFactory;
 
     protected $table = 'customers';
 

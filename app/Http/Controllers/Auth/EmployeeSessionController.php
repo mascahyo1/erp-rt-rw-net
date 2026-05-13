@@ -12,8 +12,12 @@ use Inertia\Response;
 
 class EmployeeSessionController extends Controller
 {
-    public function create(): Response
+    public function create(): Response|RedirectResponse
     {
+        if (Auth::guard('employee')->check()) {
+            return redirect()->route('employee.dashboard');
+        }
+
         return Inertia::render('Karyawan/Login');
     }
 
@@ -27,6 +31,14 @@ class EmployeeSessionController extends Controller
         if (! Auth::guard('employee')->attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
+            ]);
+        }
+
+        if (! Auth::guard('employee')->user()->is_active) {
+            Auth::guard('employee')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun anda dinonaktifkan. Hubungi admin.',
             ]);
         }
 

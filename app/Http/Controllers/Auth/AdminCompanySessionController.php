@@ -12,8 +12,12 @@ use Inertia\Response;
 
 class AdminCompanySessionController extends Controller
 {
-    public function create(): Response
+    public function create(): Response|RedirectResponse
     {
+        if (Auth::guard('admin-company')->check()) {
+            return redirect()->route('operator-perusahaan.dashboard');
+        }
+
         return Inertia::render('Landing/LoginPerusahaan');
     }
 
@@ -27,6 +31,14 @@ class AdminCompanySessionController extends Controller
         if (! Auth::guard('admin-company')->attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
+            ]);
+        }
+
+        if (! Auth::guard('admin-company')->user()->is_active) {
+            Auth::guard('admin-company')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun anda dinonaktifkan. Hubungi admin.',
             ]);
         }
 

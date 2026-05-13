@@ -12,8 +12,12 @@ use Inertia\Response;
 
 class CustomerSessionController extends Controller
 {
-    public function create(): Response
+    public function create(): Response|RedirectResponse
     {
+        if (Auth::guard('customer')->check()) {
+            return redirect()->route('customer.dashboard');
+        }
+
         return Inertia::render('Landing/LoginPelanggan');
     }
 
@@ -27,6 +31,14 @@ class CustomerSessionController extends Controller
         if (! Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => __('auth.failed'),
+            ]);
+        }
+
+        if (! Auth::guard('customer')->user()->is_active) {
+            Auth::guard('customer')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun anda dinonaktifkan. Hubungi admin.',
             ]);
         }
 
