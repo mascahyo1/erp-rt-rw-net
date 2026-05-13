@@ -8,6 +8,9 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
         $tables = [
             'companies',
             'admin_companies',
@@ -49,6 +52,9 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
         $tables = [
             'companies',
             'admin_companies',

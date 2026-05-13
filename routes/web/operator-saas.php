@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminSaasController;
+use App\Http\Controllers\CompanyController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -17,9 +18,20 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
         return Inertia::render('OperatorSaas/AdminPerusahaan');
     });
 
-    Route::get('/operator-saas/perusahaan', function () {
-        return Inertia::render('OperatorSaas/Perusahaan');
-    });
+    Route::get('/operator-saas/perusahaan', [CompanyController::class, 'index'])
+        ->name('operator-saas.perusahaan.index');
+    Route::post('/operator-saas/perusahaan', [CompanyController::class, 'store'])
+        ->name('operator-saas.perusahaan.store');
+    Route::put('/operator-saas/perusahaan/{company}', [CompanyController::class, 'update'])
+        ->name('operator-saas.perusahaan.update');
+    Route::delete('/operator-saas/perusahaan/{company}', [CompanyController::class, 'destroy'])
+        ->name('operator-saas.perusahaan.destroy');
+    Route::post('/operator-saas/perusahaan/{id}/restore', [CompanyController::class, 'restore'])
+        ->name('operator-saas.perusahaan.restore');
+    Route::post('/operator-saas/perusahaan/bulk-delete', [CompanyController::class, 'bulkDelete'])
+        ->name('operator-saas.perusahaan.bulk-delete');
+    Route::post('/operator-saas/perusahaan/bulk-status', [CompanyController::class, 'bulkToggleStatus'])
+        ->name('operator-saas.perusahaan.bulk-status');
 
     Route::get('/operator-saas/role-perusahaan', function () {
         return Inertia::render('OperatorSaas/RolePerusahaan');
