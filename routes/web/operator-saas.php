@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminSaasController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -40,9 +41,18 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
         return Inertia::render('OperatorSaas/RoleSaaS');
     });
 
-    Route::get('/operator-saas/admin-saas', function () {
-        return Inertia::render('OperatorSaas/AdminSaaS');
-    });
+    Route::get('/operator-saas/admin-saas', [AdminSaasController::class, 'index'])
+        ->name('operator-saas.admin-saas.index');
+    Route::post('/operator-saas/admin-saas', [AdminSaasController::class, 'store'])
+        ->name('operator-saas.admin-saas.store');
+    Route::put('/operator-saas/admin-saas/{adminSaas}', [AdminSaasController::class, 'update'])
+        ->name('operator-saas.admin-saas.update');
+    Route::delete('/operator-saas/admin-saas/{adminSaas}', [AdminSaasController::class, 'destroy'])
+        ->name('operator-saas.admin-saas.destroy');
+    Route::post('/operator-saas/admin-saas/bulk-delete', [AdminSaasController::class, 'bulkDelete'])
+        ->name('operator-saas.admin-saas.bulk-delete');
+    Route::post('/operator-saas/admin-saas/bulk-status', [AdminSaasController::class, 'bulkToggleStatus'])
+        ->name('operator-saas.admin-saas.bulk-status');
 
     Route::get('/operator-saas/admin-role-saas', function () {
         return Inertia::render('OperatorSaas/AdminRoleSaaS');

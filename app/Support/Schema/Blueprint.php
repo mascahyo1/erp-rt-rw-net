@@ -8,8 +8,8 @@ class Blueprint extends BaseBlueprint
 {
     public function blameable(): void
     {
-        $this->nullableMorphs('created_by');
-        $this->nullableMorphs('updated_by');
+        $this->nullableUuidMorphs('created_by');
+        $this->nullableUuidMorphs('updated_by');
     }
 
     public function dropBlameable(): void
@@ -21,9 +21,9 @@ class Blueprint extends BaseBlueprint
     public function softDelete(): void
     {
         $this->timestamp('deleted_at')->nullable();
-        $this->nullableMorphs('deleted_by');
+        $this->nullableUuidMorphs('deleted_by');
         $this->timestamp('restored_at')->nullable();
-        $this->nullableMorphs('restored_by');
+        $this->nullableUuidMorphs('restored_by');
     }
 
     public function dropSoftDelete(): void
@@ -35,7 +35,7 @@ class Blueprint extends BaseBlueprint
 
     public function approvable(): void
     {
-        $this->morphs('submitted_by');
+        $this->uuidMorphs('submitted_by');
         $this->text('submission_reason')->nullable();
         $this->string('submission_proof_file')->nullable();
         $this->enum('review_status', [
@@ -45,7 +45,7 @@ class Blueprint extends BaseBlueprint
         ])->default('pending');
 
         $this->timestamp('reviewed_at')->nullable();
-        $this->nullableMorphs('reviewed_by');
+        $this->nullableUuidMorphs('reviewed_by');
         $this->timestamp('review_attachment')->nullable();
         $this->text('review_reason')->nullable();
     }
