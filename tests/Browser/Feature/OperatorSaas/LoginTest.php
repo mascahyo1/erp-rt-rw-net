@@ -15,7 +15,7 @@ class LoginTest extends DuskTestCase
     {
         $this->browse(function (Browser $browser) {
             $browser->visit('/login-operator-saas')
-                ->waitForText('Operator SaaS', 10)
+                ->waitFor('button[type="submit"]', 10)
                 ->assertPresent('input[type="email"]')
                 ->assertPresent('input[type="password"]')
                 ->assertPresent('button[type="submit"]')
@@ -29,34 +29,19 @@ class LoginTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->visit('/login-operator-saas')
-                ->waitForText('Operator SaaS', 10)
+                ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
                 ->type('input[type="password"]', 'wrong-password')
                 ->screenshot('operator-saas/login/02-before-submit')
-                ->press('Masuk')
-                ->waitForText('Masuk', 10)
+                ->click('button[type="submit"]')
+                ->waitFor('p.text-red-500', 10)
                 ->screenshot('operator-saas/login/03-after-submit')
-                ->assertPathIs('/login-operator-saas');
+                ->assertPathIs('/login-operator-saas')
+                ->assertSeeIn('p.text-red-500', 'credentials');
 
-            // Check error element exists in DOM
-            $hasError = $browser->driver->executeScript(
-                "return document.querySelector('p.text-red-500') !== null"
-            );
-            dump('[03-error-visible] ' . ($hasError ? 'YES' : 'NO'));
-
-            $hasBorderError = $browser->driver->executeScript(
-                "return document.querySelector('input.border-red-400') !== null"
-            );
-            dump('[03-input-red-border] ' . ($hasBorderError ? 'YES' : 'NO'));
-
-            $errorText = $browser->driver->executeScript(
-                "const el = document.querySelector('p.text-red-500'); return el ? el.textContent : 'NOT_FOUND';"
-            );
-            dump('[03-error-text] ' . $errorText);
-
-            // Save source for manual check
-            $source = $browser->driver->getPageSource();
-            file_put_contents('tests/Browser/source/03-after-submit.html', $source);
+            dump('[error-text] ' . $browser->driver->executeScript(
+                "const el = document.querySelector('p.text-red-500'); return el ? el.textContent.trim() : 'NOT_FOUND';"
+            ));
         });
     }
 
@@ -66,27 +51,15 @@ class LoginTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->visit('/login-operator-saas')
-                ->waitForText('Operator SaaS', 10)
+                ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
                 ->type('input[type="password"]', 'password')
                 ->screenshot('operator-saas/login/04-inactive-before')
-                ->press('Masuk')
-                ->waitForText('Masuk', 10)
+                ->click('button[type="submit"]')
+                ->waitFor('p.text-red-500', 10)
                 ->screenshot('operator-saas/login/05-inactive-after')
-                ->assertPathIs('/login-operator-saas');
-
-            $hasError = $browser->driver->executeScript(
-                "return document.querySelector('p.text-red-500') !== null"
-            );
-            dump('[05-error-visible] ' . ($hasError ? 'YES' : 'NO'));
-
-            $errorText = $browser->driver->executeScript(
-                "const el = document.querySelector('p.text-red-500'); return el ? el.textContent : 'NOT_FOUND';"
-            );
-            dump('[05-error-text] ' . $errorText);
-
-            $source = $browser->driver->getPageSource();
-            file_put_contents('tests/Browser/source/05-inactive-after.html', $source);
+                ->assertPathIs('/login-operator-saas')
+                ->assertSeeIn('p.text-red-500', 'dinonaktifkan');
         });
     }
 
@@ -94,7 +67,7 @@ class LoginTest extends DuskTestCase
     {
         $this->browse(function (Browser $browser) {
             $browser->visit('/operator-saas/dashboard')
-                ->waitForText('Operator SaaS', 10)
+                ->waitFor('button[type="submit"]', 10)
                 ->screenshot('operator-saas/login/06-guest-redirect')
                 ->assertPathIs('/login-operator-saas');
         });

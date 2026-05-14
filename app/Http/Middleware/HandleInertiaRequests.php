@@ -53,21 +53,4 @@ class HandleInertiaRequests extends Middleware
             'errors' => $errors,
         ];
     }
-        }
-
-        if ($user instanceof \App\Models\AdminCompany) {
-            $user->load('company');
-        }
-
-        $sessionErrors = $request->session()->get('errors');
-        $errors = $sessionErrors ? $sessionErrors->getBag('default')->toArray() : [];
-
-        return [
-            ...parent::share($request),
-            'auth' => [
-                'user' => $user,
-            ],
-            'errors' => $errors,
-        ];
-    }
 }
