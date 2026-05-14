@@ -49,7 +49,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (HttpExceptionInterface $e, Request $request) {
             $status = $e->getStatusCode();
 
-            if (! in_array($status, [403, 404, 500, 503])) {
+            if (! in_array($status, [403, 404, 429, 500, 503])) {
                 return null;
             }
 

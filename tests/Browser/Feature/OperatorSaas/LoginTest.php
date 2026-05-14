@@ -109,7 +109,8 @@ class LoginTest extends DuskTestCase
                     ->pause(500);
             }
 
-            $browser->screenshot('operator-saas/login/test_case_throttled/02-throttled')
+            $browser->pause(2000)
+                ->screenshot('operator-saas/login/test_case_throttled/02-throttled')
                 ->assertPathIs('/login-operator-saas');
         });
     }
