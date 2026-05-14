@@ -23,6 +23,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
+        if (env('DUSK_ENABLED', false)) {
+            $middleware->web(remove: [
+                \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+            ]);
+        }
+
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
             if ($request->is('operator-perusahaan/*') || $request->is('login-perusahaan*')) {
                 return route('operator-perusahaan.login');

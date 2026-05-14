@@ -22,7 +22,7 @@ class LoginTest extends DuskTestCase
         });
     }
 
-    public function test_wrong_password_shows_error(): void
+    public function test_wrong_password_redirects_back(): void
     {
         $user = AdminSaas::factory()->create(['is_active' => true]);
 
@@ -33,7 +33,7 @@ class LoginTest extends DuskTestCase
                 ->screenshot('operator-saas/login/02-before-submit')
                 ->press('Masuk')
                 ->pause(2000)
-                ->screenshot('operator-saas/login/03-error-shown')
+                ->screenshot('operator-saas/login/03-after-submit')
                 ->assertPathIs('/login-operator-saas');
         });
     }

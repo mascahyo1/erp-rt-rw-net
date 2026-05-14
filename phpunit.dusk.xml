@@ -24,5 +24,6 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="MAIL_MAILER" value="array"/>
+        <env name="DUSK_ENABLED" value="true"/>
     </php>
 </phpunit>
