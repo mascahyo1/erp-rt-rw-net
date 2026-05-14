@@ -3,19 +3,18 @@
 namespace Tests\Browser\Feature\OperatorSaas;
 
 use App\Models\AdminSaas;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class LoginTest extends DuskTestCase
 {
-    use DatabaseMigrations;
-
     public function test_case_berhasil(): void
     {
         $user = AdminSaas::factory()->create(['is_active' => true]);
 
         $this->browse(function (Browser $browser) use ($user) {
+            $browser->driver->manage()->deleteAllCookies();
             $browser->visit('/login-operator-saas')
                 ->waitFor('button[type="submit"]', 10)
                 ->assertPresent('input[type="email"]')
@@ -38,6 +37,7 @@ class LoginTest extends DuskTestCase
         $user = AdminSaas::factory()->create(['is_active' => true]);
 
         $this->browse(function (Browser $browser) use ($user) {
+            $browser->driver->manage()->deleteAllCookies();
             $browser->visit('/login-operator-saas')
                 ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
@@ -56,6 +56,7 @@ class LoginTest extends DuskTestCase
         $user = AdminSaas::factory()->inactive()->create();
 
         $this->browse(function (Browser $browser) use ($user) {
+            $browser->driver->manage()->deleteAllCookies();
             $browser->visit('/login-operator-saas')
                 ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
@@ -74,7 +75,7 @@ class LoginTest extends DuskTestCase
         $user = AdminSaas::factory()->create(['is_active' => true]);
 
         $this->browse(function (Browser $browser) use ($user) {
-            // Login first
+            $browser->driver->manage()->deleteAllCookies();
             $browser->visit('/login-operator-saas')
                 ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
@@ -84,7 +85,6 @@ class LoginTest extends DuskTestCase
                 ->pause(3000)
                 ->assertPathIs('/operator-saas/dashboard');
 
-            // Visit login page again - should redirect to dashboard
             $browser->visit('/login-operator-saas')
                 ->pause(2000)
                 ->screenshot('operator-saas/login/test_case_sudah_login_ga_perlu_login_lagi/02-redirected-to-dashboard')
@@ -94,23 +94,29 @@ class LoginTest extends DuskTestCase
 
     public function test_case_throttled(): void
     {
+        Cache::flush();
+
         $user = AdminSaas::factory()->create(['is_active' => true]);
 
         $this->browse(function (Browser $browser) use ($user) {
+            // $browser->driver->manage()->deleteAllCookies();
             $browser->visit('/login-operator-saas')
-                ->waitFor('button[type="submit"]', 10)
+                ->pause(5000)
                 ->screenshot('operator-saas/login/test_case_throttled/01-page');
 
-            // Submit wrong password 6 times to trigger throttle (limit: 5/min)
-            for ($i = 0; $i < 6; $i++) {
+            $screenshotIdx = 2;
+            for ($i = 1; $i <= 6; $i++) {
                 $browser->type('input[type="email"]', $user->email)
                     ->type('input[type="password"]', 'wrong')
                     ->click('button[type="submit"]')
-                    ->pause(500);
+                    ->pause(800)
+                    ->screenshot('operator-saas/login/test_case_throttled/' . str_pad($screenshotIdx, 2, '0', STR_PAD_LEFT) . '-attempt-' . ($i + 1));
+                $screenshotIdx++;
             }
 
             $browser->pause(2000)
-                ->screenshot('operator-saas/login/test_case_throttled/02-throttled')
+                ->screenshot('operator-saas/login/test_case_throttled/' . str_pad($screenshotIdx, 2, '0', STR_PAD_LEFT) . '-throttled-final')
+                ->assertSeeIn('span', '429')
                 ->assertPathIs('/login-operator-saas');
         });
     }

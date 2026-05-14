@@ -3,18 +3,16 @@
 namespace Tests\Browser\Feature\Pelanggan;
 
 use App\Models\Customer;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class LoginTest extends DuskTestCase
 {
-    use DatabaseMigrations;
-
     public function test_page_renders(): void
     {
         $this->browse(function (Browser $browser) {
             $browser->visit('/login-pelanggan')
+                ->waitForText('Masuk', 10)
                 ->screenshot('pelanggan/login/01-page')
                 ->assertSee('Masuk')
                 ->assertPresent('input[type="email"]')
@@ -28,10 +26,11 @@ class LoginTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->visit('/login-pelanggan')
+                ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
                 ->type('input[type="password"]', 'wrong-password')
                 ->screenshot('pelanggan/login/02-before-submit')
-                ->press('Masuk')
+                ->click('button[type="submit"]')
                 ->pause(2000)
                 ->screenshot('pelanggan/login/03-error-shown')
                 ->assertPathIs('/login-pelanggan');
@@ -44,10 +43,11 @@ class LoginTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->visit('/login-pelanggan')
+                ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
                 ->type('input[type="password"]', 'password')
                 ->screenshot('pelanggan/login/04-inactive-before')
-                ->press('Masuk')
+                ->click('button[type="submit"]')
                 ->pause(2000)
                 ->screenshot('pelanggan/login/05-inactive-after')
                 ->assertPathIs('/login-pelanggan');

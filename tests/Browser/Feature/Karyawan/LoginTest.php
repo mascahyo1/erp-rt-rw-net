@@ -3,18 +3,16 @@
 namespace Tests\Browser\Feature\Karyawan;
 
 use App\Models\Employee;
-use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Laravel\Dusk\Browser;
 use Tests\DuskTestCase;
 
 class LoginTest extends DuskTestCase
 {
-    use DatabaseMigrations;
-
     public function test_page_renders(): void
     {
         $this->browse(function (Browser $browser) {
             $browser->visit('/login-karyawan')
+                ->waitForText('Login Karyawan', 10)
                 ->screenshot('karyawan/login/01-page')
                 ->assertSee('Login Karyawan')
                 ->assertPresent('input[type="email"]')
@@ -28,10 +26,11 @@ class LoginTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->visit('/login-karyawan')
+                ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
                 ->type('input[type="password"]', 'wrong-password')
                 ->screenshot('karyawan/login/02-before-submit')
-                ->press('Masuk')
+                ->click('button[type="submit"]')
                 ->pause(2000)
                 ->screenshot('karyawan/login/03-error-shown')
                 ->assertPathIs('/login-karyawan');
@@ -44,10 +43,11 @@ class LoginTest extends DuskTestCase
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->visit('/login-karyawan')
+                ->waitFor('button[type="submit"]', 10)
                 ->type('input[type="email"]', $user->email)
                 ->type('input[type="password"]', 'password')
                 ->screenshot('karyawan/login/04-inactive-before')
-                ->press('Masuk')
+                ->click('button[type="submit"]')
                 ->pause(2000)
                 ->screenshot('karyawan/login/05-inactive-after')
                 ->assertPathIs('/login-karyawan');

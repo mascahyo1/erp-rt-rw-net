@@ -6,12 +6,19 @@
 - The user refreshes their browser manually to see changes.
 
 ## Dusk browser tests
-- Dusk requires production build artifacts because Chrome sandbox cannot reach Vite dev server.
+- Dusk requires production build assets because Chrome sandbox cannot reach Vite dev server.
 - When running Dusk: temporarily rename `public/hot` → `public/hot.bak`, run dusk, then restore.
 - After Dusk completes, `public/hot` MUST be restored for `npm run dev` to resume.
 - The build artifacts in `public/build/` are used as-is; they may be stale if form templates changed recently.
 - Screenshots are saved per-guard under `tests/Browser/screenshots/operator-saas/login/`, etc. (gitignored).
 - PHPUnit feature tests (`php artisan test`) can run anytime without special setup.
+
+### Parallel Dusk
+- **No migration** — `DatabaseMigrations` removed from all Browser test classes.
+- Seed DB once: `php artisan setup --demo`
+- Run: `.\parallel-dusk.ps1` (4 workers) or `.\parallel-dusk.ps1 -Workers 2`
+- Test files split across workers, same DB, factory creates unique data.
+- `public/hot` auto-disabled/restored by script.
 
 ## Test structure
 ```
