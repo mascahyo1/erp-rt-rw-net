@@ -99,9 +99,9 @@ class LoginTest extends DuskTestCase
         $user = AdminSaas::factory()->create(['is_active' => true]);
 
         $this->browse(function (Browser $browser) use ($user) {
-            // $browser->driver->manage()->deleteAllCookies();
+            $browser->driver->manage()->deleteAllCookies();
             $browser->visit('/login-operator-saas')
-                ->pause(5000)
+                ->pause(3000)
                 ->screenshot('operator-saas/login/test_case_throttled/01-page');
 
             $screenshotIdx = 2;
@@ -119,5 +119,37 @@ class LoginTest extends DuskTestCase
                 ->assertSeeIn('span', '429')
                 ->assertPathIs('/login-operator-saas');
         });
+    }
+
+    public function test_case_sudah_login_lalu_dinonaktifkan(): void
+    {
+        Cache::flush();
+        $password = 'Password123';
+        $user = AdminSaas::factory()->create(['is_active' => true, 'password' => $password]);
+
+        $this->browse(function (Browser $browser) use ($user, $password) {
+            $browser->driver->manage()->deleteAllCookies();
+            $browser->visit('/login-operator-saas')
+                ->pause(3000)
+                ->screenshot('operator-saas/login/test_case_sudah_login_lalu_dinonaktifkan/01-page');
+            $browser
+                ->type('input[type="email"]', $user->email)
+                ->type('input[type="password"]', $password)
+                ->click('button[type="submit"]')
+                ->screenshot('operator-saas/login/test_case_sudah_login_lalu_dinonaktifkan/02-input-cred')
+                ->pause(2000)
+                ->screenshot('operator-saas/login/test_case_sudah_login_lalu_dinonaktifkan/03-login-berhasil')
+                ->assertPathIs('/operator-saas/dashboard');
+            $user->update([
+                'is_active' => false
+            ]);
+            $browser->refresh()
+            ->pause(2000)
+            ->screenshot('operator-saas/login/test_case_sudah_login_lalu_dinonaktifkan/04-akun-dinonaktifkan')
+            ->assertPathIs('/login-operator-saas');
+
+                
+        });
+
     }
 }
