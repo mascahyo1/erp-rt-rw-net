@@ -42,16 +42,32 @@ class HandleInertiaRequests extends Middleware
             $user->load('company');
         }
 
+        $sessionErrors = $request->session()->get('errors');
+        $errors = $sessionErrors ? $sessionErrors->getBag('default')->toArray() : [];
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
             ],
-            'errors' => function () use ($request) {
-                return $request->session()->get('errors')
-                    ? $request->session()->get('errors')->getBag('default')->toArray()
-                    : (object) [];
-            },
+            'errors' => $errors,
+        ];
+    }
+        }
+
+        if ($user instanceof \App\Models\AdminCompany) {
+            $user->load('company');
+        }
+
+        $sessionErrors = $request->session()->get('errors');
+        $errors = $sessionErrors ? $sessionErrors->getBag('default')->toArray() : [];
+
+        return [
+            ...parent::share($request),
+            'auth' => [
+                'user' => $user,
+            ],
+            'errors' => $errors,
         ];
     }
 }

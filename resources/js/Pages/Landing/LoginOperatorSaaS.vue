@@ -1,9 +1,10 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3';
+import { useForm, usePage } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 
 defineOptions({ layout: LandingLayout });
 
+const page = usePage();
 const form = useForm({
   email: '',
   password: '',
@@ -61,10 +62,10 @@ function submit() {
                       type="email"
                       placeholder="admin@rtrwnet.id"
                       class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"
-                      :class="{ 'border-red-400 focus:ring-red-500': form.errors.email }"
+                      :class="{ 'border-red-400 focus:ring-red-500': page.props.errors?.email }"
                     />
                   </div>
-                  <p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
+                  <p v-if="page.props.errors?.email" class="text-red-500 text-xs mt-1">{{ page.props.errors.email[0] }}</p>
                 </div>
 
                 <div>
