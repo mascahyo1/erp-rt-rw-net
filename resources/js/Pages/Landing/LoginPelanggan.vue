@@ -2,10 +2,12 @@
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
+import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 
 defineOptions({ layout: LandingLayout });
 
 const activeTab = ref('login');
+const selectedCompany = ref(null);
 
 const loginForm = useForm({
     email: '',
@@ -67,6 +69,10 @@ const submitLogin = () => {
 
                             <form v-if="activeTab === 'login'" class="space-y-4" @submit.prevent="submitLogin">
                                 <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                                    <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                                </div>
+                                <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-envelope text-gray-400 text-sm"></i></div>
@@ -96,6 +102,10 @@ const submitLogin = () => {
                             </form>
 
                             <form v-if="activeTab === 'register'" class="space-y-4" @submit.prevent="">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                                    <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                                </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Lengkap</label>
                                     <input v-model="registerForm.name" type="text" placeholder="Nama Anda" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors" />

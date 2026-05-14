@@ -7,7 +7,7 @@
 >
     <testsuites>
         <testsuite name="Browser">
-            <directory>tests/Browser</directory>
+            <directory>tests/Browser/Feature</directory>
         </testsuite>
     </testsuites>
     <php>

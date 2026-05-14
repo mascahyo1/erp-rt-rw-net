@@ -2,8 +2,11 @@
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
+import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 
 defineOptions({ layout: LandingLayout });
+
+const selectedCompany = ref(null);
 
 const form = useForm({
     email: '',
@@ -36,6 +39,10 @@ const submit = () => {
                     <div class="rounded-2xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-8 shadow-lg">
                         <div class="text-center mb-6"><h1 class="text-2xl font-bold text-gray-900 dark:text-white">Login Karyawan</h1><p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Masuk dengan akun karyawan Anda.</p></div>
                         <form class="space-y-4" @submit.prevent="submit">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                                <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                            </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
                                 <div class="relative">
