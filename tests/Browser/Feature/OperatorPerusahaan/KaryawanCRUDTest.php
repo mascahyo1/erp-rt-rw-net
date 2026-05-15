@@ -460,4 +460,26 @@ class KaryawanCRUDTest extends DuskTestCase
             'name' => 'Edit Before Karyawan',
         ]);
     }
+
+    public static function tearDownAfterClass(): void
+    {
+        Employee::onlyTrashed()->forceDelete();
+
+        Employee::query()
+            ->where(function ($q) {
+                $q->where('name', 'like', '%Test%')
+                  ->orWhere('name', 'like', '%Bulk%')
+                  ->orWhere('name', 'like', '%Sort%')
+                  ->orWhere('name', 'like', '%Search%')
+                  ->orWhere('name', 'like', '%Create%')
+                  ->orWhere('name', 'like', '%Delete%')
+                  ->orWhere('name', 'like', '%Detail%')
+                  ->orWhere('name', 'like', '%Edit%')
+                  ->orWhere('name', 'like', '%Aktif%')
+                  ->orWhere('name', 'like', '%Nonaktif%');
+            })
+            ->forceDelete();
+
+        parent::tearDownAfterClass();
+    }
 }

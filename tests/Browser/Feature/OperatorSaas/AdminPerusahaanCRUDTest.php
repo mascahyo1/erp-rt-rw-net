@@ -437,4 +437,43 @@ class AdminPerusahaanCRUDTest extends DuskTestCase
             'name' => 'Edit Before Comp',
         ]);
     }
+
+    public static function tearDownAfterClass(): void
+    {
+        AdminCompany::onlyTrashed()->forceDelete();
+
+        AdminCompany::query()
+            ->where(function ($q) {
+                $q->where('name', 'like', '%Test%')
+                  ->orWhere('name', 'like', '%Bulk%')
+                  ->orWhere('name', 'like', '%Sort%')
+                  ->orWhere('name', 'like', '%Search%')
+                  ->orWhere('name', 'like', '%Create%')
+                  ->orWhere('name', 'like', '%Delete%')
+                  ->orWhere('name', 'like', '%Detail%')
+                  ->orWhere('name', 'like', '%Edit%')
+                  ->orWhere('name', 'like', '%Aktif%')
+                  ->orWhere('name', 'like', '%Nonaktif%');
+            })
+            ->forceDelete();
+
+        Company::onlyTrashed()->forceDelete();
+
+        Company::query()
+            ->where(function ($q) {
+                $q->where('name', 'like', '%Test%')
+                  ->orWhere('name', 'like', '%Bulk%')
+                  ->orWhere('name', 'like', '%Sort%')
+                  ->orWhere('name', 'like', '%Search%')
+                  ->orWhere('name', 'like', '%Create%')
+                  ->orWhere('name', 'like', '%Delete%')
+                  ->orWhere('name', 'like', '%Detail%')
+                  ->orWhere('name', 'like', '%Edit%')
+                  ->orWhere('name', 'like', '%Aktif%')
+                  ->orWhere('name', 'like', '%Nonaktif%');
+            })
+            ->forceDelete();
+
+        parent::tearDownAfterClass();
+    }
 }

@@ -12,7 +12,33 @@ param(
 $ErrorActionPreference = "Stop"
 
 $allFolders = @("OperatorSaas", "OperatorPerusahaan", "Karyawan", "Pelanggan")
-if ($Folders -ne "") {
+
+# === Interactive prompt (if no args passed) ===
+if ($MaxWorkers -eq 4 -and $Folders -eq "" -and $PSBoundParameters.Count -eq 0) {
+    Write-Host "=== Parallel Dusk (interactive) ===" -ForegroundColor Cyan
+    Write-Host ""
+
+    # Portal selection
+    Write-Host "Pilih portal (enter = all):" -ForegroundColor Yellow
+    $i = 1
+    foreach ($f in $allFolders) { Write-Host "  [$i] $f" -ForegroundColor Gray; $i++ }
+    Write-Host "  [A] All" -ForegroundColor Gray
+    $sel = Read-Host "Pilihan (1,2,3,4 / A)"
+    if ($sel -ne "" -and $sel -ne "A" -and $sel -ne "a") {
+        $allFolders = @()
+        $sel -split "[,\s]+" | Where-Object { $_ -match '^\d+$' } | ForEach-Object {
+            $idx = [int]$_ - 1
+            if ($idx -ge 0 -and $idx -lt 4) { $allFolders += @("OperatorSaas", "OperatorPerusahaan", "Karyawan", "Pelanggan")[$idx] }
+        }
+    }
+
+    # Worker count
+    $workerInput = Read-Host "Jumlah worker paralel [default 4]"
+    if ($workerInput -match '^\d+$') { $MaxWorkers = [int]$workerInput }
+    if ($MaxWorkers -lt 1) { $MaxWorkers = 4 }
+
+    Write-Host ""
+} elseif ($Folders -ne "") {
     $allFolders = $Folders -split "," | ForEach-Object { $_.Trim() }
 }
 
@@ -67,15 +93,18 @@ Remove-Item "$outDir\*.log" -Force -ErrorAction SilentlyContinue
 Remove-Item "$outDir\*.xml" -Force -ErrorAction SilentlyContinue
 
 # Distribute files across workers (round-robin)
-$buckets = @()
-for ($i = 0; $i -lt $workerCount; $i++) { $buckets += @(@()) }
+$buckets = New-Object 'System.Collections.Generic.List[object]'
+for ($i = 0; $i -lt $workerCount; $i++) {
+    [void]$buckets.Add((New-Object 'System.Collections.Generic.List[object]'))
+}
 for ($i = 0; $i -lt $allFiles.Count; $i++) {
-    $buckets[$i % $workerCount] += $allFiles[$i]
+    [void]$buckets[$i % $workerCount].Add($allFiles[$i])
 }
 
 # Launch workers
 $jobs = @()
 $start = Get-Date
+$phpunitConfig = Join-Path $PWD "phpunit.dusk.xml"
 
 for ($i = 0; $i -lt $workerCount; $i++) {
     $bucket = $buckets[$i]
@@ -84,15 +113,21 @@ for ($i = 0; $i -lt $workerCount; $i++) {
     $logAbs = Join-Path $PWD "$outDir\worker-$i.log"
     $junitAbs = Join-Path $PWD "$outDir\worker-$i.xml"
 
-    # Build file list for php artisan dusk (space-separated paths)
-    $fileList = ($bucket | ForEach-Object { '"' + $_.path + '"' }) -join " "
+    # Build class name filter for artisan dusk (pipe-separated class names)
+    $classNames = ($bucket | ForEach-Object {
+        $f = $_.path -replace [regex]::Escape((Join-Path $PWD "tests\Browser\Feature\")), ""
+        $f = $f -replace '\.php$', ''
+        $f = $f -replace '\\', '\\'
+        $baseName = [System.IO.Path]::GetFileNameWithoutExtension($_.name)
+        $f + "\\" + $baseName
+    }) -join "|"
 
     $job = Start-Job -Name "Dusk-W$i" -ScriptBlock {
-        param($files, $log, $junit, $wd)
+        param($filter, $log, $junit, $wd)
         Set-Location $wd
-        $cmd = "`$env:DUSK_ENABLED='true'; php artisan dusk $files --log-junit=`"$junit`" 2>&1"
+        $cmd = "`$env:DUSK_ENABLED='true'; php artisan dusk --filter=`"$filter`" --log-junit=`"$junit`" 2>&1"
         Invoke-Expression $cmd | Out-File $log -Encoding utf8
-    } -ArgumentList $fileList, $logAbs, $junitAbs, $PWD
+    } -ArgumentList $classNames, $logAbs, $junitAbs, $PWD
 
     $jobs += $job
     $fileNames = ($bucket | ForEach-Object { $_.name }) -join ", "
@@ -146,7 +181,7 @@ for ($i = 0; $i -lt $workerCount; $i++) {
     $junitAbs = Join-Path $PWD "$outDir\worker-$i.xml"
 
     if (-not (Test-Path $junitAbs)) {
-        Write-Host "  [WARN] worker-$i: xml not found" -ForegroundColor DarkYellow
+        Write-Host ("  [WARN] worker-" + $i + ": xml not found") -ForegroundColor DarkYellow
         continue
     }
 
@@ -265,7 +300,7 @@ foreach ($folder in $allFolders) {
 
     $p = ($group | Where-Object { $_.status -eq "passed" }).Count
     $f = ($group | Where-Object { $_.status -ne "passed" }).Count
-    $a = ($group | Measure-Object -Property assertion -Sum).Sum
+    $a = if ($group.Count -gt 0) { ($group | Measure-Object -Property assertion -Sum -ErrorAction SilentlyContinue).Sum } else { 0 }
     $t = $group.Count
 
     [void]$csvLines.Add("$jw,,SUBTOTAL,,,")
@@ -298,7 +333,7 @@ foreach ($folder in $allFolders) {
     $jw = $jenisWebMap[$folder]
     $p = ($results | Where-Object { $_.jenis_web -eq $jw -and $_.status -eq "passed" }).Count
     $f = ($results | Where-Object { $_.jenis_web -eq $jw -and $_.status -ne "passed" }).Count
-    $a = ($results | Where-Object { $_.jenis_web -eq $jw } | Measure-Object -Property assertion -Sum).Sum
+    $a = ($results | Where-Object { $_.jenis_web -eq $jw } | Measure-Object -Property assertion -Sum -ErrorAction SilentlyContinue).Sum
     $st = if ($f -eq 0) { "PASS" } else { "FAIL" }
     $cl = if ($f -eq 0) { "Green" } else { "Red" }
     Write-Host "  $folder : $st | $p passed, $f failed | $a assertions" -ForegroundColor $cl
@@ -306,7 +341,7 @@ foreach ($folder in $allFolders) {
 
 $totalP = ($results | Where-Object { $_.status -eq "passed" }).Count
 $totalF = ($results | Where-Object { $_.status -ne "passed" }).Count
-$totalA = ($results | Measure-Object -Property assertion -Sum).Sum
+$totalA = if ($results.Count -gt 0) { ($results | Measure-Object -Property assertion -Sum -ErrorAction SilentlyContinue).Sum } else { 0 }
 
 $fc = if ($totalF -eq 0) { "Green" } else { "Red" }
 Write-Host "`nTotal: $totalP passed, $totalF failed, $totalA assertions | $elapsed s" -ForegroundColor $fc

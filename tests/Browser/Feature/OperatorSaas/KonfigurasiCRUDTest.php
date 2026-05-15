@@ -268,4 +268,16 @@ class KonfigurasiCRUDTest extends DuskTestCase
             'value' => 'New Value After',
         ]);
     }
+
+    public static function tearDownAfterClass(): void
+    {
+        SaasConfig::onlyTrashed()->forceDelete();
+
+        SaasConfig::where('key', 'like', '%test%')
+            ->orWhere('key', 'like', '%update%')
+            ->orWhere('key', 'like', '%config%')
+            ->forceDelete();
+
+        parent::tearDownAfterClass();
+    }
 }

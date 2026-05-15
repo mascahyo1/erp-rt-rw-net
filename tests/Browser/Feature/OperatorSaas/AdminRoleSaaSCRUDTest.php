@@ -140,4 +140,11 @@ class AdminRoleSaaSCRUDTest extends DuskTestCase
             $browser->screenshot('operator-saas/admin-role-saas/05-create/02-filled');
         });
     }
+
+    public static function tearDownAfterClass(): void
+    {
+        ModelHasRole::query()->forceDelete();
+
+        parent::tearDownAfterClass();
+    }
 }

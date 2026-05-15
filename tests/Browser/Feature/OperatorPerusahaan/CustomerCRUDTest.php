@@ -466,4 +466,26 @@ class CustomerCRUDTest extends DuskTestCase
             'name' => 'Edit Before Customer',
         ]);
     }
+
+    public static function tearDownAfterClass(): void
+    {
+        Customer::onlyTrashed()->forceDelete();
+
+        Customer::query()
+            ->where(function ($q) {
+                $q->where('name', 'like', '%Test%')
+                  ->orWhere('name', 'like', '%Bulk%')
+                  ->orWhere('name', 'like', '%Sort%')
+                  ->orWhere('name', 'like', '%Search%')
+                  ->orWhere('name', 'like', '%Create%')
+                  ->orWhere('name', 'like', '%Delete%')
+                  ->orWhere('name', 'like', '%Detail%')
+                  ->orWhere('name', 'like', '%Edit%')
+                  ->orWhere('name', 'like', '%Aktif%')
+                  ->orWhere('name', 'like', '%Nonaktif%');
+            })
+            ->forceDelete();
+
+        parent::tearDownAfterClass();
+    }
 }

@@ -476,4 +476,26 @@ class AdminSaasCRUDTest extends DuskTestCase
             'name' => 'Edit Before Test',
         ]);
     }
+
+    public static function tearDownAfterClass(): void
+    {
+        AdminSaas::onlyTrashed()->forceDelete();
+
+        AdminSaas::query()
+            ->where(function ($q) {
+                $q->where('name', 'like', '%Test%')
+                  ->orWhere('name', 'like', '%Bulk%')
+                  ->orWhere('name', 'like', '%Sort%')
+                  ->orWhere('name', 'like', '%Search%')
+                  ->orWhere('name', 'like', '%Create%')
+                  ->orWhere('name', 'like', '%Delete%')
+                  ->orWhere('name', 'like', '%Detail%')
+                  ->orWhere('name', 'like', '%Edit%')
+                  ->orWhere('name', 'like', '%Aktif%')
+                  ->orWhere('name', 'like', '%Nonaktif%');
+            })
+            ->forceDelete();
+
+        parent::tearDownAfterClass();
+    }
 }
