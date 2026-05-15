@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('roles', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->enum('scope', ['operator_saas', 'admin_perusahaan', 'karyawan_perusahaan']);
-            $table->foreignUuid('company_id')->constrained('companies')->onDelete('restrict')->nullable();
+            $table->uuid('company_id')->nullable();
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('restrict');
             $table->string('name');
             $table->integer('display_order')->default(0);
             $table->boolean('is_active')->default(true);
