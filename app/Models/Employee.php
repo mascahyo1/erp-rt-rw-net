@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\HasBlameable;
+use App\Models\Traits\HasPermission;
 use App\Models\Traits\HasSoftDelete;
 use App\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Employee extends Authenticatable
 {
-    use HasUuidV7, HasBlameable, HasSoftDelete, HasFactory;
+    use HasUuidV7, HasBlameable, HasSoftDelete, HasFactory, HasPermission;
 
     protected $table = 'employees';
 

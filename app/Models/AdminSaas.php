@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\HasBlameable;
+use App\Models\Traits\HasPermission;
 use App\Models\Traits\HasSoftDelete;
 use App\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,7 +12,7 @@ use Illuminate\Notifications\Notifiable;
 
 class AdminSaas extends Authenticatable
 {
-    use HasFactory, Notifiable, HasUuidV7, HasBlameable, HasSoftDelete;
+    use HasFactory, Notifiable, HasUuidV7, HasBlameable, HasSoftDelete, HasPermission;
 
     protected $table = 'admin_saas';
 

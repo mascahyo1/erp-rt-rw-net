@@ -20,24 +20,28 @@ function toggleSidebar() {
 }
 function closeSidebarOnMobile() { if (window.innerWidth < 1024) sidebarVisible.value = false; }
 
-const menuItems = [
-  { label: 'Dashboard', href: '/operator-perusahaan/dashboard', icon: 'fa-tachometer-alt' },
-  { label: 'Perusahaan Saya', href: '/operator-perusahaan/perusahaan-saya', icon: 'fa-building' },
-  { label: 'Daftar Paket', href: '/operator-perusahaan/daftar-paket', icon: 'fa-box' },
-  { label: 'Customer', href: '/operator-perusahaan/customer', icon: 'fa-users' },
-  { label: 'Langganan Customer', href: '/operator-perusahaan/langganan-customer', icon: 'fa-link' },
-  { label: 'Tagihan', href: '/operator-perusahaan/tagihan', icon: 'fa-file-invoice' },
-  { label: 'Insentif', href: '/operator-perusahaan/insentif', icon: 'fa-coins' },
-  { label: 'Riwayat Insentif', href: '/operator-perusahaan/riwayat-insentif', icon: 'fa-receipt' },
-  { label: 'Riwayat Pembayaran', href: '/operator-perusahaan/riwayat-pembayaran', icon: 'fa-history' },
-  { label: 'Admin Perusahaan', href: '/operator-perusahaan/admin-perusahaan', icon: 'fa-user-tie' },
-  { label: 'Role Perusahaan', href: '/operator-perusahaan/role-perusahaan', icon: 'fa-tags' },
-  { label: 'Admin Role Perusahaan', href: '/operator-perusahaan/admin-role-perusahaan', icon: 'fa-user-gear' },
-  { label: 'Karyawan', href: '/operator-perusahaan/karyawan', icon: 'fa-users' },
-  { label: 'Role Web Karyawan', href: '/operator-perusahaan/role-web-karyawan', icon: 'fa-globe' },
-  { label: 'Admin Role Web Karyawan', href: '/operator-perusahaan/admin-role-web-karyawan', icon: 'fa-user-lock' },
-  { label: 'Konfigurasi Perusahaan', href: '/operator-perusahaan/konfigurasi-perusahaan', icon: 'fa-sliders' },
-];
+const menuItems = computed(() => {
+  const perms = page.props.permissions || [];
+  const items = [
+    { label: 'Dashboard', href: '/operator-perusahaan/dashboard', icon: 'fa-tachometer-alt' },
+  ];
+  if (perms.includes('perusahaan-saya.list')) items.push({ label: 'Perusahaan Saya', href: '/operator-perusahaan/perusahaan-saya', icon: 'fa-building' });
+  if (perms.includes('paket.list')) items.push({ label: 'Daftar Paket', href: '/operator-perusahaan/daftar-paket', icon: 'fa-box' });
+  if (perms.includes('customer.list')) items.push({ label: 'Customer', href: '/operator-perusahaan/customer', icon: 'fa-users' });
+  if (perms.includes('langganan.list')) items.push({ label: 'Langganan Customer', href: '/operator-perusahaan/langganan-customer', icon: 'fa-link' });
+  if (perms.includes('tagihan.list')) items.push({ label: 'Tagihan', href: '/operator-perusahaan/tagihan', icon: 'fa-file-invoice' });
+  if (perms.includes('insentif.list')) items.push({ label: 'Insentif', href: '/operator-perusahaan/insentif', icon: 'fa-coins' });
+  if (perms.includes('riwayat-insentif.list')) items.push({ label: 'Riwayat Insentif', href: '/operator-perusahaan/riwayat-insentif', icon: 'fa-receipt' });
+  if (perms.includes('riwayat-pembayaran.list')) items.push({ label: 'Riwayat Pembayaran', href: '/operator-perusahaan/riwayat-pembayaran', icon: 'fa-history' });
+  if (perms.includes('admin-perusahaan.list')) items.push({ label: 'Admin Perusahaan', href: '/operator-perusahaan/admin-perusahaan', icon: 'fa-user-tie' });
+  if (perms.includes('role-perusahaan-op.list')) items.push({ label: 'Role Perusahaan', href: '/operator-perusahaan/role-perusahaan', icon: 'fa-tags' });
+  if (perms.includes('admin-role-perusahaan-op.list')) items.push({ label: 'Admin Role Perusahaan', href: '/operator-perusahaan/admin-role-perusahaan', icon: 'fa-user-gear' });
+  if (perms.includes('karyawan.list')) items.push({ label: 'Karyawan', href: '/operator-perusahaan/karyawan', icon: 'fa-users' });
+  if (perms.includes('role-web-karyawan.list')) items.push({ label: 'Role Web Karyawan', href: '/operator-perusahaan/role-web-karyawan', icon: 'fa-globe' });
+  if (perms.includes('admin-role-web-karyawan.list')) items.push({ label: 'Admin Role Web Karyawan', href: '/operator-perusahaan/admin-role-web-karyawan', icon: 'fa-user-lock' });
+  if (perms.includes('konfigurasi-perusahaan.list')) items.push({ label: 'Konfigurasi Perusahaan', href: '/operator-perusahaan/konfigurasi-perusahaan', icon: 'fa-sliders' });
+  return items;
+});
 
 const currentPath = computed(() => page.url);
 function isActive(href) { return currentPath.value === href; }

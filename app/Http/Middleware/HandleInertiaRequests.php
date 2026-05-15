@@ -45,11 +45,17 @@ class HandleInertiaRequests extends Middleware
         $sessionErrors = $request->session()->get('errors');
         $errors = $sessionErrors ? $sessionErrors->getBag('default')->toArray() : [];
 
+        $permissions = [];
+        if ($user && method_exists($user, 'getAllPermissionNames')) {
+            $permissions = $user->getAllPermissionNames();
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
             ],
+            'permissions' => $permissions,
             'errors' => $errors,
         ];
     }

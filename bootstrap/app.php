@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'ensure.user.active' => \App\Http\Middleware\EnsureUserIsActive::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
 
         $middleware->web(append: [

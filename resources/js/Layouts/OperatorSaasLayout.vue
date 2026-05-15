@@ -25,17 +25,21 @@ function closeSidebarOnMobile() {
   }
 }
 
-const menuItems = [
-  { label: 'Dashboard', href: '/operator-saas/dashboard', icon: 'fa-tachometer-alt' },
-  { label: 'Admin Perusahaan', href: '/operator-saas/admin-perusahaan', icon: 'fa-user-tie' },
-  { label: 'Perusahaan', href: '/operator-saas/perusahaan', icon: 'fa-building' },
-  { label: 'Role Perusahaan', href: '/operator-saas/role-perusahaan', icon: 'fa-tags' },
-  { label: 'Role Admin Perusahaan', href: '/operator-saas/role-admin-perusahaan', icon: 'fa-user-gear' },
-  { label: 'Konfigurasi', href: '/operator-saas/konfigurasi', icon: 'fa-sliders' },
-  { label: 'Role SaaS', href: '/operator-saas/role-saas', icon: 'fa-user-tag' },
-  { label: 'Admin SaaS', href: '/operator-saas/admin-saas', icon: 'fa-user-shield' },
-  { label: 'Admin Role SaaS', href: '/operator-saas/admin-role-saas', icon: 'fa-users-cog' },
-];
+const menuItems = computed(() => {
+  const perms = page.props.permissions || [];
+  const items = [
+    { label: 'Dashboard', href: '/operator-saas/dashboard', icon: 'fa-tachometer-alt' },
+  ];
+  if (perms.includes('admin-perusahaan.list')) items.push({ label: 'Admin Perusahaan', href: '/operator-saas/admin-perusahaan', icon: 'fa-user-tie' });
+  if (perms.includes('perusahaan.list')) items.push({ label: 'Perusahaan', href: '/operator-saas/perusahaan', icon: 'fa-building' });
+  if (perms.includes('role-perusahaan.list')) items.push({ label: 'Role Perusahaan', href: '/operator-saas/role-perusahaan', icon: 'fa-tags' });
+  if (perms.includes('role-admin-perusahaan.list')) items.push({ label: 'Role Admin Perusahaan', href: '/operator-saas/role-admin-perusahaan', icon: 'fa-user-gear' });
+  if (perms.includes('konfigurasi.list')) items.push({ label: 'Konfigurasi', href: '/operator-saas/konfigurasi', icon: 'fa-sliders' });
+  if (perms.includes('role-saas.list')) items.push({ label: 'Role SaaS', href: '/operator-saas/role-saas', icon: 'fa-user-tag' });
+  if (perms.includes('admin-saas.list')) items.push({ label: 'Admin SaaS', href: '/operator-saas/admin-saas', icon: 'fa-user-shield' });
+  if (perms.includes('admin-role-saas.list')) items.push({ label: 'Admin Role SaaS', href: '/operator-saas/admin-role-saas', icon: 'fa-users-cog' });
+  return items;
+});
 
 const currentPath = computed(() => page.url);
 

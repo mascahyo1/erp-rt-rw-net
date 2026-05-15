@@ -9,6 +9,7 @@ Route::get('/login-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionControl
 Route::post('/login-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionController::class, 'store']);
 
 Route::middleware('auth:employee')->group(function () {
+    // Dashboard always accessible
     Route::get('/karyawan/dashboard', function () {
         $employee = auth()->user();
         $companyId = $employee->company_id;
@@ -22,27 +23,39 @@ Route::middleware('auth:employee')->group(function () {
         ]);
     })->name('employee.dashboard');
 
-    Route::get('/karyawan/profil-saya', function () {
-        return Inertia::render('Karyawan/ProfilSaya');
+    Route::middleware('permission:profil-saya.list')->group(function () {
+        Route::get('/karyawan/profil-saya', function () {
+            return Inertia::render('Karyawan/ProfilSaya');
+        });
     });
 
-    Route::get('/karyawan/customer', function () {
-        return Inertia::render('Karyawan/Customer');
+    Route::middleware('permission:karyawan-customer.list')->group(function () {
+        Route::get('/karyawan/customer', function () {
+            return Inertia::render('Karyawan/Customer');
+        });
     });
 
-    Route::get('/karyawan/langganan-customer', function () {
-        return Inertia::render('Karyawan/LanggananCustomer');
+    Route::middleware('permission:karyawan-langganan.list')->group(function () {
+        Route::get('/karyawan/langganan-customer', function () {
+            return Inertia::render('Karyawan/LanggananCustomer');
+        });
     });
 
-    Route::get('/karyawan/tagihan', function () {
-        return Inertia::render('Karyawan/Tagihan');
+    Route::middleware('permission:karyawan-tagihan.list')->group(function () {
+        Route::get('/karyawan/tagihan', function () {
+            return Inertia::render('Karyawan/Tagihan');
+        });
     });
 
-    Route::get('/karyawan/insentif-saya', function () {
-        return Inertia::render('Karyawan/InsentifSaya');
+    Route::middleware('permission:karyawan-insentif.list')->group(function () {
+        Route::get('/karyawan/insentif-saya', function () {
+            return Inertia::render('Karyawan/InsentifSaya');
+        });
     });
 
-    Route::get('/karyawan/riwayat-pembayaran', function () {
-        return Inertia::render('Karyawan/RiwayatPembayaran');
+    Route::middleware('permission:karyawan-riwayat-pembayaran.list')->group(function () {
+        Route::get('/karyawan/riwayat-pembayaran', function () {
+            return Inertia::render('Karyawan/RiwayatPembayaran');
+        });
     });
 });

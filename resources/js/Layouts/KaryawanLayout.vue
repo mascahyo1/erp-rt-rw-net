@@ -11,15 +11,19 @@ const userEmail = computed(() => user.value?.email ?? '');
 const sidebarOpen = ref(false);
 const profileDropdownOpen = ref(false);
 
-const menuItems = [
-  { label: 'Dashboard', href: '/karyawan/dashboard', icon: 'fa-tachometer-alt' },
-  { label: 'Profil Saya', href: '/karyawan/profil-saya', icon: 'fa-user' },
-  { label: 'Customer', href: '/karyawan/customer', icon: 'fa-users' },
-  { label: 'Langganan Customer', href: '/karyawan/langganan-customer', icon: 'fa-link' },
-  { label: 'Tagihan', href: '/karyawan/tagihan', icon: 'fa-file-invoice' },
-  { label: 'Insentif Saya', href: '/karyawan/insentif-saya', icon: 'fa-coins' },
-  { label: 'Riwayat Pembayaran', href: '/karyawan/riwayat-pembayaran', icon: 'fa-history' },
-];
+const menuItems = computed(() => {
+  const perms = page.props.permissions || [];
+  const items = [
+    { label: 'Dashboard', href: '/karyawan/dashboard', icon: 'fa-tachometer-alt' },
+  ];
+  if (perms.includes('profil-saya.list')) items.push({ label: 'Profil Saya', href: '/karyawan/profil-saya', icon: 'fa-user' });
+  if (perms.includes('karyawan-customer.list')) items.push({ label: 'Customer', href: '/karyawan/customer', icon: 'fa-users' });
+  if (perms.includes('karyawan-langganan.list')) items.push({ label: 'Langganan Customer', href: '/karyawan/langganan-customer', icon: 'fa-link' });
+  if (perms.includes('karyawan-tagihan.list')) items.push({ label: 'Tagihan', href: '/karyawan/tagihan', icon: 'fa-file-invoice' });
+  if (perms.includes('karyawan-insentif.list')) items.push({ label: 'Insentif Saya', href: '/karyawan/insentif-saya', icon: 'fa-coins' });
+  if (perms.includes('karyawan-riwayat-pembayaran.list')) items.push({ label: 'Riwayat Pembayaran', href: '/karyawan/riwayat-pembayaran', icon: 'fa-history' });
+  return items;
+});
 
 const currentPath = computed(() => page.url);
 function isActive(href) { return currentPath.value === href; }
