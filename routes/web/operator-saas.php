@@ -126,16 +126,18 @@ Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
         ->name('operator-saas.admin-saas.index');
     Route::post('/operator-saas/admin-saas', [AdminSaasController::class, 'store'])
         ->name('operator-saas.admin-saas.store');
+    Route::post('/operator-saas/admin-saas/bulk-delete', [AdminSaasController::class, 'bulkDelete'])
+        ->name('operator-saas.admin-saas.bulk-delete');
+    Route::post('/operator-saas/admin-saas/bulk-status', [AdminSaasController::class, 'bulkToggleStatus'])
+        ->name('operator-saas.admin-saas.bulk-status');
+    Route::post('/operator-saas/admin-saas/bulk-restore', [AdminSaasController::class, 'bulkRestore'])
+        ->name('operator-saas.admin-saas.bulk-restore');
     Route::put('/operator-saas/admin-saas/{adminSaas}', [AdminSaasController::class, 'update'])
         ->name('operator-saas.admin-saas.update');
     Route::delete('/operator-saas/admin-saas/{adminSaas}', [AdminSaasController::class, 'destroy'])
         ->name('operator-saas.admin-saas.destroy');
     Route::post('/operator-saas/admin-saas/{id}/restore', [AdminSaasController::class, 'restore'])
         ->name('operator-saas.admin-saas.restore');
-    Route::post('/operator-saas/admin-saas/bulk-delete', [AdminSaasController::class, 'bulkDelete'])
-        ->name('operator-saas.admin-saas.bulk-delete');
-    Route::post('/operator-saas/admin-saas/bulk-status', [AdminSaasController::class, 'bulkToggleStatus'])
-        ->name('operator-saas.admin-saas.bulk-status');
 
     // Admin Role SaaS
     Route::get('/operator-saas/admin-role-saas', [AdminRoleSaasController::class, 'index'])

@@ -34,7 +34,9 @@ class MigrateSeedFast extends Command
 
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        $this->info('[3/3] Optimizing...');
+        $this->info('[3/3] Clearing cache...');
+        $this->callSilently('route:clear');
+        $this->callSilently('config:clear');
         $this->callSilently('optimize:clear');
         $this->callSilently('optimize');
 

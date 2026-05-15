@@ -173,6 +173,23 @@ function bulkDelete() {
   });
 }
 
+function bulkRestore() {
+  if (selectedIds.value.length === 0) return;
+  const count = selectedIds.value.length;
+  router.post('/operator-saas/admin-saas/bulk-restore', { ids: [...selectedIds.value] }, {
+    preserveState: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      selectedIds.value = [];
+      selectAll.value = false;
+      toast.success(`${count} admin berhasil dipulihkan.`);
+    },
+    onError: () => {
+      toast.error('Gagal memulihkan admin. Silakan coba lagi.');
+    },
+  });
+}
+
 function bulkSetStatus(status) {
   if (selectedIds.value.length === 0) return;
   const count = selectedIds.value.length;
@@ -388,8 +405,9 @@ function confirmDelete() {
       <div v-if="selectedIds.length > 0" class="flex items-center justify-between px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl shadow-sm">
         <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300"><i class="fas fa-check-circle mr-1.5"></i> {{ selectedIds.length }} data dipilih</span>
         <div class="flex items-center gap-2">
-          <button @click="bulkSetStatus('Aktif')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"><i class="fas fa-check mr-1"></i> Aktifkan</button>
-          <button @click="bulkSetStatus('Nonaktif')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors"><i class="fas fa-ban mr-1"></i> Nonaktifkan</button>
+          <button v-if="terhapusFilter === 'ya'" @click="bulkRestore()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"><i class="fas fa-undo-alt mr-1"></i> Pulihkan</button>
+          <button v-if="terhapusFilter !== 'ya'" @click="bulkSetStatus('Aktif')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"><i class="fas fa-check mr-1"></i> Aktifkan</button>
+          <button v-if="terhapusFilter !== 'ya'" @click="bulkSetStatus('Nonaktif')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors"><i class="fas fa-ban mr-1"></i> Nonaktifkan</button>
           <button @click="bulkDelete()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"><i class="fas fa-trash-alt mr-1"></i> Hapus</button>
         </div>
       </div>
@@ -439,7 +457,7 @@ function confirmDelete() {
               <tr v-if="adminsList.length === 0"><td colspan="6" class="px-4 py-16 text-center text-gray-500 dark:text-gray-400"><i class="fas fa-user-shield text-3xl mb-2 block opacity-40"></i>Tidak ada data admin SaaS.</td></tr>
               <tr v-for="a in adminsList" :key="a.id" :class="['transition-colors', a.dihapus ? 'bg-red-50/30 dark:bg-red-900/10 opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30']">
                 <td class="px-4 py-3">
-                  <input v-if="!a.dihapus" :checked="selectedIds.includes(a.id)" type="checkbox" @change="toggleSelect(a.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
+                  <input :checked="selectedIds.includes(a.id)" type="checkbox" @change="toggleSelect(a.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
                 </td>
                 <td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white text-xs font-bold shrink-0">{{ a.nama.charAt(0) }}</div><span class="font-medium text-gray-900 dark:text-white whitespace-nowrap" :class="{ 'line-through': a.dihapus }">{{ a.nama }}</span></div></td>
                 <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap" :class="{ 'line-through': a.dihapus }">{{ a.email }}</td>
