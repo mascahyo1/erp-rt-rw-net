@@ -16,6 +16,8 @@ class LanggananCustomerViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/langganan-customer')
                 ->waitForText('Langganan Customer', 10)
+                ->assertSee('Langganan Customer')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/langganan-customer/01-page');
         });

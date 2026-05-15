@@ -16,6 +16,8 @@ class DashboardViewTest extends DuskTestCase
             $browser->loginAs(AdminSaas::first(), 'web')
                 ->visit('/operator-saas/dashboard')
                 ->waitForText('Dashboard', 10)
+                ->assertSee('Dashboard')
+                ->assertPresent('nav')
                 ->screenshot('operator-saas/dashboard/01-page');
         });
     }
@@ -28,6 +30,7 @@ class DashboardViewTest extends DuskTestCase
             $browser->loginAs(AdminSaas::first(), 'web')
                 ->visit('/operator-saas/dashboard')
                 ->waitForText('Dashboard', 10)
+                ->assertPresent('main')
                 ->pause(1000)
                 ->screenshot('operator-saas/dashboard/02-stats');
         });
@@ -41,6 +44,7 @@ class DashboardViewTest extends DuskTestCase
             $browser->loginAs(AdminSaas::first(), 'web')
                 ->visit('/operator-saas/dashboard')
                 ->waitForText('Dashboard', 10)
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-saas/dashboard/03-navigation');
         });

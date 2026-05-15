@@ -249,7 +249,25 @@ Setiap item sidebar wajib memiliki minimal 1 file browser test. Sidebar mengikut
 - WAJIB baca file Vue terkait dulu untuk dapatkan text selector yang tepat.
 
 ### Report Excel
-Jalankan `.\parallel-dusk.ps1` untuk menjalankan semua Dusk test parallel dan menghasilkan `tests/Browser/dusk-output/dusk-report.csv` dengan format:
+Jalankan `.\parallel-dusk.ps1` untuk menjalankan semua Dusk test parallel dan menghasilkan `tests/Browser/dusk-output/dusk-report-YYYYMMDD-HHMMSS.csv` dengan format:
 | jenis web | lokasi file test case | method test case | total assertion | status | description |
 
 Nilai `jenis web`: `web operator saas`, `web operator perusahaan`, `web karyawan`, `web pelanggan`.
+
+CSV memiliki summary rows di bagian bawah: subtotal per web (passed/failed/assertions) + GRAND TOTAL.
+
+### Parallel Dusk Options
+```powershell
+# Default: 4 worker, semua 4 portal
+.\parallel-dusk.ps1
+
+# 8 worker (file-level parallel, lebih cepat)
+.\parallel-dusk.ps1 -MaxWorkers 8
+
+# Hanya portal tertentu
+.\parallel-dusk.ps1 -Folders "OperatorSaas,Karyawan"
+
+# Kombinasi
+.\parallel-dusk.ps1 -MaxWorkers 6 -Folders "OperatorPerusahaan,Pelanggan"
+```
+Setiap worker menjalankan subset test file yang didistribusi round-robin. Output disimpan di `tests/Browser/dusk-output/worker-N.log` dan `worker-N.xml`.

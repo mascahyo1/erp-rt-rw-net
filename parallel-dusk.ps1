@@ -1,12 +1,23 @@
 # parallel-dusk.ps1
-# Usage: .\parallel-dusk.ps1
-# Runs Dusk tests in parallel + generates timestamped dusk-report CSV.
+# Usage: .\parallel-dusk.ps1 [-MaxWorkers 8] [-Folders "OperatorSaas,OperatorPerusahaan"]
+# Runs Dusk tests in parallel (file-level) + generates timestamped dusk-report CSV.
 # Seed DB first: php artisan setup --demo
+
+[CmdletBinding()]
+param(
+    [int]$MaxWorkers = 4,
+    [string]$Folders = ""
+)
 
 $ErrorActionPreference = "Stop"
 
-$folders = @("OperatorSaas", "OperatorPerusahaan", "Karyawan", "Pelanggan")
+$allFolders = @("OperatorSaas", "OperatorPerusahaan", "Karyawan", "Pelanggan")
+if ($Folders -ne "") {
+    $allFolders = $Folders -split "," | ForEach-Object { $_.Trim() }
+}
+
 $outDir = "tests\Browser\dusk-output"
+$baseDir = "tests\Browser\Feature"
 
 $jenisWebMap = @{
     "OperatorSaas"        = "web operator saas"
@@ -18,8 +29,36 @@ $jenisWebMap = @{
 $timestamp = (Get-Date).ToString("yyyyMMdd-HHmmss")
 $csvFile = "$outDir\dusk-report-$timestamp.csv"
 
-Write-Host "=== Parallel Dusk ($($folders.Count) workers) ===" -ForegroundColor Cyan
+Write-Host "=== Parallel Dusk ===" -ForegroundColor Cyan
+Write-Host "  MaxWorkers: $MaxWorkers" -ForegroundColor Gray
+Write-Host "  Folders   : $($allFolders -join ', ')" -ForegroundColor Gray
 
+# Discover all test files grouped by folder
+$allFiles = [System.Collections.ArrayList]::new()
+foreach ($folder in $allFolders) {
+    $path = Join-Path $PWD "$baseDir\$folder"
+    if (Test-Path $path) {
+        $files = Get-ChildItem $path -Filter "*Test.php" | Sort-Object Name
+        foreach ($f in $files) {
+            [void]$allFiles.Add(@{
+                folder = $folder
+                path   = $f.FullName
+                name   = $f.Name
+            })
+        }
+    }
+}
+
+if ($allFiles.Count -eq 0) {
+    Write-Host "  No test files found!" -ForegroundColor Red
+    exit 1
+}
+
+# Limit workers to file count
+$workerCount = [Math]::Min($MaxWorkers, $allFiles.Count)
+Write-Host "  Test files: $($allFiles.Count) → $workerCount workers" -ForegroundColor Gray
+
+# Create output dir
 $hotExists = Test-Path public/hot
 if ($hotExists) { Move-Item public/hot public/hot.bak -Force }
 
@@ -27,24 +66,37 @@ New-Item -ItemType Directory -Force $outDir | Out-Null
 Remove-Item "$outDir\*.log" -Force -ErrorAction SilentlyContinue
 Remove-Item "$outDir\*.xml" -Force -ErrorAction SilentlyContinue
 
+# Distribute files across workers (round-robin)
+$buckets = @()
+for ($i = 0; $i -lt $workerCount; $i++) { $buckets += @(@()) }
+for ($i = 0; $i -lt $allFiles.Count; $i++) {
+    $buckets[$i % $workerCount] += $allFiles[$i]
+}
+
+# Launch workers
 $jobs = @()
 $start = Get-Date
 
-foreach ($folder in $folders) {
-    $logFile = "$outDir\$folder.log"
-    $junitFile = "$outDir\$folder.xml"
+for ($i = 0; $i -lt $workerCount; $i++) {
+    $bucket = $buckets[$i]
+    if ($bucket.Count -eq 0) { continue }
 
-    $logAbs = Join-Path $PWD $logFile
-    $junitAbs = Join-Path $PWD $junitFile
+    $logAbs = Join-Path $PWD "$outDir\worker-$i.log"
+    $junitAbs = Join-Path $PWD "$outDir\worker-$i.xml"
 
-    $job = Start-Job -Name "Dusk-$folder" -ScriptBlock {
-        param($f, $log, $junit, $wd)
+    # Build file list for php artisan dusk (space-separated paths)
+    $fileList = ($bucket | ForEach-Object { '"' + $_.path + '"' }) -join " "
+
+    $job = Start-Job -Name "Dusk-W$i" -ScriptBlock {
+        param($files, $log, $junit, $wd)
         Set-Location $wd
-        $cmd = "`$env:DUSK_ENABLED='true'; php artisan dusk --filter=`"$f`" --log-junit=`"$junit`" 2>&1"
+        $cmd = "`$env:DUSK_ENABLED='true'; php artisan dusk $files --log-junit=`"$junit`" 2>&1"
         Invoke-Expression $cmd | Out-File $log -Encoding utf8
-    } -ArgumentList $folder, $logAbs, $junitAbs, $PWD
+    } -ArgumentList $fileList, $logAbs, $junitAbs, $PWD
+
     $jobs += $job
-    Write-Host "  Worker $folder -> $logFile" -ForegroundColor Yellow
+    $fileNames = ($bucket | ForEach-Object { $_.name }) -join ", "
+    Write-Host "  Worker $i : $($bucket.Count) files → $logAbs" -ForegroundColor Yellow
 }
 
 # Monitor progress
@@ -58,19 +110,20 @@ while ($jobs | Where-Object { $_.State -eq 'Running' }) {
     $spinIdx++
 
     $line = "$spin ${el}s | "
-    foreach ($folder in $folders) {
-        $j = $jobs | Where-Object { $_.Name -eq "Dusk-$folder" }
+    for ($i = 0; $i -lt $workerCount; $i++) {
+        $j = $jobs | Where-Object { $_.Name -eq "Dusk-W$i" }
+        if (-not $j) { continue }
         $state = if ($j.State -eq 'Completed') { "OK" } elseif ($j.State -eq 'Failed') { "ERR" } elseif ($j.State -eq 'Running') { "RUN" } else { $j.State }
 
-        $logAbs = Join-Path $PWD "$outDir\$folder.log"
-        $size = if (Test-Path $logAbs) { "{0,5}KB" -f [math]::Round((Get-Item $logAbs).Length / 1KB, 0) } else { " 0KB" }
+        $logAbs = Join-Path $PWD "$outDir\worker-$i.log"
+        $size = if (Test-Path $logAbs) { "{0,4}KB" -f [math]::Round((Get-Item $logAbs).Length / 1KB, 0) } else { " 0KB" }
 
         $pass = 0; $fail = 0
         if (Test-Path $logAbs) {
             try { $txt = Get-Content $logAbs -Raw 2>$null; $pass = ([regex]::Matches($txt, [char]0x2713)).Count; $fail = ([regex]::Matches($txt, [char]0x2A2F)).Count } catch {}
         }
 
-        $line += "[" + $folder + " " + $state + " " + $size + " +$pass/-$fail] "
+        $line += "[W$i $state $size +$pass/-$fail] "
     }
 
     Write-Host "`r$line" -NoNewline
@@ -89,20 +142,17 @@ if ($hotExists) { Move-Item public/hot.bak public/hot -Force }
 Write-Host "`n=== Parsing Results ===" -ForegroundColor Cyan
 $results = [System.Collections.ArrayList]::new()
 
-foreach ($folder in $folders) {
-    $junitAbs = Join-Path $PWD "$outDir\$folder.xml"
-    $jenisWeb = $jenisWebMap[$folder]
+for ($i = 0; $i -lt $workerCount; $i++) {
+    $junitAbs = Join-Path $PWD "$outDir\worker-$i.xml"
 
     if (-not (Test-Path $junitAbs)) {
-        Write-Host ("  [WARN] " + $folder + ": xml not found") -ForegroundColor DarkYellow
+        Write-Host "  [WARN] worker-$i: xml not found" -ForegroundColor DarkYellow
         continue
     }
 
     try {
         [xml]$junit = Get-Content $junitAbs -Encoding utf8
 
-        # JUnit nested: testsuites > testsuite(phpunit.xml) > testsuite(Browser) > testsuite(ClassName...)
-        # Walk recursively to find testcase elements
         $allSuites = @($junit.testsuites.testsuite)
         while ($allSuites.Count -gt 0 -and $allSuites[0].testcase -eq $null -and $allSuites[0].testsuite -ne $null) {
             $allSuites = @($allSuites[0].testsuite)
@@ -114,32 +164,55 @@ foreach ($folder in $folders) {
             $className = $suite.name
             $classFile = $suite.file
 
+            # Determine jenis_web from class namespace
+            $jenisWeb = "unknown"
+            foreach ($f in $jenisWebMap.Keys) {
+                if ($className -match "Tests\\Browser\\Feature\\$f\\") {
+                    $jenisWeb = $jenisWebMap[$f]
+                    break
+                }
+            }
+
             @($suite.testcase) | ForEach-Object {
                 $tc = $_
                 $methodName = $tc.name
                 $assertions = [int]$tc.assertions
-                $time = [math]::Round([float]$tc.time, 2)
 
                 $status = "passed"
                 $description = ""
 
                 if ($tc.error -ne $null) {
                     $status = "failed"
-                    $errMsg = $tc.error.'#text'
-                    if ($errMsg -match 'Missing required parameter.*dusk\.login') {
+                    $errText = $tc.error.'#text'
+                    $errLines = $errText -split "[\r\n]+"
+                    $msgLine = ""
+                    foreach ($ln in $errLines) {
+                        $t = $ln.Trim()
+                        if ($t -match 'Exception:|Error:') { $msgLine = $t; break }
+                        if ($t.Length -gt 10 -and $t -notmatch '^Tests\\' -and $t -notmatch '^C:\\\\') { $msgLine = $t; break }
+                    }
+                    if ($msgLine -eq "") { $msgLine = $errLines[0].Trim() }
+
+                    if ($msgLine -match 'Missing required parameter.*dusk\.login') {
                         $status = "error"
                         $description = "Dusk auth route error - check dusk login route"
                     } else {
-                        $firstLine = ($errMsg -split "`n|`r")[0].Trim()
-                        if ($firstLine.Length -gt 250) { $firstLine = $firstLine.Substring(0, 247) + "..." }
-                        $description = $firstLine
+                        if ($msgLine.Length -gt 250) { $msgLine = $msgLine.Substring(0, 247) + "..." }
+                        $description = $msgLine
                     }
                 } elseif ($tc.failure -ne $null) {
                     $status = "failed"
-                    $failMsg = $tc.failure.'#text'
-                    $firstLine = ($failMsg -split "`n|`r")[0].Trim()
-                    if ($firstLine.Length -gt 250) { $firstLine = $firstLine.Substring(0, 247) + "..." }
-                    $description = $firstLine
+                    $failText = $tc.failure.'#text'
+                    $failLines = $failText -split "[\r\n]+"
+                    $msgLine = ""
+                    foreach ($ln in $failLines) {
+                        $t = $ln.Trim()
+                        if ($t -match 'Expected |Failed asserting|assertSee|assertDontSee|assertPresent') { $msgLine = $t; break }
+                        if ($t.Length -gt 10 -and $t -notmatch '^Tests\\') { $msgLine = $t; break }
+                    }
+                    if ($msgLine -eq "") { $msgLine = $failLines[0].Trim() }
+                    if ($msgLine.Length -gt 250) { $msgLine = $msgLine.Substring(0, 247) + "..." }
+                    $description = $msgLine
                 } elseif ($assertions -eq 0) {
                     $description = "no assertions performed"
                 }
@@ -155,17 +228,16 @@ foreach ($folder in $folders) {
             }
         }
     } catch {
-        Write-Host ("  [ERR] Failed to parse " + $folder + ".xml: " + $_.Exception.Message) -ForegroundColor Red
+        Write-Host ("  [ERR] worker-$i xml: " + $_.Exception.Message) -ForegroundColor Red
     }
 }
 
 # ============================================================
-# GENERATE CSV (Excel-compatible, UTF-8 BOM)
+# GENERATE CSV
 # ============================================================
 $csvPath = Join-Path $PWD $csvFile
 $csvLines = [System.Collections.ArrayList]::new()
 
-# CSV header
 [void]$csvLines.Add('jenis web,lokasi file test case,method test case,total assertion,status,description')
 
 foreach ($r in $results) {
@@ -175,32 +247,70 @@ foreach ($r in $results) {
     $ass   = $r.assertion
     $stat  = $r.status
     $desc  = if ($r.description) { '"' + $r.description.Replace('"', '""') + '"' } else { "" }
-
     [void]$csvLines.Add("$web,$file,$mtd,$ass,$stat,$desc")
 }
+
+# Summary rows
+[void]$csvLines.Add("")
+
+$grandPassed = 0
+$grandFailed = 0
+$grandAssert = 0
+$grandTotal = 0
+
+foreach ($folder in $allFolders) {
+    $jw = $jenisWebMap[$folder]
+    $group = @($results | Where-Object { $_.jenis_web -eq $jw })
+    if ($group.Count -eq 0) { continue }
+
+    $p = ($group | Where-Object { $_.status -eq "passed" }).Count
+    $f = ($group | Where-Object { $_.status -ne "passed" }).Count
+    $a = ($group | Measure-Object -Property assertion -Sum).Sum
+    $t = $group.Count
+
+    [void]$csvLines.Add("$jw,,SUBTOTAL,,,")
+    [void]$csvLines.Add("$jw,,> passed,$p,,")
+    [void]$csvLines.Add("$jw,,> failed,$f,,")
+    [void]$csvLines.Add("$jw,,> assertions,$a,,")
+    [void]$csvLines.Add("$jw,,> total methods,$t,,")
+    [void]$csvLines.Add("")
+
+    $grandPassed += $p
+    $grandFailed += $f
+    $grandAssert += $a
+    $grandTotal += $t
+}
+
+[void]$csvLines.Add("GRAND TOTAL,,SUBTOTAL,,,")
+[void]$csvLines.Add("GRAND TOTAL,,> passed,$grandPassed,,")
+[void]$csvLines.Add("GRAND TOTAL,,> failed,$grandFailed,,")
+[void]$csvLines.Add("GRAND TOTAL,,> assertions,$grandAssert,,")
+[void]$csvLines.Add("GRAND TOTAL,,> total methods,$grandTotal,,")
 
 [System.IO.File]::WriteAllLines($csvPath, $csvLines, [System.Text.UTF8Encoding]::new($true))
 
 # ============================================================
-# PRINT SUMMARY
+# CONSOLE SUMMARY
 # ============================================================
 Write-Host "`n=== Summary ($elapsed s) ===" -ForegroundColor Cyan
-$totalPassed = 0
-$totalFailed = 0
 
-foreach ($folder in $folders) {
-    $pass = ($results | Where-Object { $_.jenis_web -eq $jenisWebMap[$folder] -and $_.status -eq "passed" }).Count
-    $fail = ($results | Where-Object { $_.jenis_web -eq $jenisWebMap[$folder] -and $_.status -ne "passed" }).Count
-    $status = if ($fail -eq 0) { "PASS" } else { "FAIL" }
-    $color = if ($fail -eq 0) { "Green" } else { "Red" }
-    Write-Host "  $folder : $status ($pass passed, $fail failed)" -ForegroundColor $color
-    $totalPassed += $pass
-    $totalFailed += $fail
+foreach ($folder in $allFolders) {
+    $jw = $jenisWebMap[$folder]
+    $p = ($results | Where-Object { $_.jenis_web -eq $jw -and $_.status -eq "passed" }).Count
+    $f = ($results | Where-Object { $_.jenis_web -eq $jw -and $_.status -ne "passed" }).Count
+    $a = ($results | Where-Object { $_.jenis_web -eq $jw } | Measure-Object -Property assertion -Sum).Sum
+    $st = if ($f -eq 0) { "PASS" } else { "FAIL" }
+    $cl = if ($f -eq 0) { "Green" } else { "Red" }
+    Write-Host "  $folder : $st | $p passed, $f failed | $a assertions" -ForegroundColor $cl
 }
+
+$totalP = ($results | Where-Object { $_.status -eq "passed" }).Count
+$totalF = ($results | Where-Object { $_.status -ne "passed" }).Count
+$totalA = ($results | Measure-Object -Property assertion -Sum).Sum
+
+$fc = if ($totalF -eq 0) { "Green" } else { "Red" }
+Write-Host "`nTotal: $totalP passed, $totalF failed, $totalA assertions | $elapsed s" -ForegroundColor $fc
+
 $jobs | Remove-Job -Force
-
-$finalColor = if ($totalFailed -eq 0) { "Green" } else { "Red" }
-Write-Host "`nTotal: $totalPassed passed, $totalFailed failed | Time: ${elapsed}s" -ForegroundColor $finalColor
-
 Write-Host "`nReport: $csvPath" -ForegroundColor Cyan
-Write-Host "  Buka di Excel: Data → From Text/CSV → pilih file di atas (UTF-8)" -ForegroundColor Gray
+Write-Host "  Workers: $workerCount | Test files: $($allFiles.Count) | Buka CSV di Excel" -ForegroundColor Gray

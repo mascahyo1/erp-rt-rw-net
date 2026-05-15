@@ -16,6 +16,8 @@ class RoleWebKaryawanViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/role-web-karyawan')
                 ->waitForText('Role Web Karyawan', 10)
+                ->assertSee('Role Web Karyawan')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/role-web-karyawan/01-page');
         });

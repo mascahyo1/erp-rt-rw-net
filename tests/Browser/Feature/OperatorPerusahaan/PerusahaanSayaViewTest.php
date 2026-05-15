@@ -16,6 +16,8 @@ class PerusahaanSayaViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/perusahaan-saya')
                 ->waitForText('Perusahaan Saya', 10)
+                ->assertSee('Perusahaan Saya')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/perusahaan-saya/01-page');
         });

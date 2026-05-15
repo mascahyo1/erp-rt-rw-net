@@ -16,6 +16,8 @@ class DaftarPaketViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/daftar-paket')
                 ->waitForText('Daftar Paket', 10)
+                ->assertSee('Daftar Paket')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/daftar-paket/01-page');
         });

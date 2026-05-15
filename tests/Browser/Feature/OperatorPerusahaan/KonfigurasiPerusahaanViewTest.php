@@ -16,6 +16,8 @@ class KonfigurasiPerusahaanViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/konfigurasi-perusahaan')
                 ->waitForText('Konfigurasi', 10)
+                ->assertSee('Konfigurasi')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/konfigurasi-perusahaan/01-page');
         });

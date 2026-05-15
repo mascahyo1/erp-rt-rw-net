@@ -16,6 +16,8 @@ class RiwayatInsentifViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/riwayat-insentif')
                 ->waitForText('Riwayat Insentif', 10)
+                ->assertSee('Riwayat Insentif')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/riwayat-insentif/01-page');
         });

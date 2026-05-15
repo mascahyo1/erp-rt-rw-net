@@ -16,6 +16,8 @@ class DashboardViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/dashboard')
                 ->waitForText('Dashboard', 10)
+                ->assertSee('Dashboard')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/dashboard/01-page');
         });
@@ -29,6 +31,7 @@ class DashboardViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/dashboard')
                 ->waitForText('Dashboard', 10)
+                ->assertPresent('main')
                 ->pause(1000)
                 ->screenshot('operator-perusahaan/dashboard/02-stats');
         });

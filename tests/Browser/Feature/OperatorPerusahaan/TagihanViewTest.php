@@ -16,6 +16,8 @@ class TagihanViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/tagihan')
                 ->waitForText('Tagihan', 10)
+                ->assertSee('Tagihan')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/tagihan/01-page');
         });

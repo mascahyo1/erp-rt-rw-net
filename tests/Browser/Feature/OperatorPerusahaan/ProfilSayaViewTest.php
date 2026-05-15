@@ -16,6 +16,8 @@ class ProfilSayaViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/profil-saya')
                 ->waitForText('Profil Saya', 10)
+                ->assertSee('Profil Saya')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/profil-saya/01-page');
         });

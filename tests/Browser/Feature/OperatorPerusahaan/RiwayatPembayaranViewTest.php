@@ -16,6 +16,8 @@ class RiwayatPembayaranViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/riwayat-pembayaran')
                 ->waitForText('Riwayat Pembayaran', 10)
+                ->assertSee('Riwayat Pembayaran')
+                ->assertPresent('nav')
                 ->pause(500)
                 ->screenshot('operator-perusahaan/riwayat-pembayaran/01-page');
         });
