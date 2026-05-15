@@ -208,3 +208,48 @@ const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '
 - `resources/js/Components/SearchableSelect.vue` — Komponen reusable searchable dropdown
 - `resources/js/Layouts/OperatorSaasLayout.vue` — Sidebar menu + layout responsif
 - `routes/web.php` — Route pattern untuk halaman operator SaaS
+
+## Konvensi Testing
+
+### JANGAN PERNAH:
+- ❌ Membuat file `.env.testing` — project ini development di lokal, server dev dan production terpisah. Pakai langsung `.env` yang ada.
+- ❌ Bypass CSRF secara global di production code — CSRF hanya di-bypass untuk **feature test** (PHPUnit) via `$this->withoutMiddleware([VerifyCsrfToken::class])` di `TestCase.php`. Browser test (Dusk) tetap menggunakan CSRF normal yang otomatis di-handle oleh Laravel Dusk.
+- ❌ Mengubah `bootstrap/app.php` untuk menonaktifkan CSRF middleware secara global.
+
+### Struktur Test
+```
+tests/
+  Feature/            → PHPUnit HTTP tests (CSRF di-bypass di TestCase)
+    Auth/             → Authentication tests
+    OperatorSaas/     → SaaS admin CRUD tests
+    OperatorPerusahaan/ → Company admin CRUD tests
+  Browser/            → Laravel Dusk browser tests (CSRF normal via DUSK_ENABLED)
+    Feature/
+      OperatorSaas/   → SaaS admin browser tests
+      OperatorPerusahaan/ → Company admin browser tests
+      Karyawan/       → Employee browser tests
+      Pelanggan/      → Customer browser tests
+    screenshots/      → Dusk screenshots organized by portal/module/test
+```
+
+### Sidebar Menu Harus Di-cover Browser Test
+Setiap item sidebar wajib memiliki minimal 1 file browser test. Sidebar mengikuti file layout:
+- `resources/js/Layouts/OperatorSaasLayout.vue`
+- `resources/js/Layouts/OperatorPerusahaanLayout.vue`
+- `resources/js/Layouts/KaryawanLayout.vue`
+- `resources/js/Layouts/CustomerLayout.vue`
+
+### Pola Browser Test (Dusk)
+- Auth Operator SaaS: `$browser->loginAs(AdminSaas::first(), 'web')`
+- Auth Operator Perusahaan: `$browser->loginAs(AdminCompany::first(), 'admin-company')`
+- Auth Karyawan: `$browser->loginAs(Employee::first(), 'employee')`
+- Auth Pelanggan: `$browser->loginAs(Customer::first(), 'customer')`
+- Screenshot path: `portal/module/##-test-name/##-step.png`
+- Setiap test method: `test_01_page_renders`, `test_02_search`, dst.
+- WAJIB baca file Vue terkait dulu untuk dapatkan text selector yang tepat.
+
+### Report Excel
+Jalankan `.\parallel-dusk.ps1` untuk menjalankan semua Dusk test parallel dan menghasilkan `tests/Browser/dusk-output/dusk-report.csv` dengan format:
+| jenis web | lokasi file test case | method test case | total assertion | status | description |
+
+Nilai `jenis web`: `web operator saas`, `web operator perusahaan`, `web karyawan`, `web pelanggan`.
