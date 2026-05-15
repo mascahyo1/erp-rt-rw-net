@@ -113,13 +113,9 @@ for ($i = 0; $i -lt $workerCount; $i++) {
     $logAbs = Join-Path $PWD "$outDir\worker-$i.log"
     $junitAbs = Join-Path $PWD "$outDir\worker-$i.xml"
 
-    # Build class name filter for artisan dusk (pipe-separated class names)
+    # Build filter: use base class names only (no namespace backslash escaping issues)
     $classNames = ($bucket | ForEach-Object {
-        $f = $_.path -replace [regex]::Escape((Join-Path $PWD "tests\Browser\Feature\")), ""
-        $f = $f -replace '\.php$', ''
-        $f = $f -replace '\\', '\\'
-        $baseName = [System.IO.Path]::GetFileNameWithoutExtension($_.name)
-        $f + "\\" + $baseName
+        [System.IO.Path]::GetFileNameWithoutExtension($_.name)
     }) -join "|"
 
     $job = Start-Job -Name "Dusk-W$i" -ScriptBlock {
