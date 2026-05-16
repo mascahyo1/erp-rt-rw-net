@@ -10,7 +10,7 @@ use App\Models\Role;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-
+class RoleAdminPerusahaanTest extends TestCase
 {
 
     protected AdminSaas $user;

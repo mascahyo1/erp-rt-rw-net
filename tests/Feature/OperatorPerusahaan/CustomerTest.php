@@ -7,7 +7,7 @@ use App\Models\Customer;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-
+class CustomerTest extends TestCase
 {
 
     protected AdminCompany $user;
