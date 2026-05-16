@@ -1,10 +1,10 @@
 <script setup>
+import LandingLayout from '@/Layouts/LandingLayout.vue';
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import LandingLayout from '@/Layouts/LandingLayout.vue';
-import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 
 defineOptions({ layout: LandingLayout });
+import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 
 const activeTab = ref('login');
 const selectedCompany = ref(null);
@@ -26,6 +26,15 @@ const registerForm = useForm({
 const submitLogin = () => {
     loginForm.post('/login-pelanggan', {
         onFinish: () => loginForm.reset('password'),
+    });
+};
+
+const submitRegister = () => {
+    registerForm.transform((data) => ({
+        ...data,
+        company_id: selectedCompany.value?.value ?? '',
+    })).post('/daftar-pelanggan', {
+        onFinish: () => registerForm.reset('password', 'password_confirmation'),
     });
 };
 </script>
@@ -101,7 +110,7 @@ const submitLogin = () => {
                                 </button>
                             </form>
 
-                            <form v-if="activeTab === 'register'" class="space-y-4" @submit.prevent="">
+                            <form v-if="activeTab === 'register'" class="space-y-4" @submit.prevent="submitRegister">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
                                     <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
@@ -126,8 +135,10 @@ const submitLogin = () => {
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Konfirmasi Password</label>
                                     <input v-model="registerForm.password_confirmation" type="password" placeholder="Ulangi password" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors" />
                                 </div>
-                                <button type="button" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center">
-                                    <i class="fas fa-user-plus mr-2"></i> Daftar
+                                <button type="submit" :disabled="registerForm.processing" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50">
+                                    <i v-if="registerForm.processing" class="fas fa-spinner fa-spin mr-2"></i>
+                                    <i v-else class="fas fa-user-plus mr-2"></i>
+                                    {{ registerForm.processing ? 'Memproses...' : 'Daftar' }}
                                 </button>
                             </form>
                         </div>

@@ -4,12 +4,10 @@ namespace Tests\Feature\Auth;
 
 use App\Models\AdminCompany;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class AdminCompanyAuthenticationTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function setUp(): void
     {

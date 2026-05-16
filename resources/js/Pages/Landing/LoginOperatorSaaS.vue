@@ -1,6 +1,6 @@
 <script setup>
-import { useForm, usePage } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
+import { useForm, usePage } from '@inertiajs/vue3';
 
 defineOptions({ layout: LandingLayout });
 

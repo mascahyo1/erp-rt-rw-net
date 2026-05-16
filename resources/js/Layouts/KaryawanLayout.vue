@@ -79,11 +79,20 @@ onUnmounted(() => mediaQuery?.removeEventListener('change', applyTheme));
           </div>
         </div>
       </header>
-      <main class="flex-1 py-6 px-4 sm:px-6 lg:px-8 w-full max-w-full overflow-x-hidden"><Transition name="page" mode="out-in"><slot /></Transition></main>
+      <main class="flex-1 py-6 px-4 sm:px-6 lg:px-8 w-full max-w-full overflow-x-hidden"><Transition name="page" mode="out-in"><div :key="page.url"><slot /></div></Transition></main>
     </div>
   </div>
 </template>
 <style scoped>
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
 .dropdown-enter-active, .dropdown-leave-active { transition: opacity 0.15s ease, transform 0.15s ease; }
 .dropdown-enter-from, .dropdown-leave-to { opacity: 0; transform: scale(0.95); }
 </style>

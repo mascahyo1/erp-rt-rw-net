@@ -4,13 +4,11 @@ namespace Tests\Feature\OperatorSaas;
 
 use App\Models\AdminSaas;
 use App\Models\SaasConfig;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class SaasConfigTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected AdminSaas $user;
 

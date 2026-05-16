@@ -71,5 +71,8 @@ Route::post('/login-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionContr
 Route::post('/logout-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'destroy'])
     ->name('customer.logout');
 
+Route::post('/daftar-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'register'])
+    ->name('customer.register');
+
 Route::post('/logout-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionController::class, 'destroy'])
     ->name('employee.logout');

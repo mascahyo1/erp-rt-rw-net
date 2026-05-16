@@ -271,3 +271,27 @@ CSV memiliki summary rows di bagian bawah: subtotal per web (passed/failed/asser
 .\parallel-dusk.ps1 -MaxWorkers 6 -Folders "OperatorPerusahaan,Pelanggan"
 ```
 Setiap worker menjalankan subset test file yang didistribusi round-robin. Output disimpan di `tests/Browser/dusk-output/worker-N.log` dan `worker-N.xml`.
+
+### Parallel Feature Test
+```powershell
+# Default: interactive prompt (input jumlah worker)
+.\parallel-test.ps1
+
+# 8 worker (file-level parallel, ~5× lebih cepat)
+.\parallel-test.ps1 -MaxWorkers 8
+
+# 16 worker
+.\parallel-test.ps1 -MaxWorkers 16
+```
+Setiap worker menjalankan subset `*Test.php` dari `tests/Feature/` (Auth, OperatorSaas, OperatorPerusahaan) yang didistribusi round-robin. Output disimpan di `tests/Browser/dusk-output/ftest-wN.log` dan `ftest-wN.xml`. CSV report di `ftest-report-YYYYMMDD-HHMMSS.csv`.
+
+**ALWAYS use `.\parallel-test.ps1` ketika menjalankan feature tests. Jangan `php artisan test` langsung karena single worker lambat (`~68s` vs `~15s` dengan 8 worker).**
+
+### Testing Conventions
+- ❌ JANGAN buat file `.env.testing`
+- ❌ JANGAN panggil `php artisan test` langsung — PAKAI `.\parallel-test.ps1`
+- ❌ JANGAN bypass CSRF global di production
+- ✅ TestCase bypass CSRF via `withoutMiddleware([PreventRequestForgery::class])`
+- ✅ `bootstrap/app.php` remove `PreventRequestForgery` di non-production
+- ✅ Browser test login pakai `loginAs(AdminSaas::first(), 'web')` dll
+- ✅ Setiap sidebar item wajib punya minimal 1 browser test

@@ -2,6 +2,7 @@
 
 namespace Tests\Browser\Feature\OperatorSaas;
 
+use App\Models\AdminCompany;
 use App\Models\AdminSaas;
 use App\Models\Permission;
 use App\Models\Role;
@@ -12,7 +13,7 @@ use Tests\DuskTestCase;
 /**
  * Granular RBAC test: setiap permission diuji terpisah.
  *
- * Module target: Admin SaaS (admin-saas.{list,create,edit,detail,delete,restore})
+ * Module target: Admin Perusahaan (admin-perusahaan.{list,create,edit,detail,delete,restore})
  *
  * | Permission | tanpa permission |
  * |-----------|-----------------|
@@ -23,11 +24,12 @@ use Tests\DuskTestCase;
  * | delete    | tombol hapus ga muncul, bulk delete ga muncul, URL delete → 403 |
  * | restore   | tombol pulihkan ga muncul, bulk restore ga muncul, URL post restore → 403 |
  */
-class PermissionTest extends DuskTestCase
+class AdminPerusahaanPermissionTest extends DuskTestCase
 {
     private AdminSaas $superAdmin;
     private static array $cleanupUserIds = [];
     private static array $cleanupRoleIds = [];
+    private static array $cleanupAdminCompanyIds = [];
 
     protected function setUp(): void
     {
@@ -82,20 +84,22 @@ class PermissionTest extends DuskTestCase
     // ============================================================
     public function test_01_list_only_sees_sidebar_and_table_no_action_buttons(): void
     {
-        $user = $this->createUserWithPerms(['admin-saas.list']);
+        $user = $this->createUserWithPerms(['admin-perusahaan.list']);
+
+        AdminCompany::factory()->count(3)->create(['is_active' => true]);
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'web')
                 ->visit('/operator-saas/dashboard')
                 ->pause(800)
-                ->screenshot('operator-saas/permission/01-list/01-sidebar')
+                ->screenshot('operator-saas/adminperusahaan-permission/01-list/01-sidebar')
                 ->assertSee('Dashboard')
-                ->assertSee('Admin SaaS')
-                ->assertDontSee('Admin Perusahaan');
+                ->assertSee('Admin Perusahaan')
+                ->assertDontSee('Admin SaaS');
 
-            $browser->visit('/operator-saas/admin-saas?per_page=100')
+            $browser->visit('/operator-saas/admin-perusahaan?per_page=100')
                 ->pause(800)
-                ->screenshot('operator-saas/permission/01-list/02-table');
+                ->screenshot('operator-saas/adminperusahaan-permission/01-list/02-table');
 
             // Table visible
             $browser->assertPresent('table');
@@ -109,8 +113,8 @@ class PermissionTest extends DuskTestCase
             $browser->assertDontSee('Edit');
             $browser->assertDontSee('Hapus');
 
-            // Direct POST store → 403
-            $browser->visit('/operator-saas/admin-saas/create')  // fallback: try direct access
+            // Direct GET → 403
+            $browser->visit('/operator-saas/admin-perusahaan/create')
                 ->pause(500)
                 ->assertSee('403');
         });
@@ -121,13 +125,13 @@ class PermissionTest extends DuskTestCase
     // ============================================================
     public function test_02_list_plus_create_shows_add_button_and_can_open_modal(): void
     {
-        $user = $this->createUserWithPerms(['admin-saas.list', 'admin-saas.create']);
+        $user = $this->createUserWithPerms(['admin-perusahaan.list', 'admin-perusahaan.create']);
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'web')
-                ->visit('/operator-saas/admin-saas?per_page=100')
+                ->visit('/operator-saas/admin-perusahaan?per_page=100')
                 ->pause(800)
-                ->screenshot('operator-saas/permission/02-create/01-before');
+                ->screenshot('operator-saas/adminperusahaan-permission/02-create/01-before');
 
             // Tambah button visible
             $browser->assertSee('Tambah');
@@ -138,7 +142,7 @@ class PermissionTest extends DuskTestCase
             // Click Tambah → modal opens
             $browser->press('Tambah')
                 ->pause(500)
-                ->screenshot('operator-saas/permission/02-create/02-modal')
+                ->screenshot('operator-saas/adminperusahaan-permission/02-create/02-modal')
                 ->assertSee('Tambah Admin');
 
             // Close modal
@@ -152,23 +156,23 @@ class PermissionTest extends DuskTestCase
     // ============================================================
     public function test_03_list_plus_edit_shows_edit_button_and_bulk_toggle(): void
     {
-        $user = $this->createUserWithPerms(['admin-saas.list', 'admin-saas.edit']);
+        $user = $this->createUserWithPerms(['admin-perusahaan.list', 'admin-perusahaan.edit']);
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'web')
-                ->visit('/operator-saas/admin-saas?per_page=100')
+                ->visit('/operator-saas/admin-perusahaan?per_page=100')
                 ->pause(800)
-                ->screenshot('operator-saas/permission/03-edit/01-table');
+                ->screenshot('operator-saas/adminperusahaan-permission/03-edit/01-table');
 
             // No tambah button (missing create)
             $browser->assertDontSee('Tambah');
-            // Edit button must be present (as a link/button - check for href with edit or title)
-            $browser->assertPresent('a[title="Edit"], button[title="Edit"]');
+            // Edit button must be present
+            $browser->assertPresent('button[title="Edit"]');
 
             // Select first checkbox to trigger bulk bar
             $browser->script("document.querySelectorAll('tbody input[type=\"checkbox\"]')[0].click()");
             $browser->pause(500)
-                ->screenshot('operator-saas/permission/03-edit/02-bulk-active');
+                ->screenshot('operator-saas/adminperusahaan-permission/03-edit/02-bulk-active');
 
             // Bulk toggle buttons visible (nebeng .edit)
             $browser->assertSee('Aktifkan');
@@ -177,9 +181,9 @@ class PermissionTest extends DuskTestCase
             $browser->assertDontSee('Hapus');
 
             // Click edit button on first row → modal opens
-            $browser->script("document.querySelector('a[title=\"Edit\"], button[title=\"Edit\"]').click()");
+            $browser->script("document.querySelector('button[title=\"Edit\"]').click()");
             $browser->pause(500)
-                ->screenshot('operator-saas/permission/03-edit/03-modal')
+                ->screenshot('operator-saas/adminperusahaan-permission/03-edit/03-modal')
                 ->assertSee('Edit Admin');
 
             // Close modal
@@ -193,21 +197,21 @@ class PermissionTest extends DuskTestCase
     // ============================================================
     public function test_04_list_plus_detail_shows_detail_button_and_can_open_modal(): void
     {
-        $user = $this->createUserWithPerms(['admin-saas.list', 'admin-saas.detail']);
+        $user = $this->createUserWithPerms(['admin-perusahaan.list', 'admin-perusahaan.detail']);
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'web')
-                ->visit('/operator-saas/admin-saas?per_page=100')
+                ->visit('/operator-saas/admin-perusahaan?per_page=100')
                 ->pause(800)
-                ->screenshot('operator-saas/permission/04-detail/01-table');
+                ->screenshot('operator-saas/adminperusahaan-permission/04-detail/01-table');
 
             // Detail button visible
-            $browser->assertPresent('a[title="Detail"], button[title="Detail"]');
+            $browser->assertPresent('button[title="Detail"]');
 
             // Click detail button on first row
-            $browser->script("document.querySelector('a[title=\"Detail\"], button[title=\"Detail\"]').click()");
+            $browser->script("document.querySelector('button[title=\"Detail\"]').click()");
             $browser->pause(500)
-                ->screenshot('operator-saas/permission/04-detail/02-modal')
+                ->screenshot('operator-saas/adminperusahaan-permission/04-detail/02-modal')
                 ->assertSee('Detail Admin');
 
             $browser->press('Tutup')
@@ -220,30 +224,30 @@ class PermissionTest extends DuskTestCase
     // ============================================================
     public function test_05_list_plus_delete_shows_delete_button_and_bulk_delete(): void
     {
-        $user = $this->createUserWithPerms(['admin-saas.list', 'admin-saas.delete']);
+        $user = $this->createUserWithPerms(['admin-perusahaan.list', 'admin-perusahaan.delete']);
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'web')
-                ->visit('/operator-saas/admin-saas?per_page=100')
+                ->visit('/operator-saas/admin-perusahaan?per_page=100')
                 ->pause(800)
-                ->screenshot('operator-saas/permission/05-delete/01-table');
+                ->screenshot('operator-saas/adminperusahaan-permission/05-delete/01-table');
 
             // Delete button visible per row
-            $browser->assertPresent('button[title="Hapus"], a[title="Hapus"]');
+            $browser->assertPresent('button[title="Hapus"]');
 
             // Select checkbox to trigger bulk
             $browser->script("document.querySelectorAll('tbody input[type=\"checkbox\"]')[0].click()");
             $browser->pause(500)
-                ->screenshot('operator-saas/permission/05-delete/02-bulk-delete');
+                ->screenshot('operator-saas/adminperusahaan-permission/05-delete/02-bulk-delete');
 
             // Bulk hapus visible (nebeng .delete)
             $browser->assertSee('data dipilih');
             $browser->assertDontSee('Aktifkan');  // no .edit
 
             // Click delete button → modal konfirmasi
-            $browser->script("document.querySelector('button[title=\"Hapus\"], a[title=\"Hapus\"]').click()");
+            $browser->script("document.querySelector('button[title=\"Hapus\"]').click()");
             $browser->pause(500)
-                ->screenshot('operator-saas/permission/05-delete/03-delete-modal')
+                ->screenshot('operator-saas/adminperusahaan-permission/05-delete/03-delete-modal')
                 ->assertSee('Hapus Admin');
         });
     }
@@ -253,30 +257,29 @@ class PermissionTest extends DuskTestCase
     // ============================================================
     public function test_06_list_plus_restore_shows_restore_and_bulk_restore_in_trash(): void
     {
-        $user = $this->createUserWithPerms(['admin-saas.list', 'admin-saas.restore']);
+        $user = $this->createUserWithPerms(['admin-perusahaan.list', 'admin-perusahaan.restore']);
 
-        // Create + soft-delete a record so trash tab has data
-        $trashUser = AdminSaas::factory()->create([
-            'name' => 'To Restore User',
-            'email' => 'torestore@rtrwnet.id',
+        // Create + soft-delete an AdminCompany so trash tab has data
+        $trashRecord = AdminCompany::factory()->create([
+            'name' => 'To Restore Admin Comp',
             'is_active' => true,
         ]);
-        $trashUser->delete();
-        self::$cleanupUserIds[] = $trashUser->id;
+        $trashRecord->delete();
+        self::$cleanupAdminCompanyIds[] = $trashRecord->id;
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'web')
-                ->visit('/operator-saas/admin-saas?terhapus=ya&per_page=100')
+                ->visit('/operator-saas/admin-perusahaan?terhapus=ya&per_page=100')
                 ->pause(800)
-                ->screenshot('operator-saas/permission/06-restore/01-trash-tab');
+                ->screenshot('operator-saas/adminperusahaan-permission/06-restore/01-trash-tab');
 
             // Restore button visible per row
-            $browser->assertPresent('button[title="Pulihkan"], a[title="Pulihkan"]');
+            $browser->assertPresent('button[title="Pulihkan"]');
 
             // Select checkbox
             $browser->script("document.querySelectorAll('tbody input[type=\"checkbox\"]')[0].click()");
             $browser->pause(500)
-                ->screenshot('operator-saas/permission/06-restore/02-bulk-restore');
+                ->screenshot('operator-saas/adminperusahaan-permission/06-restore/02-bulk-restore');
 
             // Bulk restore visible (nebeng .restore)
             $browser->assertSee('Pulihkan');
@@ -301,20 +304,21 @@ class PermissionTest extends DuskTestCase
             // Sidebar should only show Dashboard
             $browser->visit('/operator-saas/dashboard')
                 ->pause(500)
-                ->screenshot('operator-saas/permission/07-forbidden/01-sidebar-only-dashboard')
+                ->screenshot('operator-saas/adminperusahaan-permission/07-forbidden/01-sidebar-only-dashboard')
                 ->assertSee('Dashboard')
-                ->assertDontSee('Admin SaaS');
+                ->assertDontSee('Admin Perusahaan');
 
             // Direct GET → 403
-            $browser->visit('/operator-saas/admin-saas')
+            $browser->visit('/operator-saas/admin-perusahaan')
                 ->pause(500)
-                ->screenshot('operator-saas/permission/07-forbidden/02-get-forbidden')
+                ->screenshot('operator-saas/adminperusahaan-permission/07-forbidden/02-get-forbidden')
                 ->assertSee('403');
         });
     }
 
     public static function tearDownAfterClass(): void
     {
+        AdminCompany::whereIn('id', self::$cleanupAdminCompanyIds)->forceDelete();
         AdminSaas::whereIn('id', self::$cleanupUserIds)->forceDelete();
         Role::whereIn('id', self::$cleanupRoleIds)->forceDelete();
         parent::tearDownAfterClass();

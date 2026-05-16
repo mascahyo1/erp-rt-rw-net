@@ -11,10 +11,6 @@ use App\Http\Controllers\SaasConfigController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/operator-saas/login', function () {
-    return Inertia::render('OperatorSaas/Login');
-});
-
 Route::get('/operator-saas/perusahaan/select-search', [CompanyController::class, 'selectSearch'])
     ->name('operator-saas.perusahaan.select-search');
 

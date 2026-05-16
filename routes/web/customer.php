@@ -3,10 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/customer/login-register', function () {
-    return Inertia::render('Customer/LoginRegister');
-});
-
 Route::middleware('auth:customer')->group(function () {
     Route::get('/customer/dashboard', function () {
         $customer = auth()->user();

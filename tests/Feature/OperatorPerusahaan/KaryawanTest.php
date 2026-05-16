@@ -4,13 +4,11 @@ namespace Tests\Feature\OperatorPerusahaan;
 
 use App\Models\AdminCompany;
 use App\Models\Employee;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class KaryawanTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected AdminCompany $user;
 

@@ -5,13 +5,11 @@ namespace Tests\Feature\OperatorSaas;
 use App\Models\AdminSaas;
 use App\Models\AdminCompany;
 use App\Models\Company;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class AdminCompanyTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected AdminSaas $user;
 

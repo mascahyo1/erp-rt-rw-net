@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
+
+const page = usePage();
 
 // ========================
 // Theme Management
@@ -210,7 +212,9 @@ function closeDropdown(e) {
     ======================== -->
     <main>
       <Transition name="page" mode="out-in">
-        <slot />
+        <div :key="page.url">
+          <slot />
+        </div>
       </Transition>
     </main>
 
@@ -276,6 +280,15 @@ function closeDropdown(e) {
 </template>
 
 <style scoped>
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+
 .dropdown-enter-active {
   transition: opacity 0.15s ease, transform 0.15s ease;
 }

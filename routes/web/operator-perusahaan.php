@@ -110,32 +110,147 @@ Route::middleware('auth:admin-company')->group(function () {
         });
     });
 
+    // Langganan (full CRUD)
     Route::middleware('permission:langganan.list')->group(function () {
         Route::get('/operator-perusahaan/langganan-customer', function () {
             return Inertia::render('OperatorPerusahaan/LanggananCustomer');
         });
     });
+    Route::middleware('permission:langganan.create')->group(function () {
+        Route::post('/operator-perusahaan/langganan-customer', function () {
+            return Inertia::render('OperatorPerusahaan/LanggananCustomer');
+        });
+    });
+    Route::middleware('permission:langganan.edit')->group(function () {
+        Route::put('/operator-perusahaan/langganan-customer/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/LanggananCustomer');
+        });
+    });
+    Route::middleware('permission:langganan.delete')->group(function () {
+        Route::delete('/operator-perusahaan/langganan-customer/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/LanggananCustomer');
+        });
+    });
+    Route::middleware('permission:langganan.restore')->group(function () {
+        Route::patch('/operator-perusahaan/langganan-customer/{id}/restore', function () {
+            return Inertia::render('OperatorPerusahaan/LanggananCustomer');
+        });
+    });
 
+    // Tagihan (full CRUD)
     Route::middleware('permission:tagihan.list')->group(function () {
         Route::get('/operator-perusahaan/tagihan', function () {
             return Inertia::render('OperatorPerusahaan/Tagihan');
         });
     });
+    Route::middleware('permission:tagihan.create')->group(function () {
+        Route::post('/operator-perusahaan/tagihan', function () {
+            return Inertia::render('OperatorPerusahaan/Tagihan');
+        });
+    });
+    Route::middleware('permission:tagihan.edit')->group(function () {
+        Route::put('/operator-perusahaan/tagihan/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/Tagihan');
+        });
+    });
+    Route::middleware('permission:tagihan.delete')->group(function () {
+        Route::delete('/operator-perusahaan/tagihan/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/Tagihan');
+        });
+    });
+    Route::middleware('permission:tagihan.restore')->group(function () {
+        Route::patch('/operator-perusahaan/tagihan/{id}/restore', function () {
+            return Inertia::render('OperatorPerusahaan/Tagihan');
+        });
+    });
 
+    // Riwayat Pembayaran (full CRUD + persetujuan)
     Route::middleware('permission:riwayat-pembayaran.list')->group(function () {
         Route::get('/operator-perusahaan/riwayat-pembayaran', function () {
             return Inertia::render('OperatorPerusahaan/RiwayatPembayaran');
         });
     });
+    Route::middleware('permission:riwayat-pembayaran.create')->group(function () {
+        Route::post('/operator-perusahaan/riwayat-pembayaran', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatPembayaran');
+        });
+    });
+    Route::middleware('permission:riwayat-pembayaran.edit')->group(function () {
+        Route::put('/operator-perusahaan/riwayat-pembayaran/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatPembayaran');
+        });
+    });
+    Route::middleware('permission:riwayat-pembayaran.delete')->group(function () {
+        Route::delete('/operator-perusahaan/riwayat-pembayaran/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatPembayaran');
+        });
+    });
+    Route::middleware('permission:riwayat-pembayaran.restore')->group(function () {
+        Route::patch('/operator-perusahaan/riwayat-pembayaran/{id}/restore', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatPembayaran');
+        });
+    });
+    Route::middleware('permission:riwayat-pembayaran.persetujuan')->group(function () {
+        Route::post('/operator-perusahaan/riwayat-pembayaran/{id}/approve', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatPembayaran');
+        });
+    });
 
+    // Insentif (full CRUD)
     Route::middleware('permission:insentif.list')->group(function () {
         Route::get('/operator-perusahaan/insentif', function () {
             return Inertia::render('OperatorPerusahaan/Insentif');
         });
     });
+    Route::middleware('permission:insentif.create')->group(function () {
+        Route::post('/operator-perusahaan/insentif', function () {
+            return Inertia::render('OperatorPerusahaan/Insentif');
+        });
+    });
+    Route::middleware('permission:insentif.edit')->group(function () {
+        Route::put('/operator-perusahaan/insentif/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/Insentif');
+        });
+    });
+    Route::middleware('permission:insentif.delete')->group(function () {
+        Route::delete('/operator-perusahaan/insentif/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/Insentif');
+        });
+    });
+    Route::middleware('permission:insentif.restore')->group(function () {
+        Route::patch('/operator-perusahaan/insentif/{id}/restore', function () {
+            return Inertia::render('OperatorPerusahaan/Insentif');
+        });
+    });
 
+    // Riwayat Insentif (full CRUD + persetujuan)
     Route::middleware('permission:riwayat-insentif.list')->group(function () {
         Route::get('/operator-perusahaan/riwayat-insentif', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatInsentif');
+        });
+    });
+    Route::middleware('permission:riwayat-insentif.create')->group(function () {
+        Route::post('/operator-perusahaan/riwayat-insentif', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatInsentif');
+        });
+    });
+    Route::middleware('permission:riwayat-insentif.edit')->group(function () {
+        Route::put('/operator-perusahaan/riwayat-insentif/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatInsentif');
+        });
+    });
+    Route::middleware('permission:riwayat-insentif.delete')->group(function () {
+        Route::delete('/operator-perusahaan/riwayat-insentif/{id}', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatInsentif');
+        });
+    });
+    Route::middleware('permission:riwayat-insentif.restore')->group(function () {
+        Route::patch('/operator-perusahaan/riwayat-insentif/{id}/restore', function () {
+            return Inertia::render('OperatorPerusahaan/RiwayatInsentif');
+        });
+    });
+    Route::middleware('permission:riwayat-insentif.persetujuan')->group(function () {
+        Route::post('/operator-perusahaan/riwayat-insentif/{id}/approve', function () {
             return Inertia::render('OperatorPerusahaan/RiwayatInsentif');
         });
     });

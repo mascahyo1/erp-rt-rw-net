@@ -7,13 +7,11 @@ use App\Models\AdminSaas;
 use App\Models\Company;
 use App\Models\ModelHasRole;
 use App\Models\Role;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class RoleAdminPerusahaanTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected AdminSaas $user;
 

@@ -54,4 +54,29 @@ class CustomerSessionController extends Controller
 
         return redirect()->route('landing.home');
     }
+
+    public function register(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:customers,email'],
+            'phone' => ['required', 'string', 'max:20'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'company_id' => ['required', 'string', 'exists:companies,id'],
+        ]);
+
+        $customer = \App\Models\Customer::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone_number' => $data['phone'],
+            'phone_country_code' => '+62',
+            'company_id' => $data['company_id'],
+            'password' => bcrypt($data['password']),
+            'is_active' => true,
+        ]);
+
+        Auth::guard('customer')->login($customer);
+
+        return redirect()->route('customer.dashboard');
+    }
 }

@@ -1,10 +1,10 @@
 <script setup>
+import LandingLayout from '@/Layouts/LandingLayout.vue';
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import LandingLayout from '@/Layouts/LandingLayout.vue';
-import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 
 defineOptions({ layout: LandingLayout });
+import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 
 const selectedCompany = ref(null);
 

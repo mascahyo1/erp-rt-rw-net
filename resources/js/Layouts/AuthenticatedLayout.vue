@@ -5,8 +5,9 @@ import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
+const page = usePage();
 const showingNavigationDropdown = ref(false);
 </script>
 
@@ -192,9 +193,22 @@ const showingNavigationDropdown = ref(false);
             <!-- Page Content -->
             <main>
                 <Transition name="page" mode="out-in">
-                    <slot />
+                    <div :key="page.url">
+                        <slot />
+                    </div>
                 </Transition>
             </main>
         </div>
     </div>
 </template>
+
+<style scoped>
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s ease;
+}
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+}
+</style>
