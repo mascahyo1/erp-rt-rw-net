@@ -14,7 +14,7 @@ class CheckPermission
      */
     public function handle(Request $request, Closure $next, string $permission): Response
     {
-        $user = auth()->user();
+        $user = $this->resolveUser();
 
         if (! $user) {
             abort(403, 'Authentication required.');
@@ -29,5 +29,16 @@ class CheckPermission
         }
 
         abort(403, 'Forbidden: Anda tidak memiliki izin akses.');
+    }
+
+    private function resolveUser()
+    {
+        foreach (['web', 'admin-company', 'employee', 'customer'] as $guard) {
+            if (auth()->guard($guard)->check()) {
+                return auth()->guard($guard)->user();
+            }
+        }
+
+        return auth()->user();
     }
 }

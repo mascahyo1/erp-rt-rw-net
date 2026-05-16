@@ -148,6 +148,12 @@ enum Permissions: string
             'admin_perusahaan' => [
                 self::PerusahaanSayaList->value,
                 self::PaketList->value,
+                self::AdminPerusahaanList->value,
+                self::AdminPerusahaanCreate->value,
+                self::AdminPerusahaanEdit->value,
+                self::AdminPerusahaanDetail->value,
+                self::AdminPerusahaanDelete->value,
+                self::AdminPerusahaanRestore->value,
                 self::CustomerList->value,
                 self::CustomerCreate->value,
                 self::CustomerEdit->value,

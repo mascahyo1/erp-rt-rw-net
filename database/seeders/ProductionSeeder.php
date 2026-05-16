@@ -13,6 +13,8 @@ class ProductionSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->call(PermissionSeeder::class);
+
         AdminSaas::query()->insert([
             [
                 'id' => Str::uuid(),

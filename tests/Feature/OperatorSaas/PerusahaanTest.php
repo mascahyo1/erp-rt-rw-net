@@ -18,6 +18,7 @@ class PerusahaanTest extends TestCase
     {
         parent::setUp();
         $this->admin = AdminSaas::factory()->create(['is_active' => true]);
+        $this->assignDefaultRole($this->admin, 'operator_saas');
     }
 
     public function test_guest_cannot_access_perusahaan_page()

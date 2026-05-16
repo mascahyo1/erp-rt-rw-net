@@ -15,7 +15,6 @@ class CustomerAuthenticationTest extends TestCase
     {
         parent::setUp();
 
-        $this->withoutMiddleware([PreventRequestForgery::class]);
     }
 
     public function test_login_screen_can_be_rendered(): void

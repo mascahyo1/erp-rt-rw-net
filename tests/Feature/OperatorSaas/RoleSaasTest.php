@@ -17,8 +17,8 @@ class RoleSaasTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->withoutMiddleware([\App\Http\Middleware\PreventRequestForgery::class]);
         $this->user = AdminSaas::factory()->create(['is_active' => true]);
+        $this->assignDefaultRole($this->user, 'operator_saas');
     }
 
     public function test_guest_cannot_access_role_saas_page()
@@ -195,7 +195,7 @@ class RoleSaasTest extends TestCase
         $response->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('OperatorSaas/RoleSaaS')
-                ->has('roles.data', 2)
+                ->has('roles.data', 3)
             );
     }
 

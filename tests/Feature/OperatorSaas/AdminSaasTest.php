@@ -16,8 +16,8 @@ class AdminSaasTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->withoutMiddleware([\App\Http\Middleware\PreventRequestForgery::class]);
         $this->user = AdminSaas::factory()->create(['is_active' => true]);
+        $this->assignDefaultRole($this->user, 'operator_saas');
     }
 
     public function test_guest_cannot_access_admin_saas_page()

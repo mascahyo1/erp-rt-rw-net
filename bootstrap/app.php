@@ -24,9 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        if (env('DUSK_ENABLED', false)) {
+        if (env('APP_ENV', 'local') !== 'production') {
             $middleware->web(remove: [
-                \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+                \Illuminate\Foundation\Http\Middleware\PreventRequestForgery::class,
             ]);
         }
 
