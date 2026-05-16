@@ -6,7 +6,7 @@ use App\Models\AdminSaas;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-class AdminSaasTest extends TestCase
+
 {
 
     protected AdminSaas $user;

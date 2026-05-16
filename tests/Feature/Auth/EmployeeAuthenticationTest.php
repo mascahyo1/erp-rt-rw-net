@@ -6,7 +6,7 @@ use App\Models\Employee;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Tests\TestCase;
 
-class EmployeeAuthenticationTest extends TestCase
+
 {
 
     protected function setUp(): void

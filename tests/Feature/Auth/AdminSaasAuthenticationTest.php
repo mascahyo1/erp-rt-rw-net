@@ -6,7 +6,7 @@ use App\Models\AdminSaas;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Tests\TestCase;
 
-class AdminSaasAuthenticationTest extends TestCase
+
 {
 
     protected function setUp(): void

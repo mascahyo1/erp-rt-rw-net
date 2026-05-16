@@ -11,7 +11,7 @@ Route::middleware('auth:customer')->group(function () {
             'stats' => [
                 'paket_aktif' => \App\Models\CustInternet::where('customer_id', $customer->id)->where('internet_status', 'active')->count(),
                 'tagihan_bulan_ini' => \App\Models\CustInternetInvc::whereHas('custInternet', fn($q) => $q->where('customer_id', $customer->id))->whereMonth('created_at', now()->month)->count(),
-                'riwayat_pembayaran' => \App\Models\CustInternetPayment::whereHas('custInternet', fn($q) => $q->where('customer_id', $customer->id))->count(),
+                'riwayat_pembayaran' => \App\Models\CustInternetPayment::whereHas('custInternetInvc.custInternet', fn($q) => $q->where('customer_id', $customer->id))->count(),
             ],
         ]);
     })->name('customer.dashboard');

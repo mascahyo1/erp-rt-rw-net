@@ -15,20 +15,20 @@ class CustInternetPayment extends Model
     protected $table = 'cust_internet_payments';
 
     protected $fillable = [
-        'id', 'cust_internet_id', 'amount', 'payment_date',
-        'payment_method', 'status', 'description',
+        'id', 'cust_internet_invc_id', 'amount_paid', 'payment_method',
+        'status', 'proof_file', 'provider',
     ];
 
     protected function casts(): array
     {
         return [
             'payment_date' => 'date',
-            'amount' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
         ];
     }
 
-    public function custInternet(): BelongsTo
+    public function custInternetInvc(): BelongsTo
     {
-        return $this->belongsTo(CustInternet::class);
+        return $this->belongsTo(CustInternetInvc::class, 'cust_internet_invc_id');
     }
 }

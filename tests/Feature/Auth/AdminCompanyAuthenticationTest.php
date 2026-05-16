@@ -6,7 +6,7 @@ use App\Models\AdminCompany;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Tests\TestCase;
 
-class AdminCompanyAuthenticationTest extends TestCase
+
 {
 
     protected function setUp(): void

@@ -8,7 +8,7 @@ use App\Models\Company;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-class AdminCompanyTest extends TestCase
+
 {
 
     protected AdminSaas $user;

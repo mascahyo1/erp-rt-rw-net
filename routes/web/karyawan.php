@@ -17,7 +17,7 @@ Route::middleware('auth:employee')->group(function () {
             'stats' => [
                 'customer_ditagih' => \App\Models\CustInternet::whereHas('customer', fn($q) => $q->where('company_id', $companyId))->where('internet_status', 'active')->count(),
                 'tagihan_bulan_ini' => \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))->whereMonth('created_at', now()->month)->count(),
-                'pembayaran_collection' => \App\Models\CustInternetPayment::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))->count(),
+                'pembayaran_collection' => \App\Models\CustInternetPayment::whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $companyId))->count(),
             ],
         ]);
     })->name('employee.dashboard');

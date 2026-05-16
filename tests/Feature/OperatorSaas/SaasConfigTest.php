@@ -7,7 +7,7 @@ use App\Models\SaasConfig;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-class SaasConfigTest extends TestCase
+
 {
 
     protected AdminSaas $user;
