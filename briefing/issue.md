@@ -5,8 +5,10 @@ http://erp-rt-rw-net.test/syarat-dan-ketentuan kontak syarat ketentuan juga sama
 http://erp-rt-rw-net.test/kebijakan-privasi juga sama
 
 
-jadi gini ya saya mau fitur dokumentasi strukturnya gini
+jadi gini ya saya mau fitur dokumentasi strukturnya gini biar rapi
 dokumentasi/operator-saas/halaman-admin-saas.md
 dokumentasi/landing-page/beranda.md
 
 dokumentasi, route, back end, front end, test case harus sinkron ya 
+
+dari semua web semua halaman semua aksi
