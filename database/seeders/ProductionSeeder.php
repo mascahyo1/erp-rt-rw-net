@@ -13,8 +13,6 @@ class ProductionSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call(PermissionSeeder::class);
-
         AdminSaas::query()->insert([
             [
                 'id' => Str::uuid(),
@@ -151,5 +149,7 @@ class ProductionSeeder extends Seeder
                 'updated_at' => now(),
             ],
         ]);
+
+        $this->call(PermissionSeeder::class);
     }
 }

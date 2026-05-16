@@ -137,17 +137,17 @@ function closeDropdown(e) {
               </button>
               <Transition name="dropdown">
                 <div v-show="dropdownOpen" class="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black/5 dark:ring-white/10 py-1 z-50">
-                  <Link href="/login-operator-saas" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
+                  <Link @click="dropdownOpen = false" href="/login-operator-saas" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors">
                     <i class="fas fa-cloud w-5 text-center"></i> Operator SaaS
                   </Link>
-                  <Link href="/login-perusahaan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/30 transition-colors">
+                  <Link @click="dropdownOpen = false" href="/login-perusahaan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-900/30 transition-colors">
                     <i class="fas fa-building w-5 text-center"></i> Perusahaan
                   </Link>
-                  <Link href="/login-pelanggan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors">
+                  <Link @click="dropdownOpen = false" href="/login-pelanggan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors">
                     <i class="fas fa-user w-5 text-center"></i> Pelanggan
                   </Link>
                   <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                  <Link href="/login-karyawan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors">
+                  <Link @click="dropdownOpen = false" href="/login-karyawan" class="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 transition-colors">
                     <i class="fas fa-user-tie w-5 text-center"></i> Karyawan
                   </Link>
                 </div>

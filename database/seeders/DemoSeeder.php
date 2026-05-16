@@ -489,5 +489,7 @@ class DemoSeeder extends Seeder
                 'updated_at' => now(),
             ],
         ]);
+
+        $this->call(PermissionSeeder::class);
     }
 }
