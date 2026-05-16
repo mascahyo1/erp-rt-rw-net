@@ -241,7 +241,6 @@ onUnmounted(() => {
               <Transition name="dropdown">
                 <div
                   v-show="profileDropdownOpen"
-                  @click="profileDropdownOpen = false"
                   class="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-50"
                 >
                   <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
@@ -249,21 +248,26 @@ onUnmounted(() => {
                     <p class="text-xs text-gray-500 dark:text-gray-400">admin@rtrwnet.id</p>
                   </div>
                   <Link
+                    @click.stop="profileDropdownOpen = false"
                     href="/operator-saas/dashboard"
                     class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
                     <i class="fas fa-tachometer-alt w-4 text-center"></i> Dashboard
                   </Link>
                   <Link
-                    href="#"
+                    @click.stop="profileDropdownOpen = false"
+                    href="/operator-saas/profil-saya"
                     class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
-                    <i class="fas fa-user-cog w-4 text-center"></i> Profil
+                    <i class="fas fa-user-cog w-4 text-center"></i> Profil Saya
                   </Link>
                   <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                   <Link
-                    href="/"
-                    class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    @click.stop="profileDropdownOpen = false"
+                    href="/logout-operator-saas"
+                    method="post"
+                    as="button"
+                    class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left"
                   >
                     <i class="fas fa-sign-out-alt w-4 text-center"></i> Logout
                   </Link>

@@ -97,12 +97,12 @@ onUnmounted(() => mediaQuery?.removeEventListener('change', applyTheme));
               <button @click="profileDropdownOpen = !profileDropdownOpen" class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
                 <i class="fas fa-user-circle text-lg"></i><span class="hidden sm:inline font-medium">{{ companyName }}</span><i :class="['fas text-xs transition-transform', profileDropdownOpen ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
               </button>
-              <Transition name="dropdown"><div v-show="profileDropdownOpen" @click="profileDropdownOpen = false" class="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-50">
+              <Transition name="dropdown"><div v-show="profileDropdownOpen" class="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-50">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700"><p class="text-sm font-medium text-gray-900 dark:text-white">{{ companyName }}</p><p class="text-xs text-gray-500 dark:text-gray-400">{{ userEmail }}</p></div>
-                <Link href="/operator-perusahaan/perusahaan-saya" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-building w-4 text-center"></i> Perusahaan Saya</Link>
-                <Link href="/operator-perusahaan/profil-saya" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-user-cog w-4 text-center"></i> Profil Saya</Link>
+                <Link href="/operator-perusahaan/perusahaan-saya" @click.stop="profileDropdownOpen = false" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-building w-4 text-center"></i> Perusahaan Saya</Link>
+                <Link href="/operator-perusahaan/dashboard" @click.stop="profileDropdownOpen = false" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-user-cog w-4 text-center"></i> Profil Saya</Link>
                 <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
-                <Link href="/" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"><i class="fas fa-sign-out-alt w-4 text-center"></i> Logout</Link>
+                <Link href="/logout-perusahaan" method="post" as="button" @click.stop="profileDropdownOpen = false" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left"><i class="fas fa-sign-out-alt w-4 text-center"></i> Logout</Link>
               </div></Transition>
             </div>
           </div>
