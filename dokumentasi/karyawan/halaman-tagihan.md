@@ -1,7 +1,28 @@
 # Halaman Tagihan
 > Portal: Karyawan | URL: `/karyawan/tagihan`
 
-## Route
+## Fungsi
+Halaman untuk **melihat dan mengelola tagihan bulanan** pelanggan yang ditugaskan kepada karyawan.
+Karyawan dapat melihat tagihan yang harus ditagih kepada pelanggan dan mencatat status pembayarannya.
+
+## Fitur
+- **Tabel daftar tagihan** — menampilkan tagihan pelanggan dengan periode, jumlah, dan status
+- **Pencarian** — mencari tagihan berdasarkan nama pelanggan atau periode (tekan Enter untuk mencari)
+- **Filter status** — menyaring tagihan berdasarkan status: Belum Dibayar, Lunas, atau Terhapus
+- **Urutkan** — klik judul kolom untuk mengurutkan data (bisa multi-kolom)
+- **Pagination** — pilih jumlah data per halaman: 5, 10, 25, 50, 100
+
+## Aksi
+| Aksi | Izin Diperlukan | Keterangan |
+|------|----------------|------------|
+| **Lihat Daftar** | `karyawan-tagihan.list` | Melihat tabel tagihan dan sidebar menu |
+| **Tambah Tagihan** | `karyawan-tagihan.create` | Membuat tagihan baru secara manual |
+| **Edit Tagihan** | `karyawan-tagihan.edit` | Mengubah jumlah atau status tagihan |
+| **Hapus Tagihan** | `karyawan-tagihan.delete` | Menghapus tagihan (dapat dipulihkan lagi) |
+| **Pulihkan Tagihan** | `karyawan-tagihan.restore` | Mengembalikan tagihan yang sudah dihapus |
+
+## Teknis
+### Route
 | Method | URI | Name | Middleware | Permission |
 |--------|-----|------|-----------|------------|
 | GET | `/karyawan/tagihan` | — | `auth:employee` | `karyawan-tagihan.list` |
@@ -10,13 +31,13 @@
 | DELETE | `/karyawan/tagihan/{id}` | — | `auth:employee` | `karyawan-tagihan.delete` |
 | PATCH | `/karyawan/tagihan/{id}/restore` | — | `auth:employee` | `karyawan-tagihan.restore` |
 
-## Controller
+### Controller
 Closure (inline route)
 
-## View
+### View
 `resources/js/Pages/Karyawan/Tagihan.vue`
 
-## Test Case
+### Test Case
 | File | Method | Description |
 |------|--------|-------------|
 | `tests/Browser/Feature/Karyawan/TagihanPermissionTest.php` | Various | Browser permission test |

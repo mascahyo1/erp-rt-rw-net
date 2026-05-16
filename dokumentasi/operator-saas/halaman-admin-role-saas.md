@@ -1,7 +1,28 @@
 # Halaman Admin Role SaaS
 > Portal: Operator SaaS | URL: `/operator-saas/admin-role-saas`
 
-## Route
+## Fungsi
+Halaman untuk **memasangkan role ke admin SaaS** — menentukan role/hak akses apa yang dimiliki oleh masing-masing admin SaaS.
+Setiap admin SaaS bisa memiliki satu role yang mengontrol menu dan fitur apa saja yang bisa diakses.
+
+## Fitur
+- **Tabel daftar pemasangan** — menampilkan admin SaaS dan role yang sudah dipasangkan
+- **Pencarian** — mencari berdasarkan nama admin atau nama role (tekan Enter untuk mencari)
+- **Filter perusahaan** — menyaring berdasarkan perusahaan
+- **Urutkan** — klik judul kolom untuk mengurutkan data (bisa multi-kolom)
+- **Pagination** — pilih jumlah data per halaman: 5, 10, 25, 50, 100
+
+## Aksi
+| Aksi | Izin Diperlukan | Keterangan |
+|------|----------------|------------|
+| **Lihat Daftar** | `admin-role-saas.list` | Melihat tabel pemasangan dan sidebar menu |
+| **Pasang Role** | `admin-role-saas.create` | Memasangkan role ke admin SaaS |
+| **Edit Pemasangan** | `admin-role-saas.edit` | Mengubah role yang sudah dipasangkan ke admin SaaS |
+| **Hapus Pemasangan** | `admin-role-saas.delete` | Menghapus pemasangan role dari admin SaaS |
+| **Bulk Hapus** | `admin-role-saas.delete` | Menghapus banyak pemasangan sekaligus |
+
+## Teknis
+### Route
 | Method | URI | Name | Middleware | Permission |
 |--------|-----|------|-----------|------------|
 | GET | `/operator-saas/admin-role-saas` | `operator-saas.admin-role-saas.index` | `auth:web`, `ensure.user.active:web` | `admin-role-saas.list` |
@@ -10,17 +31,17 @@
 | DELETE | `/operator-saas/admin-role-saas/{modelHasRole}` | `operator-saas.admin-role-saas.destroy` | `auth:web`, `ensure.user.active:web` | `admin-role-saas.delete` |
 | POST | `/operator-saas/admin-role-saas/bulk-delete` | `operator-saas.admin-role-saas.bulk-delete` | `auth:web`, `ensure.user.active:web` | `admin-role-saas.delete` |
 
-## Controller
+### Controller
 `App\Http\Controllers\AdminRoleSaasController@index`
 `App\Http\Controllers\AdminRoleSaasController@store`
 `App\Http\Controllers\AdminRoleSaasController@update`
 `App\Http\Controllers\AdminRoleSaasController@destroy`
 `App\Http\Controllers\AdminRoleSaasController@bulkDelete`
 
-## View
+### View
 `resources/js/Pages/OperatorSaas/AdminRoleSaaS.vue`
 
-## Test Case
+### Test Case
 | File | Method | Description |
 |------|--------|-------------|
 | `tests/Feature/OperatorSaas/AdminRoleSaasTest.php` | Various | Feature CRUD test |

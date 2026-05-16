@@ -14,34 +14,34 @@ use Inertia\Inertia;
 Route::get('/operator-saas/perusahaan/select-search', [CompanyController::class, 'selectSearch'])
     ->name('operator-saas.perusahaan.select-search');
 
-Route::get('/operator-saas/profil-saya', function () {
-    return Inertia::render('OperatorSaas/ProfilSaya');
-});
-
-Route::put('/operator-saas/profil-saya', function (\Illuminate\Http\Request $request) {
-    $user = auth()->user();
-    $data = $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'email', 'max:255', 'unique:admin_saas,email,' . $user->id],
-        'current_password' => ['nullable', 'string'],
-        'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-    ]);
-
-    if ($data['password'] ?? null) {
-        if (!\Hash::check($data['current_password'], $user->password)) {
-            return back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
-        }
-        $user->password = bcrypt($data['password']);
-    }
-
-    $user->name = $data['name'];
-    $user->email = $data['email'];
-    $user->save();
-
-    return back()->with('success', 'Profil berhasil diperbarui.');
-});
-
 Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
+    Route::get('/operator-saas/profil-saya', function () {
+        return Inertia::render('OperatorSaas/ProfilSaya');
+    });
+
+    Route::put('/operator-saas/profil-saya', function (\Illuminate\Http\Request $request) {
+        $user = auth()->user();
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:admin_saas,email,' . $user->id],
+            'current_password' => ['nullable', 'string'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if ($data['password'] ?? null) {
+            if (!\Hash::check($data['current_password'], $user->password)) {
+                return back()->withErrors(['current_password' => 'Password saat ini tidak sesuai.']);
+            }
+            $user->password = bcrypt($data['password']);
+        }
+
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->save();
+
+        return back()->with('success', 'Profil berhasil diperbarui.');
+    });
+
     Route::get('/operator-saas/dashboard', function () {
         return Inertia::render('OperatorSaas/Dashboard', [
             'stats' => [

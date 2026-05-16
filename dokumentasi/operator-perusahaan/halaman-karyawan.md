@@ -1,7 +1,31 @@
 # Halaman Karyawan
 > Portal: Operator Perusahaan | URL: `/operator-perusahaan/karyawan`
 
-## Route
+## Fungsi
+Halaman untuk mengelola **data karyawan** perusahaan.
+Karyawan adalah petugas yang bertugas menagih pelanggan dan mencatat pembayaran di lapangan.
+
+## Fitur
+- **Tabel daftar karyawan** — menampilkan semua karyawan dengan nama, email, nomor HP, dan status
+- **Pencarian** — mencari karyawan berdasarkan nama, email, atau nomor HP (tekan Enter untuk mencari)
+- **Filter status** — menyaring karyawan berdasarkan status: Aktif, Nonaktif, atau Terhapus
+- **Urutkan** — klik judul kolom untuk mengurutkan data (bisa multi-kolom)
+- **Pagination** — pilih jumlah data per halaman: 5, 10, 25, 50, 100
+
+## Aksi
+| Aksi | Izin Diperlukan | Keterangan |
+|------|----------------|------------|
+| **Lihat Daftar** | `karyawan.list` | Melihat tabel karyawan dan sidebar menu |
+| **Tambah Karyawan** | `karyawan.create` | Membuat akun karyawan baru dengan mengisi nama, email, password, nomor HP, dan status |
+| **Edit Karyawan** | `karyawan.edit` | Mengubah data karyawan yang sudah ada |
+| **Hapus Karyawan** | `karyawan.delete` | Menghapus karyawan (dapat dipulihkan lagi) |
+| **Pulihkan Karyawan** | `karyawan.restore` | Mengembalikan karyawan yang sudah dihapus |
+| **Bulk Aktifkan** | `karyawan.edit` | Mengaktifkan banyak karyawan sekaligus |
+| **Bulk Nonaktifkan** | `karyawan.edit` | Menonaktifkan banyak karyawan sekaligus |
+| **Bulk Hapus** | `karyawan.delete` | Menghapus banyak karyawan sekaligus |
+
+## Teknis
+### Route
 | Method | URI | Name | Middleware | Permission |
 |--------|-----|------|-----------|------------|
 | GET | `/operator-perusahaan/karyawan` | `operator-perusahaan.karyawan.index` | `auth:admin-company` | `karyawan.list` |
@@ -12,7 +36,7 @@
 | POST | `/operator-perusahaan/karyawan/bulk-delete` | `operator-perusahaan.karyawan.bulkDelete` | `auth:admin-company` | `karyawan.delete` |
 | PATCH | `/operator-perusahaan/karyawan/{id}/restore` | `operator-perusahaan.karyawan.restore` | `auth:admin-company` | `karyawan.restore` |
 
-## Controller
+### Controller
 `App\Http\Controllers\OperatorPerusahaan\KaryawanController@index`
 `App\Http\Controllers\OperatorPerusahaan\KaryawanController@store`
 `App\Http\Controllers\OperatorPerusahaan\KaryawanController@update`
@@ -21,10 +45,10 @@
 `App\Http\Controllers\OperatorPerusahaan\KaryawanController@bulkDelete`
 `App\Http\Controllers\OperatorPerusahaan\KaryawanController@restore`
 
-## View
+### View
 `resources/js/Pages/OperatorPerusahaan/Karyawan.vue`
 
-## Test Case
+### Test Case
 | File | Method | Description |
 |------|--------|-------------|
 | `tests/Feature/OperatorPerusahaan/KaryawanTest.php` | Various | Feature CRUD test |
