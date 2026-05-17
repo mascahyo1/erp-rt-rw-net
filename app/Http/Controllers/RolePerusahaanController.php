@@ -71,7 +71,7 @@ class RolePerusahaanController extends Controller
 
         return Inertia::render('OperatorSaas/RolePerusahaan', [
             'roles' => $roles,
-            'permissions' => $permissions,
+            'availablePermissions' => $permissions,
             'filters' => $request->only(['search', 'status', 'company', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
         ]);
     }

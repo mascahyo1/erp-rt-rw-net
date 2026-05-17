@@ -20,7 +20,7 @@ const toast = useToast();
 // ── Permission Groups (derived from flat permissions array) ──
 const permissionGroups = computed(() => {
   const groups = {};
-  (props.permissions || []).forEach(p => {
+  (props.availablePermissions || []).forEach(p => {
     const parts = p.nama.split('.');
     const module = parts.length > 1 ? parts.slice(0, -1).join(' ') : parts[0];
     const moduleLabel = module.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());

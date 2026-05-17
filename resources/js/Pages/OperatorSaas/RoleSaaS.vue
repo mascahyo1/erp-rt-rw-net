@@ -234,7 +234,7 @@ const actionLabels = {
 
 const permissionGroups = computed(() => {
   const groups = {};
-  props.permissions?.forEach(p => {
+  props.availablePermissions?.forEach(p => {
     const module = extractModule(p.nama);
     if (!groups[module]) groups[module] = { module: moduleLabels[module] || module, permissions: [] };
     groups[module].permissions.push({ id: p.id, key: p.nama, label: actionLabels[extractAction(p.nama)] || extractAction(p.nama), deskripsi: p.deskripsi });

@@ -46,7 +46,7 @@ class RoleSaasController extends Controller
             ->get()->map(fn($p) => ['id' => $p->id, 'nama' => $p->name, 'deskripsi' => $p->description]);
 
         return Inertia::render('OperatorSaas/RoleSaaS', [
-            'roles' => $roles, 'permissions' => $permissions,
+            'roles' => $roles, 'availablePermissions' => $permissions,
             'filters' => $request->only(['search', 'status', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
         ]);
     }
