@@ -1,23 +1,102 @@
 <script setup>
+import { ref, computed } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import KaryawanLayout from '@/Layouts/KaryawanLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { useToast } from '@/Composables/useToast';
+import ToastContainer from '@/Components/ToastContainer.vue';
+
 defineOptions({ layout: KaryawanLayout });
 
-const customers = [
-  { id: 1, nama: 'Pak Sugeng', alamat: 'Jl. Mawar No. 5, RT 02/RW 01', telepon: '+62 81234567890', status: 'Aktif' },
-  { id: 2, nama: 'Bu Rini', alamat: 'Jl. Melati No. 12, RT 03/RW 01', telepon: '+62 81345678901', status: 'Aktif' },
-  { id: 3, nama: 'Pak Herman', alamat: 'Jl. Anggrek No. 8, RT 01/RW 02', telepon: '+62 85789012345', status: 'Nonaktif' },
-  { id: 4, nama: 'Mbak Dewi', alamat: 'Jl. Kenanga No. 20, RT 04/RW 01', telepon: '+62 82123456789', status: 'Aktif' },
-  { id: 5, nama: 'Pak Slamet', alamat: 'Jl. Dahlia No. 3, RT 02/RW 03', telepon: '+62 85678901234', status: 'Aktif' },
-];
-function statusBadge(s) { return s === 'Aktif' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; }
+const props = defineProps({ customers: Object, filters: Object });
+const toast = useToast();
+
+const searchInput = ref(props.filters?.search || '');
+const statusFilter = ref(props.filters?.status || '');
+const terhapusFilter = ref(props.filters?.terhapus || 'tidak');
+const sortField = ref(props.filters?.sort_field || '');
+const sortDir = ref(props.filters?.sort_dir || 'asc');
+const perPage = ref(props.filters?.per_page ? Number(props.filters.per_page) : 10);
+const perPageOptions = [5, 10, 25, 50, 100];
+const selectedIds = ref([]); const selectAll = ref(false);
+const selectedItem = ref(null);
+const showCreateModal = ref(false); const showDetailModal = ref(false);
+const showEditModal = ref(false); const showDeleteModal = ref(false);
+
+function buildQuery(o = {}) {
+  const p = { ...o };
+  if (p.search === undefined) p.search = searchInput.value || undefined;
+  if (p.status === undefined) p.status = statusFilter.value || undefined;
+  if (p.terhapus === undefined) p.terhapus = terhapusFilter.value || undefined;
+  if (p.sort_field === undefined) p.sort_field = sortField.value || undefined;
+  if (p.sort_dir === undefined) p.sort_dir = sortDir.value || undefined;
+  if (p.per_page === undefined) p.per_page = perPage.value;
+  Object.keys(p).forEach(k => { if (p[k] === undefined) delete p[k]; });
+  return p;
+}
+function fetchData(o = {}) {
+  router.get('/karyawan/customer', buildQuery(o), { preserveState: true, preserveScroll: true, replace: true });
+}
+function applySearch() { fetchData({ search: searchInput.value || undefined, status: statusFilter.value || undefined, terhapus: terhapusFilter.value, page: 1 }); }
+function clearSearch() { searchInput.value = ''; fetchData({ search: undefined, status: statusFilter.value || undefined, terhapus: terhapusFilter.value, page: 1 }); }
+function applyFilters(s) { statusFilter.value = s; fetchData({ status: s || undefined, terhapus: terhapusFilter.value, page: 1 }); }
+function applyTerhapus(t) { terhapusFilter.value = t; statusFilter.value = ''; fetchData({ terhapus: t, status: undefined, page: 1 }); }
+function resetFilters() { searchInput.value = ''; statusFilter.value = ''; terhapusFilter.value = 'tidak'; fetchData({ search: undefined, status: undefined, terhapus: 'tidak', page: 1 }); }
+function sort(f) {
+  if (sortField.value === f) { if (sortDir.value === 'asc') sortDir.value = 'desc'; else { sortField.value = ''; sortDir.value = 'asc'; } }
+  else { sortField.value = f; sortDir.value = 'asc'; }
+  fetchData({ sort_field: sortField.value || undefined, sort_dir: sortDir.value || undefined });
+}
+function sortIcon(f) { if (sortField.value !== f) return 'fa-sort'; return sortDir.value === 'asc' ? 'fa-sort-up' : 'fa-sort-down'; }
+function toggleSelectAll() { selectedIds.value = selectAll.value ? items.value.map(c => c.id) : []; }
+function toggleSelect(id) { const i = selectedIds.value.indexOf(id); i === -1 ? selectedIds.value.push(id) : selectedIds.value.splice(i, 1); }
+function goToPage(p) { fetchData({ page: p }); }
+function changePerPage(n) { perPage.value = n; fetchData({ per_page: n, page: 1 }); }
+function statusBadgeClass(s) { return s === 'Aktif' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; }
+
+const createForm = useForm({ nama: '', email: '', kode_negara: '+62', no_telp: '', no_nik: '', no_kk: '', alamat: '', status: 'Aktif', password: '' });
+const editForm = useForm({ nama: '', email: '', kode_negara: '+62', no_telp: '', no_nik: '', no_kk: '', alamat: '', status: 'Aktif', password: '' });
+
+function openCreate() { createForm.reset(); showCreateModal.value = true; }
+function submitCreate() { createForm.post('/karyawan/customer', { onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Customer berhasil ditambahkan.'); } }); }
+function openEdit(item) { editForm.defaults({ nama: item.nama, email: item.email, kode_negara: item.kode_negara, no_telp: item.no_telp, no_nik: item.no_nik || '', no_kk: item.no_kk || '', alamat: item.alamat || '', status: item.status, password: '' }); editForm.reset(); selectedItem.value = item; showEditModal.value = true; }
+function submitEdit() { editForm.put('/karyawan/customer/' + selectedItem.value.id, { onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Customer berhasil diperbarui.'); } }); }
+function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; }
+function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
+function confirmDelete() { router.delete('/karyawan/customer/' + selectedItem.value.id, { onSuccess: () => { showDeleteModal.value = false; fetchData(); toast.success('Customer berhasil dihapus.'); } }); }
+function confirmRestore(id) { router.patch('/karyawan/customer/' + id + '/restore', { onSuccess: () => { fetchData(); toast.success('Customer berhasil dipulihkan.'); } }); }
+function bulkDelete() { router.post('/operator-perusahaan/customer/bulk-delete', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Customer berhasil dihapus.'); } }); }
+function bulkSetStatus(s) { router.post('/operator-perusahaan/customer/bulk-status', { ids: selectedIds.value, status: s }, { onSuccess: () => { selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Status berhasil diubah.'); } }); }
+
+const items = computed(() => props.customers?.data || []);
+const pagination = computed(() => ({ current: props.customers?.current_page || 1, last: props.customers?.last_page || 1, total: props.customers?.total || 0 }));
+const hasFilter = computed(() => searchInput.value || statusFilter.value || terhapusFilter.value !== 'tidak');
+const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
 </script>
+
 <template>
-  <div><Head title="Customer | Karyawan" /><slot name="header">Customer</slot>
+  <div>
+    <Head title="Customer | Karyawan" />
+    <ToastContainer />
     <div class="space-y-6">
-      <nav class="flex items-center gap-1.5 text-sm"><Link href="/karyawan/dashboard" class="text-gray-500 dark:text-gray-400 hover:text-amber-600 transition-colors"><i class="fas fa-home"></i></Link><i class="fas fa-chevron-right text-[10px] text-gray-400 dark:text-gray-500"></i><Link href="/karyawan/dashboard" class="text-gray-500 dark:text-gray-400 hover:text-amber-600 transition-colors">Dashboard</Link><i class="fas fa-chevron-right text-[10px] text-gray-400 dark:text-gray-500"></i><span class="text-gray-900 dark:text-white font-medium">Customer</span></nav>
-      <p class="text-sm text-gray-500 dark:text-gray-400">Daftar customer yang menjadi tanggung jawab Anda.</p>
-      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden"><div class="overflow-x-auto"><table class="w-full text-sm min-w-[600px]"><thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"><tr><th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Nama</th><th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Alamat</th><th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Telepon</th><th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Status</th></tr></thead><tbody class="divide-y divide-gray-200 dark:divide-gray-700"><tr v-for="c in customers" :key="c.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"><td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold shrink-0">{{ c.nama.charAt(0) }}</div><span class="font-medium text-gray-900 dark:text-white">{{ c.nama }}</span></div></td><td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-48 truncate">{{ c.alamat }}</td><td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ c.telepon }}</td><td class="px-4 py-3"><span :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(c.status)]">{{ c.status }}</span></td></tr></tbody></table></div></div>
+      <nav class="flex items-center gap-1.5 text-sm"><Link href="/karyawan/dashboard" class="text-gray-500 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"><i class="fas fa-home"></i></Link><i class="fas fa-chevron-right text-[10px] text-gray-400 dark:text-gray-500"></i><span class="text-gray-900 dark:text-white font-medium">Customer</span></nav>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"><div><h2 class="text-2xl font-bold text-gray-900 dark:text-white">Customer</h2><p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Daftar customer yang menjadi tanggung jawab Anda.</p></div><button v-if="terhapusFilter !== 'ya'" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm"><i class="fas fa-plus mr-1.5"></i> Tambah Customer</button></div>
+      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+        <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <div class="relative w-full sm:w-72"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div><input v-model="searchInput" type="text" placeholder="Cari..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-amber-500 outline-none" @keydown.enter="applySearch" /><div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5"><button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white" title="Clear"><i class="fas fa-times text-xs"></i></button><button @click="applySearch" class="px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700" title="Cari"><i class="fas fa-search text-xs"></i></button></div></div>
+          <div class="flex gap-1 flex-wrap"><button v-for="s in [{v:'tidak',l:'Aktif'},{v:'ya',l:'Terhapus'}]" :key="s.v" @click="applyTerhapus(s.v)" :class="['px-3 py-2 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap', terhapusFilter === s.v ? 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400']">{{ s.l }}</button></div>
+          <div v-if="terhapusFilter !== 'ya'" class="flex gap-1 flex-wrap"><button v-for="s in [{v:'',l:'Semua'},{v:'Aktif',l:'Aktif'},{v:'Nonaktif',l:'Nonaktif'}]" :key="s.v" @click="applyFilters(s.v)" :class="['px-3 py-2 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap', statusFilter === s.v ? 'bg-amber-50 border-amber-300 text-amber-700 dark:bg-amber-900/30 dark:border-amber-700 dark:text-amber-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400']">{{ s.l }}</button></div>
+          <button v-if="hasFilter" @click="resetFilters" class="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 hover:underline whitespace-nowrap"><i class="fas fa-times-circle"></i> Reset Filter</button>
+        </div>
+      </div>
+      <div v-if="selectedIds.length > 0" class="flex items-center justify-between px-4 py-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl shadow-sm"><span class="text-sm font-medium text-amber-700 dark:text-amber-300"><i class="fas fa-check-circle mr-1.5"></i> {{ selectedIds.length }} data dipilih</span><div class="flex items-center gap-2"><button v-if="terhapusFilter !== 'ya'" @click="bulkSetStatus('Aktif')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"><i class="fas fa-check mr-1"></i> Aktifkan</button><button v-if="terhapusFilter !== 'ya'" @click="bulkSetStatus('Nonaktif')" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700"><i class="fas fa-ban mr-1"></i> Nonaktifkan</button><button @click="bulkDelete()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash-alt mr-1"></i> Hapus</button></div></div>
+      <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+        <div class="overflow-x-auto"><table class="w-full text-sm min-w-[800px]"><thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"><tr><th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 text-amber-600" /></th><th @click="sort('name')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Nama <i :class="['fas', sortIcon('name'), 'text-[10px]', sortField === 'name' ? 'text-amber-500' : 'text-gray-400']"></i></span></th><th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Alamat</th><th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Telepon</th><th @click="sort('email')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Email <i :class="['fas', sortIcon('email'), 'text-[10px]', sortField === 'email' ? 'text-amber-500' : 'text-gray-400']"></i></span></th><th @click="sort('is_active')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Status <i :class="['fas', sortIcon('is_active'), 'text-[10px]', sortField === 'is_active' ? 'text-amber-500' : 'text-gray-400']"></i></span></th><th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400 w-24">Aksi</th></tr></thead>
+        <tbody><tr v-if="items.length === 0"><td colspan="7" class="px-4 py-16 text-center text-gray-400 dark:text-gray-500"><i class="fas fa-inbox text-4xl mb-3 block"></i><span class="text-sm">Tidak ada data customer</span></td></tr>
+        <tr v-for="item in items" :key="item.id" class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors" :class="{'opacity-60': item.dihapus}"><td class="px-4 py-3"><input v-model="selectedIds" :value="item.id" type="checkbox" @change="toggleSelect(item.id)" class="rounded border-gray-300 text-amber-600" /></td><td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">{{ (item.nama || '?')[0] }}</div><span class="font-medium text-gray-900 dark:text-white">{{ item.nama }}</span></div></td><td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-48 truncate">{{ item.alamat || '—' }}</td><td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ item.kode_negara }} {{ item.no_telp }}</td><td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ item.email }}</td><td class="px-4 py-3"><span :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadgeClass(item.status)]">{{ item.status }}</span></td><td class="px-4 py-3"><div class="flex items-center justify-center gap-1"><button v-if="!item.dihapus" @click="openDetail(item)" title="Detail" class="p-1.5 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-amber-900/30"><i class="fas fa-eye"></i></button><button v-if="!item.dihapus" @click="openEdit(item)" title="Edit" class="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:text-indigo-400 dark:hover:bg-indigo-900/30"><i class="fas fa-edit"></i></button><button v-if="!item.dihapus" @click="openDelete(item)" title="Hapus" class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/30"><i class="fas fa-trash-alt"></i></button><button v-if="item.dihapus" @click="confirmRestore(item.id)" title="Pulihkan" class="p-1.5 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-900/30"><i class="fas fa-undo"></i></button></div></td></tr></tbody></table></div>
+        <div class="flex flex-col sm:flex-row items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900"><div class="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mb-3 sm:mb-0"><span>Tampilkan</span><select v-model="perPage" @change="changePerPage(perPage)" class="px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm"><option v-for="n in perPageOptions" :key="n" :value="n">{{ n }}</option></select><span>dari {{ pagination.total }} data</span></div><div class="flex items-center gap-1"><button @click="goToPage(1)" :disabled="pagination.current <= 1" class="px-2 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30"><i class="fas fa-angle-double-left"></i></button><button @click="goToPage(pagination.current-1)" :disabled="pagination.current <= 1" class="px-2 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30"><i class="fas fa-angle-left"></i></button><span class="px-2 text-sm text-gray-500">{{ pagination.current }} / {{ pagination.last }}</span><button @click="goToPage(pagination.current+1)" :disabled="pagination.current >= pagination.last" class="px-2 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30"><i class="fas fa-angle-right"></i></button><button @click="goToPage(pagination.last)" :disabled="pagination.current >= pagination.last" class="px-2 py-1.5 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-30"><i class="fas fa-angle-double-right"></i></button></div></div>
+      </div>
     </div>
+    <Teleport to="body"><Transition name="modal"><div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDetailModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg"><div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold">Detail Customer</h3><button @click="showDetailModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-times"></i></button></div><div class="px-6 py-5 space-y-3" v-if="selectedItem"><div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-gray-500">Nama</label><p class="font-medium">{{ selectedItem.nama }}</p></div><div><label class="text-xs text-gray-500">Status</label><p><span :class="['px-2 py-0.5 rounded text-xs font-medium', statusBadgeClass(selectedItem.status)]">{{ selectedItem.status }}</span></p></div><div><label class="text-xs text-gray-500">Email</label><p>{{ selectedItem.email }}</p></div><div><label class="text-xs text-gray-500">Telepon</label><p>{{ selectedItem.kode_negara }} {{ selectedItem.no_telp }}</p></div><div><label class="text-xs text-gray-500">NIK</label><p>{{ selectedItem.no_nik || '—' }}</p></div><div><label class="text-xs text-gray-500">No KK</label><p>{{ selectedItem.no_kk || '—' }}</p></div></div><div><label class="text-xs text-gray-500">Alamat</label><p>{{ selectedItem.alamat || '—' }}</p></div></div></div></div></Transition></Teleport>
   </div>
 </template>
+<style scoped>.modal-enter-active,.modal-leave-active{transition:opacity .2s ease}.modal-enter-active>div:last-child,.modal-leave-active>div:last-child{transition:transform .2s ease,opacity .2s ease}.modal-enter-from,.modal-leave-to{opacity:0}.modal-enter-from>div:last-child{transform:scale(.95) translateY(10px);opacity:0}.modal-leave-to>div:last-child{transform:scale(.95) translateY(10px);opacity:0}</style>

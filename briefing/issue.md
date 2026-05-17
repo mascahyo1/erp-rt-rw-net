@@ -54,3 +54,9 @@ web pelanggan cek lagi juga
 
 
 jangan lupa route, front end, back end, dokumentasi, test case semuanya harus sinkron
+
+
+granular permission gak ada contohnya
+app\Enums\Permissions.php line admin-saas.create 47
+resources\js\Pages\OperatorSaas\AdminSaaS.vue line 356 sd 359
+seharusnya ada pengecekan user punya role yang memiliki admin-saas.create tidak? lha terus test case browser dengan screenshot gimana belum ada juga ya? kayaknya sudah ada ini ya tests\Browser\Feature\OperatorSaas\PermissionTest.php

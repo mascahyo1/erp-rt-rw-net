@@ -59,7 +59,13 @@ enum Permissions: string
     // ADMIN PERUSAHAAN (16 module)
     // ============================================================
     case PerusahaanSayaList = 'perusahaan-saya.list';
+    case PerusahaanSayaEdit = 'perusahaan-saya.edit';
     case PaketList = 'paket.list';
+    case PaketCreate = 'paket.create';
+    case PaketEdit = 'paket.edit';
+    case PaketDetail = 'paket.detail';
+    case PaketDelete = 'paket.delete';
+    case PaketRestore = 'paket.restore';
 
     // Customer (full CRUD)
     case CustomerList   = 'customer.list';
@@ -119,12 +125,29 @@ enum Permissions: string
     case KaryawanDelete = 'karyawan.delete';
     case KaryawanRestore = 'karyawan.restore';
 
-    // View-only sub-modules
-    case RolePerusahaanOpList = 'role-perusahaan-op.list';
-    case AdminRolePerusahaanOpList = 'admin-role-perusahaan-op.list';
-    case RoleWebKaryawanList = 'role-web-karyawan.list';
-    case AdminRoleWebKaryawanList = 'admin-role-web-karyawan.list';
-    case KonfigurasiPerusahaanList = 'konfigurasi-perusahaan.list';
+    // View-only sub-modules → now full CRUD
+    case RolePerusahaanOpList   = 'role-perusahaan-op.list';
+    case RolePerusahaanOpCreate = 'role-perusahaan-op.create';
+    case RolePerusahaanOpEdit   = 'role-perusahaan-op.edit';
+    case RolePerusahaanOpDelete = 'role-perusahaan-op.delete';
+    case RolePerusahaanOpRestore = 'role-perusahaan-op.restore';
+    case AdminRolePerusahaanOpList   = 'admin-role-perusahaan-op.list';
+    case AdminRolePerusahaanOpCreate = 'admin-role-perusahaan-op.create';
+    case AdminRolePerusahaanOpEdit   = 'admin-role-perusahaan-op.edit';
+    case AdminRolePerusahaanOpDelete = 'admin-role-perusahaan-op.delete';
+    case RoleWebKaryawanList   = 'role-web-karyawan.list';
+    case RoleWebKaryawanCreate = 'role-web-karyawan.create';
+    case RoleWebKaryawanEdit   = 'role-web-karyawan.edit';
+    case RoleWebKaryawanDelete = 'role-web-karyawan.delete';
+    case RoleWebKaryawanRestore = 'role-web-karyawan.restore';
+    case AdminRoleWebKaryawanList   = 'admin-role-web-karyawan.list';
+    case AdminRoleWebKaryawanCreate = 'admin-role-web-karyawan.create';
+    case AdminRoleWebKaryawanEdit   = 'admin-role-web-karyawan.edit';
+    case AdminRoleWebKaryawanDelete = 'admin-role-web-karyawan.delete';
+    case KonfigurasiPerusahaanList   = 'konfigurasi-perusahaan.list';
+    case KonfigurasiPerusahaanCreate = 'konfigurasi-perusahaan.create';
+    case KonfigurasiPerusahaanEdit   = 'konfigurasi-perusahaan.edit';
+    case KonfigurasiPerusahaanDelete = 'konfigurasi-perusahaan.delete';
 
     // ============================================================
     // KARYAWAN (7 module — 1 view-only + 5 full CRUD + profil)
@@ -222,7 +245,13 @@ enum Permissions: string
             ],
             'admin_perusahaan' => [
                 self::PerusahaanSayaList->value,
+                self::PerusahaanSayaEdit->value,
                 self::PaketList->value,
+                self::PaketCreate->value,
+                self::PaketEdit->value,
+                self::PaketDetail->value,
+                self::PaketDelete->value,
+                self::PaketRestore->value,
                 self::AdminPerusahaanList->value,
                 self::AdminPerusahaanCreate->value,
                 self::AdminPerusahaanEdit->value,
@@ -274,10 +303,27 @@ enum Permissions: string
                 self::KaryawanDelete->value,
                 self::KaryawanRestore->value,
                 self::RolePerusahaanOpList->value,
+                self::RolePerusahaanOpCreate->value,
+                self::RolePerusahaanOpEdit->value,
+                self::RolePerusahaanOpDelete->value,
+                self::RolePerusahaanOpRestore->value,
                 self::AdminRolePerusahaanOpList->value,
+                self::AdminRolePerusahaanOpCreate->value,
+                self::AdminRolePerusahaanOpEdit->value,
+                self::AdminRolePerusahaanOpDelete->value,
                 self::RoleWebKaryawanList->value,
+                self::RoleWebKaryawanCreate->value,
+                self::RoleWebKaryawanEdit->value,
+                self::RoleWebKaryawanDelete->value,
+                self::RoleWebKaryawanRestore->value,
                 self::AdminRoleWebKaryawanList->value,
+                self::AdminRoleWebKaryawanCreate->value,
+                self::AdminRoleWebKaryawanEdit->value,
+                self::AdminRoleWebKaryawanDelete->value,
                 self::KonfigurasiPerusahaanList->value,
+                self::KonfigurasiPerusahaanCreate->value,
+                self::KonfigurasiPerusahaanEdit->value,
+                self::KonfigurasiPerusahaanDelete->value,
             ],
             'karyawan_perusahaan' => [
                 self::ProfilSayaList->value,
