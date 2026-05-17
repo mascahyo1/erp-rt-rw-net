@@ -15,7 +15,8 @@ class EmpIncentiveLog extends Model
 
     protected $fillable = [
         'emp_incentive_id', 'cust_internet_invcs_id', 'amount', 'date',
-        'approval_status', 'approved_by', 'approved_at',
+        'review_status', 'reviewed_by_type', 'reviewed_by_id', 'reviewed_at',
+        'submitted_by_type', 'submitted_by_id',
     ];
 
     protected function casts(): array
@@ -23,7 +24,7 @@ class EmpIncentiveLog extends Model
         return [
             'date' => 'date',
             'amount' => 'decimal:2',
-            'approved_at' => 'datetime',
+            'reviewed_at' => 'datetime',
         ];
     }
 

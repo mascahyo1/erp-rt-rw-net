@@ -490,6 +490,98 @@ class DemoSeeder extends Seeder
             ],
         ]);
 
+        // ============================================================
+        // DATA DEMO: Paket Internet, Langganan, Tagihan, Pembayaran, Insentif
+        // ============================================================
+        $this->seedInternetPackages($company1Id);
+        $this->seedInternetPackages($company2Id);
+        $this->seedInternetPackages($company4Id);
+        $this->seedInternetPackages($company5Id);
+
         $this->call(PermissionSeeder::class);
+    }
+
+    private function seedInternetPackages(string $companyId): void
+    {
+        $packages = [
+            ['name' => 'Basic 10Mbps', 'price' => 150000, 'speed_down_kbps' => 10240, 'speed_up_kbps' => 5120, 'quota_gb' => 100, 'billing_cycle' => 'monthly', 'is_unlimited' => false],
+            ['name' => 'Pro 25Mbps', 'price' => 250000, 'speed_down_kbps' => 25600, 'speed_up_kbps' => 10240, 'quota_gb' => 300, 'billing_cycle' => 'monthly', 'is_unlimited' => false],
+            ['name' => 'Ultimate 50Mbps', 'price' => 400000, 'speed_down_kbps' => 51200, 'speed_up_kbps' => 20480, 'quota_gb' => 500, 'billing_cycle' => 'monthly', 'is_unlimited' => true],
+        ];
+
+        foreach ($packages as $pkg) {
+            \App\Models\InternetPackage::create($pkg + [
+                'id' => Str::uuid(),
+                'company_id' => $companyId,
+                'is_active' => true,
+            ]);
+
+            // Buat langganan untuk customer acak
+            $customers = Customer::where('company_id', $companyId)->inRandomOrder()->take(rand(2, 4))->get();
+            foreach ($customers as $customer) {
+                $langganan = \App\Models\CustInternet::create([
+                    'id' => Str::uuid(),
+                    'customer_id' => $customer->id,
+                    'internet_package_id' => \App\Models\InternetPackage::where('company_id', $companyId)->where('name', $pkg['name'])->first()->id,
+                    'account_number' => 'NET-' . strtoupper(Str::random(8)),
+                    'internet_status' => 'active',
+                    'billing_amount' => $pkg['price'],
+                    'billing_status' => 'unpaid',
+                    'billing_cycle_start' => now()->startOfMonth(),
+                    'billing_cycle_end' => now()->endOfMonth(),
+                ]);
+
+                // Generate 2-3 invoice untuk tiap langganan
+                for ($i = 0; $i < rand(2, 3); $i++) {
+                    $dueDate = now()->subMonths($i)->addDays(15);
+                    $status = $i === 0 ? 'unpaid' : 'paid';
+                    \App\Models\CustInternetInvc::create([
+                        'id' => Str::uuid(),
+                        'cust_internet_id' => $langganan->id,
+                        'invoice_number' => 'INV-' . now()->subMonths($i)->format('Ymd') . '-' . strtoupper(Str::random(6)),
+                        'amount' => $pkg['price'],
+                        'total_amount' => $pkg['price'],
+                        'grand_total' => $pkg['price'],
+                        'due_date' => $dueDate,
+                        'invoice_due_date' => $dueDate,
+                        'payment_status' => $status,
+                        'payment_status' => $status,
+                        'status' => $status,
+                        'status_description' => $status === 'paid' ? 'Lunas' : 'Menunggu pembayaran',
+                        'paid_at' => $status === 'paid' ? now()->subMonths($i)->addDays(rand(1, 10)) : null,
+                    ]);
+                }
+            }
+        }
+
+        // Buat data insentif utk perusahaan
+        $incentiveNames = ['Komisi Tagih', 'Bonus Pelanggan Baru', 'Insentif Bulanan'];
+        $incentiveTypes = ['fixed', 'percentage', 'fixed'];
+        $incentiveValues = [10000, 5, 50000];
+        foreach ($incentiveNames as $idx => $name) {
+            $insentif = \App\Models\EmpIncentive::create([
+                'id' => Str::uuid(),
+                'company_id' => $companyId,
+                'name' => $name,
+                'type' => $incentiveTypes[$idx],
+                'value' => $incentiveValues[$idx],
+                'is_active' => true,
+            ]);
+
+            // Buat 2-3 riwayat insentif
+            $invoices = \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))->inRandomOrder()->take(rand(2, 3))->get();
+            foreach ($invoices as $invoice) {
+                \App\Models\EmpIncentiveLog::create([
+                    'emp_incentive_id' => $insentif->id,
+                    'cust_internet_invcs_id' => $invoice->id,
+                    'submitted_by_type' => \App\Models\AdminCompany::class,
+                    'submitted_by_id' => \App\Models\AdminCompany::where('company_id', $companyId)->first()?->id,
+                    'amount' => $insentif->type === 'percentage' ? ($invoice->amount * $insentif->value / 100) : $insentif->value,
+                    'date' => now()->subDays(rand(1, 60)),
+                    'review_status' => ['pending', 'approved', 'approved'][rand(0, 2)],
+                    'reviewed_at' => rand(0, 1) ? now() : null,
+                ]);
+            }
+        }
     }
 }

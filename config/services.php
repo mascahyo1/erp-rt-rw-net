@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'midtrans' => [
+        'server_key' => env('MIDTRANS_SERVER_KEY'),
+        'client_key' => env('MIDTRANS_CLIENT_KEY'),
+        'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+    ],
+
+    'payment' => [
+        'default' => env('PAYMENT_GATEWAY_DEFAULT', 'midtrans'),
+        'gateways' => ['midtrans', 'tunai', 'transfer'],
+    ],
+
 ];

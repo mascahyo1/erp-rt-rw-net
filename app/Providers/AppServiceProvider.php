@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Support\Payment\MidtransGateway;
+use App\Support\Payment\PaymentManager;
 use App\Support\Session\MultiAuthDatabaseSessionHandler;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Vite;
@@ -11,7 +13,12 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        $this->app->singleton(PaymentManager::class, function () {
+            $manager = new PaymentManager;
+            $manager->register('midtrans', new MidtransGateway);
+            // Register gateway lain di sini: xendit, stripe, dsb.
+            return $manager;
+        });
     }
 
     public function boot(): void

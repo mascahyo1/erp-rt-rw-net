@@ -30,10 +30,10 @@ class RiwayatInsentifController extends Controller
         }
 
         if ($status = $request->input('status')) {
-            $query->where('approval_status', $status);
+            $query->where('review_status', $status);
         }
 
-        $allowedSorts = ['amount', 'date', 'approval_status', 'created_at'];
+        $allowedSorts = ['amount', 'date', 'review_status', 'created_at'];
         if ($sortField = $request->input('sort_field')) {
             $sortDir = $request->input('sort_dir', 'asc');
             if (in_array($sortField, $allowedSorts)) {
@@ -55,8 +55,8 @@ class RiwayatInsentifController extends Controller
                 'customer_name' => $item->invoice?->custInternet?->customer?->name,
                 'amount' => $item->amount,
                 'date' => $item->date?->format('Y-m-d'),
-                'approval_status' => $item->approval_status,
-                'approved_at' => $item->approved_at?->format('Y-m-d H:i'),
+                'review_status' => $item->review_status,
+                'reviewed_at' => $item->reviewed_at?->format('Y-m-d H:i'),
                 'dihapus' => $item->trashed(),
                 'deleted_at' => $item->deleted_at?->format('Y-m-d H:i'),
                 'created_at' => $item->created_at->format('Y-m-d H:i'),
@@ -81,7 +81,7 @@ class RiwayatInsentifController extends Controller
             'date' => ['required', 'date'],
         ]);
 
-        EmpIncentiveLog::create($validated + ['approval_status' => 'pending']);
+        EmpIncentiveLog::create($validated + ['review_status' => 'pending']);
 
         return back()->with('success', 'Riwayat insentif berhasil ditambahkan.');
     }
@@ -118,9 +118,10 @@ class RiwayatInsentifController extends Controller
     {
         $log = EmpIncentiveLog::findOrFail($id);
         $log->update([
-            'approval_status' => 'approved',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
+            'review_status' => 'approved',
+            'reviewed_by_type' => auth()->check() ? get_class(auth()->user()) : null,
+            'reviewed_by_id' => auth()->id(),
+            'reviewed_at' => now(),
         ]);
 
         return back()->with('success', 'Riwayat insentif berhasil disetujui.');

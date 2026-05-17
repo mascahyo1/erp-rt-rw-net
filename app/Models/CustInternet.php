@@ -42,4 +42,9 @@ class CustInternet extends Model
     {
         return $this->belongsTo(InternetPackage::class);
     }
+
+    public function invoices()
+    {
+        return $this->hasMany(CustInternetInvc::class);
+    }
 }
