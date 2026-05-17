@@ -30,11 +30,35 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = null;
+        $path = '/' . trim($request->path(), '/') . '/';
 
-        foreach (['admin-saas', 'admin-company', 'employee', 'customer'] as $guard) {
-            if (auth()->guard($guard)->check()) {
-                $user = auth()->guard($guard)->user();
+        // Deteksi guard berdasarkan URL prefix agar multi-login tidak bentrok.
+        // Bila user login di banyak portal sekaligus, tiap portal pakai
+        // guard-nya sendiri — sidebar + permission sesuai portal yang diakses.
+        $guardMap = [
+            '/operator-saas/'        => 'admin-saas',
+            '/operator-perusahaan/'  => 'admin-company',
+            '/karyawan/'             => 'employee',
+            '/customer/'             => 'customer',
+        ];
+
+        $matchedGuard = null;
+        foreach ($guardMap as $prefix => $guard) {
+            if (str_starts_with($path, $prefix)) {
+                $matchedGuard = $guard;
                 break;
+            }
+        }
+
+        if ($matchedGuard && auth()->guard($matchedGuard)->check()) {
+            $user = auth()->guard($matchedGuard)->user();
+        } else {
+            // Fallback: cek semua guard (halaman landing, login, dsb.)
+            foreach (['admin-saas', 'admin-company', 'employee', 'customer'] as $guard) {
+                if (auth()->guard($guard)->check()) {
+                    $user = auth()->guard($guard)->user();
+                    break;
+                }
             }
         }
 
@@ -49,6 +73,14 @@ class HandleInertiaRequests extends Middleware
         if ($user && method_exists($user, 'getAllPermissionNames')) {
             $permissions = $user->getAllPermissionNames();
         }
+
+        \Log::info('HandleInertiaRequests', [
+            'path' => $path,
+            'matched_guard' => $matchedGuard,
+            'user_type' => $user ? get_class($user) : 'guest',
+            'user_name' => $user?->name ?? 'guest',
+            'perm_count' => count($permissions),
+        ]);
 
         return [
             ...parent::share($request),
