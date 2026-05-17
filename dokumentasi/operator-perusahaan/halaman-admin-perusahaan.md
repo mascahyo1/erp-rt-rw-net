@@ -48,6 +48,16 @@ Admin perusahaan adalah pengelola yang bertugas mengelola pelanggan, karyawan, d
 ### View
 `resources/js/Pages/OperatorPerusahaan/AdminPerusahaan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\AdminCompany` | `admin_companies` | Model utama — akun admin perusahaan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_135636_create_admin_companies_table` | `admin_companies` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

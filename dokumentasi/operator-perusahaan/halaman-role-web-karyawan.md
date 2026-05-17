@@ -25,6 +25,16 @@ Closure (inline route)
 ### View
 `resources/js/Pages/OperatorPerusahaan/RoleWebKaryawan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Role` | `roles` | Model utama — role dengan scope `web-karyawan` |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_140234_create_roles_table` | `roles` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

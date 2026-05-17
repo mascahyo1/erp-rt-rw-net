@@ -48,6 +48,16 @@ Pelanggan adalah pengguna akhir yang berlangganan layanan internet dari perusaha
 ### View
 `resources/js/Pages/OperatorPerusahaan/Customer.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Customer` | `customers` | Model utama — data pelanggan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_142201_create_customers_table` | `customers` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

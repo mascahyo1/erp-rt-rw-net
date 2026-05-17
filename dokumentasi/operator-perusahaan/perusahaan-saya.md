@@ -25,6 +25,16 @@ Closure (inline route)
 ### View
 `resources/js/Pages/OperatorPerusahaan/PerusahaanSaya.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Company` | `companies` | Model utama — data perusahaan (diambil via `auth()->user()->company_id`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_135231_create_companies_table` | `companies` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

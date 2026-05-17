@@ -39,6 +39,20 @@ Closure (inline route)
 ### View
 `resources/js/Pages/OperatorPerusahaan/RiwayatInsentif.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\EmpIncentiveLog` | `emp_incentive_logs` | Model utama — riwayat pencairan insentif |
+| `App\Models\EmpIncentive` | `emp_incentives` | Join — data insentif (via `emp_incentive_id`) |
+| `App\Models\CustInternetInvc` | `cust_internet_invcs` | Join — invoice terkait (via `cust_internet_invcs_id`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_144240_create_emp_incentive_logs_table` | `emp_incentive_logs` |
+| `2026_05_11_144033_create_emp_incentives_table` | `emp_incentives` |
+| `2026_05_11_143143_create_cust_internet_invcs_table` | `cust_internet_invcs` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

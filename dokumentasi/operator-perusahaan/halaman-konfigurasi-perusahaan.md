@@ -25,6 +25,18 @@ Closure (inline route)
 ### View
 `resources/js/Pages/OperatorPerusahaan/KonfigurasiPerusahaan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\SaasConfig` | `saas_configs` | Model utama — konfigurasi global dari operator SaaS |
+| `App\Models\CompanyConfig` | `company_configs` | Konfigurasi spesifik perusahaan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_224754_create_saas_configs_table` | `saas_configs` |
+| `2026_05_11_224942_create_company_configs_table` | `company_configs` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

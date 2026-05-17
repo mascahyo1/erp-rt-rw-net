@@ -25,6 +25,20 @@ Closure (inline route)
 ### View
 `resources/js/Pages/OperatorPerusahaan/AdminRolePerusahaan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\ModelHasRole` | `model_has_roles` | Model utama — pivot pemasangan role ke admin |
+| `App\Models\AdminCompany` | `admin_companies` | Join — admin yang dipasangkan (via `model_type` = `AdminCompany`) |
+| `App\Models\Role` | `roles` | Join — role yang dipasangkan (via `role_id`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_140504_create_model_has_roles_table` | `model_has_roles` |
+| `2026_05_11_135636_create_admin_companies_table` | `admin_companies` |
+| `2026_05_11_140234_create_roles_table` | `roles` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

@@ -25,6 +25,22 @@ Closure (inline route) — loads stats: total_customer, customer_aktif, karyawan
 ### View
 `resources/js/Pages/OperatorPerusahaan/Dashboard.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Customer` | `customers` | Data pelanggan — total & pelanggan aktif |
+| `App\Models\Employee` | `employees` | Data karyawan — karyawan aktif |
+| `App\Models\CustInternet` | `cust_internets` | Data langganan — langganan aktif (join ke `customers`) |
+| `App\Models\CustInternetInvc` | `cust_internet_invcs` | Data tagihan — tagihan bulan ini (join ke `cust_internets` → `customers`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_142201_create_customers_table` | `customers` |
+| `2026_05_11_140604_create_employees_table` | `employees` |
+| `2026_05_11_142443_create_cust_internets_table` | `cust_internets` |
+| `2026_05_11_143143_create_cust_internet_invcs_table` | `cust_internet_invcs` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

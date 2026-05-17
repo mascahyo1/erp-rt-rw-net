@@ -25,6 +25,16 @@ Closure (inline route)
 ### View
 `resources/js/Pages/OperatorPerusahaan/ProfilSaya.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\AdminCompany` | `admin_companies` | Model utama — akun admin perusahaan yang sedang login (`auth()->user()`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_135636_create_admin_companies_table` | `admin_companies` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

@@ -37,6 +37,20 @@ Closure (inline route)
 ### View
 `resources/js/Pages/OperatorPerusahaan/LanggananCustomer.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\CustInternet` | `cust_internets` | Model utama — data langganan pelanggan |
+| `App\Models\Customer` | `customers` | Join — nama pelanggan (via `customer_id`) |
+| `App\Models\InternetPackage` | `internet_packages` | Join — nama paket & harga (via `internet_package_id`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_142443_create_cust_internets_table` | `cust_internets` |
+| `2026_05_11_142201_create_customers_table` | `customers` |
+| `2026_05_11_141134_create_internet_packages_table` | `internet_packages` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

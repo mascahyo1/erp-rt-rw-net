@@ -48,6 +48,16 @@ Karyawan adalah petugas yang bertugas menagih pelanggan dan mencatat pembayaran 
 ### View
 `resources/js/Pages/OperatorPerusahaan/Karyawan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Employee` | `employees` | Model utama — data karyawan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_140604_create_employees_table` | `employees` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|
