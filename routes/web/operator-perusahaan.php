@@ -90,6 +90,7 @@ Route::middleware('auth:admin-company')->group(function () {
         });
         Route::middleware('permission:admin-perusahaan.restore')->group(function () {
             Route::patch('/admin-perusahaan/{id}/restore', [AdminPerusahaanController::class, 'restore'])->name('admin-perusahaan.restore');
+            Route::post('/admin-perusahaan/bulk-restore', [AdminPerusahaanController::class, 'bulkRestore'])->name('admin-perusahaan.bulkRestore');
         });
 
         // Perusahaan Saya

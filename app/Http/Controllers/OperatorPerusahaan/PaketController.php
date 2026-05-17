@@ -29,7 +29,10 @@ class PaketController extends Controller
         $items = $query->paginate(min((int)$request->input('per_page',10),100))->through(fn($p) => [
             'id'=>$p->id, 'name'=>$p->name, 'price'=>$p->price, 'speed_down_kbps'=>$p->speed_down_kbps,
             'speed_up_kbps'=>$p->speed_up_kbps, 'quota_gb'=>$p->quota_gb, 'billing_cycle'=>$p->billing_cycle,
-            'is_unlimited'=>$p->is_unlimited, 'is_active'=>$p->is_active, 'status'=>$p->is_active?'Aktif':'Nonaktif',
+            'is_unlimited'=>$p->is_unlimited, 'max_devices'=>$p->max_devices,
+            'fup_quota_down'=>$p->fup_quota_down, 'fup_quota_up'=>$p->fup_quota_up,
+            'fup_speed_down_kbps'=>$p->fup_speed_down_kbps, 'fup_speed_up_kbps'=>$p->fup_speed_up_kbps,
+            'is_active'=>$p->is_active, 'status'=>$p->is_active?'Aktif':'Nonaktif',
             'description'=>$p->description, 'dihapus'=>$p->trashed(), 'deleted_at'=>$p->deleted_at?->format('Y-m-d H:i'),
             'created_at'=>$p->created_at->format('Y-m-d H:i'), 'created_by'=>$p->createdBy?->name,
         ]);
@@ -45,7 +48,10 @@ class PaketController extends Controller
             'name'=>['required','string','max:255'], 'price'=>['required','numeric'],
             'speed_down_kbps'=>['required','numeric'], 'speed_up_kbps'=>['required','numeric'],
             'quota_gb'=>['required','integer'], 'billing_cycle'=>['required',Rule::in(['daily','weekly','monthly','yearly'])],
-            'is_unlimited'=>['boolean'], 'description'=>['nullable','string'],
+            'is_unlimited'=>['boolean'], 'max_devices'=>['nullable','integer'],
+            'fup_quota_down'=>['nullable','integer'], 'fup_quota_up'=>['nullable','integer'],
+            'fup_speed_down_kbps'=>['nullable','numeric'], 'fup_speed_up_kbps'=>['nullable','numeric'],
+            'description'=>['nullable','string'],
         ]);
         InternetPackage::create($v + ['company_id'=>auth()->user()->company_id,'is_active'=>true]);
         return back()->with('success','Paket berhasil ditambahkan.');
@@ -57,7 +63,10 @@ class PaketController extends Controller
             'name'=>['required','string','max:255'], 'price'=>['required','numeric'],
             'speed_down_kbps'=>['required','numeric'], 'speed_up_kbps'=>['required','numeric'],
             'quota_gb'=>['required','integer'], 'billing_cycle'=>['required',Rule::in(['daily','weekly','monthly','yearly'])],
-            'is_unlimited'=>['boolean'], 'description'=>['nullable','string'],
+            'is_unlimited'=>['boolean'], 'max_devices'=>['nullable','integer'],
+            'fup_quota_down'=>['nullable','integer'], 'fup_quota_up'=>['nullable','integer'],
+            'fup_speed_down_kbps'=>['nullable','numeric'], 'fup_speed_up_kbps'=>['nullable','numeric'],
+            'description'=>['nullable','string'],
         ]);
         $internetPackage->update($v);
         return back()->with('success','Paket berhasil diperbarui.');

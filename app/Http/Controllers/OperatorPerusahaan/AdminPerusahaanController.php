@@ -179,4 +179,17 @@ class AdminPerusahaanController extends Controller
 
         return back()->with('success', "{$count} admin perusahaan berhasil {$label}.");
     }
+
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+
+        if (empty($ids)) {
+            return back()->with('error', 'Tidak ada admin yang dipilih.');
+        }
+
+        $count = AdminCompany::onlyTrashed()->whereIn('id', $ids)->restore();
+
+        return back()->with('success', "{$count} admin perusahaan berhasil dipulihkan.");
+    }
 }
