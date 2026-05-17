@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SearchController;
 use App\Http\Controllers\OperatorPerusahaan\AdminPerusahaanController;
 use App\Http\Controllers\OperatorPerusahaan\AdminRolePerusahaanController;
 use App\Http\Controllers\OperatorPerusahaan\AdminRoleWebKaryawanController;
@@ -316,4 +317,11 @@ Route::middleware('auth:admin-company')->group(function () {
     Route::middleware('permission:riwayat-insentif.persetujuan')->group(function () {
         Route::post('/operator-perusahaan/riwayat-insentif/{id}/approve', [RiwayatInsentifController::class, 'approve'])->name('operator-perusahaan.riwayat-insentif.approve');
     });
+
+    // API search untuk SearchableSelectAjax component
+    Route::get('/operator-perusahaan/api/search/customers', [SearchController::class, 'customers'])->name('operator-perusahaan.api.search.customers');
+    Route::get('/operator-perusahaan/api/search/packages', [SearchController::class, 'packages'])->name('operator-perusahaan.api.search.packages');
+    Route::get('/operator-perusahaan/api/search/langganans', [SearchController::class, 'langganans'])->name('operator-perusahaan.api.search.langganans');
+    Route::get('/operator-perusahaan/api/search/invoices', [SearchController::class, 'invoices'])->name('operator-perusahaan.api.search.invoices');
+    Route::get('/operator-perusahaan/api/search/incentives', [SearchController::class, 'incentives'])->name('operator-perusahaan.api.search.incentives');
 });
