@@ -31,7 +31,7 @@ class HandleInertiaRequests extends Middleware
     {
         $user = null;
 
-        foreach (['web', 'admin-company', 'employee', 'customer'] as $guard) {
+        foreach (['admin-saas', 'admin-company', 'employee', 'customer'] as $guard) {
             if (auth()->guard($guard)->check()) {
                 $user = auth()->guard($guard)->user();
                 break;

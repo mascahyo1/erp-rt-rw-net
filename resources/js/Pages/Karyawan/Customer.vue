@@ -99,4 +99,21 @@ const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '
     <Teleport to="body"><Transition name="modal"><div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDetailModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg"><div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold">Detail Customer</h3><button @click="showDetailModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-times"></i></button></div><div class="px-6 py-5 space-y-3" v-if="selectedItem"><div class="grid grid-cols-2 gap-3"><div><label class="text-xs text-gray-500">Nama</label><p class="font-medium">{{ selectedItem.nama }}</p></div><div><label class="text-xs text-gray-500">Status</label><p><span :class="['px-2 py-0.5 rounded text-xs font-medium', statusBadgeClass(selectedItem.status)]">{{ selectedItem.status }}</span></p></div><div><label class="text-xs text-gray-500">Email</label><p>{{ selectedItem.email }}</p></div><div><label class="text-xs text-gray-500">Telepon</label><p>{{ selectedItem.kode_negara }} {{ selectedItem.no_telp }}</p></div><div><label class="text-xs text-gray-500">NIK</label><p>{{ selectedItem.no_nik || '—' }}</p></div><div><label class="text-xs text-gray-500">No KK</label><p>{{ selectedItem.no_kk || '—' }}</p></div></div><div><label class="text-xs text-gray-500">Alamat</label><p>{{ selectedItem.alamat || '—' }}</p></div></div></div></div></Transition></Teleport>
   </div>
 </template>
-<style scoped>.modal-enter-active,.modal-leave-active{transition:opacity .2s ease}.modal-enter-active>div:last-child,.modal-leave-active>div:last-child{transition:transform .2s ease,opacity .2s ease}.modal-enter-from,.modal-leave-to{opacity:0}.modal-enter-from>div:last-child{transform:scale(.95) translateY(10px);opacity:0}.modal-leave-to>div:last-child{transform:scale(.95) translateY(10px);opacity:0}</style>
+
+<style scoped>
+.modal-enter-active, .modal-leave-active { transition: opacity 0.2s ease; }
+.modal-enter-active > div:last-child, .modal-leave-active > div:last-child { transition: transform 0.2s ease, opacity 0.2s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
+.modal-enter-from > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
+.modal-leave-to > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
+</style>
+
+<style>
+.modal-scroll::-webkit-scrollbar { width: 6px; }
+.modal-scroll::-webkit-scrollbar-track { background: transparent; }
+.modal-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+.modal-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+.dark .modal-scroll::-webkit-scrollbar-thumb { background: #374151; }
+.dark .modal-scroll::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+</style>

@@ -14,7 +14,7 @@ use Inertia\Inertia;
 Route::get('/operator-saas/perusahaan/select-search', [CompanyController::class, 'selectSearch'])
     ->name('operator-saas.perusahaan.select-search');
 
-Route::middleware(['auth:web', 'ensure.user.active:web'])->group(function () {
+Route::middleware(['auth:admin-saas', 'ensure.user.active:admin-saas'])->group(function () {
     Route::get('/operator-saas/profil-saya', function () {
         return Inertia::render('OperatorSaas/ProfilSaya');
     });

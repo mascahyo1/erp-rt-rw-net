@@ -100,4 +100,21 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
     </div>
   </div>
 </template>
-<style scoped>.modal-enter-active,.modal-leave-active{transition:opacity .2s ease}.modal-enter-active>div:last-child,.modal-leave-active>div:last-child{transition:transform .2s ease,opacity .2s ease}.modal-enter-from,.modal-leave-to{opacity:0}.modal-enter-from>div:last-child{transform:scale(.95) translateY(10px);opacity:0}.modal-leave-to>div:last-child{transform:scale(.95) translateY(10px);opacity:0}</style>
+
+<style scoped>
+.modal-enter-active, .modal-leave-active { transition: opacity 0.2s ease; }
+.modal-enter-active > div:last-child, .modal-leave-active > div:last-child { transition: transform 0.2s ease, opacity 0.2s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
+.modal-enter-from > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
+.modal-leave-to > div:last-child { transform: scale(0.95) translateY(10px); opacity: 0; }
+</style>
+
+<style>
+.modal-scroll::-webkit-scrollbar { width: 6px; }
+.modal-scroll::-webkit-scrollbar-track { background: transparent; }
+.modal-scroll::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 9999px; }
+.modal-scroll::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+.dark .modal-scroll::-webkit-scrollbar-thumb { background: #374151; }
+.dark .modal-scroll::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+</style>

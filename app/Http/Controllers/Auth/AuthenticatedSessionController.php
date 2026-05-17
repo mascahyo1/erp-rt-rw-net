@@ -16,7 +16,7 @@ class AuthenticatedSessionController extends Controller
 {
     public function create(): Response|RedirectResponse
     {
-        if (Auth::guard('web')->check()) {
+        if (Auth::guard('admin-saas')->check()) {
             return redirect()->route('operator-saas.dashboard');
         }
 
@@ -44,14 +44,14 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        Auth::guard('web')->login($user, $request->boolean('remember'));
+        Auth::guard('admin-saas')->login($user, $request->boolean('remember'));
 
         return redirect()->route('operator-saas.dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse
     {
-        Auth::guard('web')->logout();
+        Auth::guard('admin-saas')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
