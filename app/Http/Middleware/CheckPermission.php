@@ -31,9 +31,30 @@ class CheckPermission
         abort(403, 'Forbidden: Anda tidak memiliki izin akses.');
     }
 
+    /**
+     * Deteksi user berdasarkan guard yang cocok dengan URL prefix.
+     * Bila multi-login (beberapa portal dibuka bersamaan), permission
+     * dicek terhadap user di portal yang sedang diakses — bukan portal lain.
+     */
     private function resolveUser()
     {
-        foreach (['web', 'admin-company', 'employee', 'customer'] as $guard) {
+        $path = '/' . trim(request()->path(), '/') . '/';
+
+        $guardMap = [
+            '/operator-saas/'        => 'admin-saas',
+            '/operator-perusahaan/'  => 'admin-company',
+            '/karyawan/'             => 'employee',
+            '/customer/'             => 'customer',
+        ];
+
+        foreach ($guardMap as $prefix => $guard) {
+            if (str_starts_with($path, $prefix) && auth()->guard($guard)->check()) {
+                return auth()->guard($guard)->user();
+            }
+        }
+
+        // Fallback: cek semua guard (halaman login, landing, dsb.)
+        foreach (['admin-saas', 'admin-company', 'employee', 'customer'] as $guard) {
             if (auth()->guard($guard)->check()) {
                 return auth()->guard($guard)->user();
             }

@@ -20,12 +20,13 @@ class EnsureUserIsActive
                 if (! $user->is_active) {
                     Auth::guard($guard)->logout();
 
+                    // Hanya regenerate token — tidak invalidate session
+                    // agar multi-login tidak terpengaruh.
                     if ($request->hasSession()) {
-                        $request->session()->invalidate();
                         $request->session()->regenerateToken();
                     }
 
-                    return redirect()->route('operator-saas.login')
+                    return redirect('/login-' . str_replace(['admin-saas', 'admin-company', 'employee', 'customer'], ['operator-saas', 'perusahaan', 'karyawan', 'pelanggan'], $guard))
                         ->with('error', 'Akun anda dinonaktifkan. Hubungi admin.');
                 }
             }
