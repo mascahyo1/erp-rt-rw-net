@@ -12,7 +12,6 @@ Route::middleware('auth:employee')->group(function () {
     Route::get('/karyawan/dashboard', function () {
         $employee = auth()->user();
         $companyId = $employee->company_id;
-
         return Inertia::render('Karyawan/Dashboard', [
             'stats' => [
                 'customer_ditagih' => \App\Models\CustInternet::whereHas('customer', fn($q) => $q->where('company_id', $companyId))->where('internet_status', 'active')->count(),
@@ -22,145 +21,69 @@ Route::middleware('auth:employee')->group(function () {
         ]);
     })->name('employee.dashboard');
 
-    // Profil Saya
     Route::middleware('permission:profil-saya.list')->group(function () {
-        Route::get('/karyawan/profil-saya', function () {
-            return Inertia::render('Karyawan/ProfilSaya');
-        });
+        Route::get('/karyawan/profil-saya', function () { return Inertia::render('Karyawan/ProfilSaya'); });
     });
 
-    // Customer (full CRUD)
-    Route::middleware('permission:karyawan-customer.list')->group(function () {
-        Route::get('/karyawan/customer', function () {
-            return Inertia::render('Karyawan/Customer');
-        });
-    });
-    Route::middleware('permission:karyawan-customer.create')->group(function () {
-        Route::post('/karyawan/customer', function () {
-            return Inertia::render('Karyawan/Customer');
-        });
-    });
-    Route::middleware('permission:karyawan-customer.edit')->group(function () {
-        Route::put('/karyawan/customer/{id}', function () {
-            return Inertia::render('Karyawan/Customer');
-        });
-    });
-    Route::middleware('permission:karyawan-customer.delete')->group(function () {
-        Route::delete('/karyawan/customer/{id}', function () {
-            return Inertia::render('Karyawan/Customer');
-        });
-    });
-    Route::middleware('permission:karyawan-customer.restore')->group(function () {
-        Route::patch('/karyawan/customer/{id}/restore', function () {
-            return Inertia::render('Karyawan/Customer');
-        });
-    });
+    $perusahaanNs = 'App\Http\Controllers\OperatorPerusahaan';
 
-    // Langganan (full CRUD)
-    Route::middleware('permission:karyawan-langganan.list')->group(function () {
-        Route::get('/karyawan/langganan-customer', function () {
-            return Inertia::render('Karyawan/LanggananCustomer');
-        });
-    });
-    Route::middleware('permission:karyawan-langganan.create')->group(function () {
-        Route::post('/karyawan/langganan-customer', function () {
-            return Inertia::render('Karyawan/LanggananCustomer');
-        });
-    });
-    Route::middleware('permission:karyawan-langganan.edit')->group(function () {
-        Route::put('/karyawan/langganan-customer/{id}', function () {
-            return Inertia::render('Karyawan/LanggananCustomer');
-        });
-    });
-    Route::middleware('permission:karyawan-langganan.delete')->group(function () {
-        Route::delete('/karyawan/langganan-customer/{id}', function () {
-            return Inertia::render('Karyawan/LanggananCustomer');
-        });
-    });
-    Route::middleware('permission:karyawan-langganan.restore')->group(function () {
-        Route::patch('/karyawan/langganan-customer/{id}/restore', function () {
-            return Inertia::render('Karyawan/LanggananCustomer');
-        });
-    });
+    // Customer — reuse OpPerusahaan controller, render Karyawan view
+    Route::middleware('permission:karyawan-customer.list')
+        ->get('/karyawan/customer', [$perusahaanNs.'\CustomerController', 'index'])->defaults('view', 'Karyawan/Customer');
+    Route::middleware('permission:karyawan-customer.create')
+        ->post('/karyawan/customer', [$perusahaanNs.'\CustomerController', 'store']);
+    Route::middleware('permission:karyawan-customer.edit')
+        ->put('/karyawan/customer/{customer}', [$perusahaanNs.'\CustomerController', 'update']);
+    Route::middleware('permission:karyawan-customer.delete')
+        ->delete('/karyawan/customer/{customer}', [$perusahaanNs.'\CustomerController', 'destroy']);
+    Route::middleware('permission:karyawan-customer.restore')
+        ->patch('/karyawan/customer/{id}/restore', [$perusahaanNs.'\CustomerController', 'restore']);
 
-    // Tagihan (full CRUD)
-    Route::middleware('permission:karyawan-tagihan.list')->group(function () {
-        Route::get('/karyawan/tagihan', function () {
-            return Inertia::render('Karyawan/Tagihan');
-        });
-    });
-    Route::middleware('permission:karyawan-tagihan.create')->group(function () {
-        Route::post('/karyawan/tagihan', function () {
-            return Inertia::render('Karyawan/Tagihan');
-        });
-    });
-    Route::middleware('permission:karyawan-tagihan.edit')->group(function () {
-        Route::put('/karyawan/tagihan/{id}', function () {
-            return Inertia::render('Karyawan/Tagihan');
-        });
-    });
-    Route::middleware('permission:karyawan-tagihan.delete')->group(function () {
-        Route::delete('/karyawan/tagihan/{id}', function () {
-            return Inertia::render('Karyawan/Tagihan');
-        });
-    });
-    Route::middleware('permission:karyawan-tagihan.restore')->group(function () {
-        Route::patch('/karyawan/tagihan/{id}/restore', function () {
-            return Inertia::render('Karyawan/Tagihan');
-        });
-    });
+    // Langganan
+    Route::middleware('permission:karyawan-langganan.list')
+        ->get('/karyawan/langganan-customer', [$perusahaanNs.'\LanggananController', 'index'])->defaults('view', 'Karyawan/LanggananCustomer');
+    Route::middleware('permission:karyawan-langganan.create')
+        ->post('/karyawan/langganan-customer', [$perusahaanNs.'\LanggananController', 'store']);
+    Route::middleware('permission:karyawan-langganan.edit')
+        ->put('/karyawan/langganan-customer/{custInternet}', [$perusahaanNs.'\LanggananController', 'update']);
+    Route::middleware('permission:karyawan-langganan.delete')
+        ->delete('/karyawan/langganan-customer/{custInternet}', [$perusahaanNs.'\LanggananController', 'destroy']);
+    Route::middleware('permission:karyawan-langganan.restore')
+        ->patch('/karyawan/langganan-customer/{id}/restore', [$perusahaanNs.'\LanggananController', 'restore']);
 
-    // Insentif (full CRUD)
-    Route::middleware('permission:karyawan-insentif.list')->group(function () {
-        Route::get('/karyawan/insentif-saya', function () {
-            return Inertia::render('Karyawan/InsentifSaya');
-        });
-    });
-    Route::middleware('permission:karyawan-insentif.create')->group(function () {
-        Route::post('/karyawan/insentif-saya', function () {
-            return Inertia::render('Karyawan/InsentifSaya');
-        });
-    });
-    Route::middleware('permission:karyawan-insentif.edit')->group(function () {
-        Route::put('/karyawan/insentif-saya/{id}', function () {
-            return Inertia::render('Karyawan/InsentifSaya');
-        });
-    });
-    Route::middleware('permission:karyawan-insentif.delete')->group(function () {
-        Route::delete('/karyawan/insentif-saya/{id}', function () {
-            return Inertia::render('Karyawan/InsentifSaya');
-        });
-    });
-    Route::middleware('permission:karyawan-insentif.restore')->group(function () {
-        Route::patch('/karyawan/insentif-saya/{id}/restore', function () {
-            return Inertia::render('Karyawan/InsentifSaya');
-        });
-    });
+    // Tagihan
+    Route::middleware('permission:karyawan-tagihan.list')
+        ->get('/karyawan/tagihan', [$perusahaanNs.'\TagihanController', 'index'])->defaults('view', 'Karyawan/Tagihan');
+    Route::middleware('permission:karyawan-tagihan.create')
+        ->post('/karyawan/tagihan', [$perusahaanNs.'\TagihanController', 'store']);
+    Route::middleware('permission:karyawan-tagihan.edit')
+        ->put('/karyawan/tagihan/{custInternetInvc}', [$perusahaanNs.'\TagihanController', 'update']);
+    Route::middleware('permission:karyawan-tagihan.delete')
+        ->delete('/karyawan/tagihan/{custInternetInvc}', [$perusahaanNs.'\TagihanController', 'destroy']);
+    Route::middleware('permission:karyawan-tagihan.restore')
+        ->patch('/karyawan/tagihan/{id}/restore', [$perusahaanNs.'\TagihanController', 'restore']);
 
-    // Riwayat Pembayaran (full CRUD)
-    Route::middleware('permission:karyawan-riwayat-pembayaran.list')->group(function () {
-        Route::get('/karyawan/riwayat-pembayaran', function () {
-            return Inertia::render('Karyawan/RiwayatPembayaran');
-        });
-    });
-    Route::middleware('permission:karyawan-riwayat-pembayaran.create')->group(function () {
-        Route::post('/karyawan/riwayat-pembayaran', function () {
-            return Inertia::render('Karyawan/RiwayatPembayaran');
-        });
-    });
-    Route::middleware('permission:karyawan-riwayat-pembayaran.edit')->group(function () {
-        Route::put('/karyawan/riwayat-pembayaran/{id}', function () {
-            return Inertia::render('Karyawan/RiwayatPembayaran');
-        });
-    });
-    Route::middleware('permission:karyawan-riwayat-pembayaran.delete')->group(function () {
-        Route::delete('/karyawan/riwayat-pembayaran/{id}', function () {
-            return Inertia::render('Karyawan/RiwayatPembayaran');
-        });
-    });
-    Route::middleware('permission:karyawan-riwayat-pembayaran.restore')->group(function () {
-        Route::patch('/karyawan/riwayat-pembayaran/{id}/restore', function () {
-            return Inertia::render('Karyawan/RiwayatPembayaran');
-        });
-    });
+    // Insentif
+    Route::middleware('permission:karyawan-insentif.list')
+        ->get('/karyawan/insentif-saya', [$perusahaanNs.'\InsentifController', 'index'])->defaults('view', 'Karyawan/InsentifSaya');
+    Route::middleware('permission:karyawan-insentif.create')
+        ->post('/karyawan/insentif-saya', [$perusahaanNs.'\InsentifController', 'store']);
+    Route::middleware('permission:karyawan-insentif.edit')
+        ->put('/karyawan/insentif-saya/{empIncentive}', [$perusahaanNs.'\InsentifController', 'update']);
+    Route::middleware('permission:karyawan-insentif.delete')
+        ->delete('/karyawan/insentif-saya/{empIncentive}', [$perusahaanNs.'\InsentifController', 'destroy']);
+    Route::middleware('permission:karyawan-insentif.restore')
+        ->patch('/karyawan/insentif-saya/{id}/restore', [$perusahaanNs.'\InsentifController', 'restore']);
+
+    // Riwayat Pembayaran
+    Route::middleware('permission:karyawan-riwayat-pembayaran.list')
+        ->get('/karyawan/riwayat-pembayaran', [$perusahaanNs.'\PembayaranController', 'index'])->defaults('view', 'Karyawan/RiwayatPembayaran');
+    Route::middleware('permission:karyawan-riwayat-pembayaran.create')
+        ->post('/karyawan/riwayat-pembayaran', [$perusahaanNs.'\PembayaranController', 'store']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.edit')
+        ->put('/karyawan/riwayat-pembayaran/{custInternetPayment}', [$perusahaanNs.'\PembayaranController', 'update']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.delete')
+        ->delete('/karyawan/riwayat-pembayaran/{custInternetPayment}', [$perusahaanNs.'\PembayaranController', 'destroy']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.restore')
+        ->patch('/karyawan/riwayat-pembayaran/{id}/restore', [$perusahaanNs.'\PembayaranController', 'restore']);
 });

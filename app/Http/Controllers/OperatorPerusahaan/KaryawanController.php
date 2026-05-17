@@ -68,7 +68,7 @@ class KaryawanController extends Controller
             ];
         });
 
-        return Inertia::render('OperatorPerusahaan/Karyawan', [
+        return Inertia::render($request->route()->defaults['view'] ?? 'OperatorPerusahaan/Karyawan', [
             'karyawans' => $karyawans,
             'filters' => $request->only(['search', 'status', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
         ]);

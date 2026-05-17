@@ -71,7 +71,7 @@ class CustomerController extends Controller
             ];
         });
 
-        return Inertia::render('OperatorPerusahaan/Customer', [
+        return Inertia::render($request->route()->defaults['view'] ?? 'OperatorPerusahaan/Customer', [
             'customers' => $customers,
             'filters' => $request->only(['search', 'status', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
         ]);
