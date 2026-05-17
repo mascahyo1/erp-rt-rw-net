@@ -25,6 +25,12 @@ Closure (inline route)
 ### View
 `resources/js/Pages/Landing/TentangKami.vue`
 
+### Model
+Tidak ada — halaman statis.
+
+### Migration
+Tidak ada.
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

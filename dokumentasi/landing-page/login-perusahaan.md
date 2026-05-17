@@ -32,6 +32,16 @@ Admin perusahaan memasukkan email dan password untuk masuk ke portal operator pe
 ### View
 `resources/js/Pages/Landing/LoginPerusahaan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\AdminCompany` | `admin_companies` | Model utama — autentikasi admin perusahaan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_135636_create_admin_companies_table` | `admin_companies` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

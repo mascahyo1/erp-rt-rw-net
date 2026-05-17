@@ -31,6 +31,16 @@ Karyawan memasukkan email dan password untuk masuk ke portal karyawan.
 ### View
 `resources/js/Pages/Karyawan/Login.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Employee` | `employees` | Model utama — autentikasi karyawan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_140604_create_employees_table` | `employees` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

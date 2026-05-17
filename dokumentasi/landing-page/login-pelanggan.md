@@ -36,6 +36,16 @@ Pelanggan dapat login dengan email dan password, atau mendaftar akun baru jika b
 ### View
 `resources/js/Pages/Landing/LoginPelanggan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Customer` | `customers` | Model utama — autentikasi pelanggan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_142201_create_customers_table` | `customers` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

@@ -51,6 +51,16 @@ Setiap perusahaan adalah penyedia layanan internet yang memiliki pelanggan dan k
 ### View
 `resources/js/Pages/OperatorSaas/Perusahaan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Company` | `companies` | Model utama — data perusahaan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_135231_create_companies_table` | `companies` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

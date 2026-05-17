@@ -50,6 +50,16 @@ Contoh: Role "Super Admin" bisa akses semua menu, sedangkan Role "Admin Terbatas
 ### View
 `resources/js/Pages/OperatorSaas/RoleSaaS.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Role` | `roles` | Model utama — role dengan scope `admin-saas` |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_140234_create_roles_table` | `roles` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

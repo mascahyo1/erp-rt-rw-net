@@ -25,6 +25,16 @@ Closure (inline route)
 ### View
 `resources/js/Pages/Karyawan/ProfilSaya.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Employee` | `employees` | Model utama — akun karyawan yang sedang login (`auth()->user()`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_140604_create_employees_table` | `employees` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

@@ -24,7 +24,11 @@ Closure (inline route) — loads `contact.email_terms` from `App\Models\SaasConf
 
 ### View
 `resources/js/Pages/Landing/SyaratKetentuan.vue`
+### Model
+Tidak ada — halaman statis.
 
+### Migration
+Tidak ada.
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

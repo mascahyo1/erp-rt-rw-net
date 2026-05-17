@@ -25,6 +25,20 @@ Closure (inline route) — loads stats: paket_aktif, tagihan_bulan_ini, riwayat_
 ### View
 `resources/js/Pages/Customer/Dashboard.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Customer` | `customers` | Data pelanggan — auth user (`auth()->user()`) |
+| `App\Models\CustInternet` | `cust_internets` | Data langganan aktif pelanggan |
+| `App\Models\CustInternetInvc` | `cust_internet_invcs` | Data tagihan pelanggan |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_142201_create_customers_table` | `customers` |
+| `2026_05_11_142443_create_cust_internets_table` | `cust_internets` |
+| `2026_05_11_143143_create_cust_internet_invcs_table` | `cust_internet_invcs` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

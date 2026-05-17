@@ -25,6 +25,16 @@ Closure (inline route)
 ### View
 `resources/js/Pages/Customer/ProfilSaya.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Customer` | `customers` | Model utama — akun pelanggan yang sedang login (`auth()->user()`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_142201_create_customers_table` | `customers` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

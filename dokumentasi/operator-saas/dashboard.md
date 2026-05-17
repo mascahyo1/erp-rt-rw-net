@@ -25,6 +25,22 @@ Closure (inline route) — loads stats: perusahaan_aktif, admin_perusahaan_aktif
 ### View
 `resources/js/Pages/OperatorSaas/Dashboard.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Company` | `companies` | Data perusahaan — total perusahaan terdaftar |
+| `App\Models\Customer` | `customers` | Data pelanggan — total seluruh pelanggan |
+| `App\Models\Employee` | `employees` | Data karyawan — total seluruh karyawan |
+| `App\Models\AdminCompany` | `admin_companies` | Data admin perusahaan — total admin |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_135231_create_companies_table` | `companies` |
+| `2026_05_11_142201_create_customers_table` | `customers` |
+| `2026_05_11_140604_create_employees_table` | `employees` |
+| `2026_05_11_135636_create_admin_companies_table` | `admin_companies` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

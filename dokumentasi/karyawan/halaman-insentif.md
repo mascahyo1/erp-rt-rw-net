@@ -36,7 +36,15 @@ Closure (inline route)
 
 ### View
 `resources/js/Pages/Karyawan/InsentifSaya.vue`
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\EmpIncentive` | `emp_incentives` | Model utama — data insentif karyawan |
 
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_144033_create_emp_incentives_table` | `emp_incentives` |
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

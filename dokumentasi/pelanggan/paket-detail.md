@@ -24,7 +24,15 @@ Closure (inline route)
 
 ### View
 `resources/js/Pages/Customer/PaketDetail.vue`
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\InternetPackage` | `internet_packages` | Model utama — detail paket internet |
 
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_141134_create_internet_packages_table` | `internet_packages` |
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

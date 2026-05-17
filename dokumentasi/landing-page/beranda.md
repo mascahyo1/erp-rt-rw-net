@@ -26,6 +26,12 @@ Closure (inline route)
 ### View
 `resources/js/Pages/Landing/Home.vue`
 
+### Model
+Tidak ada — halaman statis.
+
+### Migration
+Tidak ada.
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

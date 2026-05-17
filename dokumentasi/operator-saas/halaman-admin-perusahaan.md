@@ -48,6 +48,18 @@ Admin perusahaan adalah pengelola tingkat perusahaan yang bertugas mengelola pel
 ### View
 `resources/js/Pages/OperatorSaas/AdminPerusahaan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\AdminCompany` | `admin_companies` | Model utama — akun admin perusahaan (global) |
+| `App\Models\Company` | `companies` | Join — nama perusahaan (via `company_id`) |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_135636_create_admin_companies_table` | `admin_companies` |
+| `2026_05_11_135231_create_companies_table` | `companies` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

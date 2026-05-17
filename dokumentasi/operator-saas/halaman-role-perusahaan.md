@@ -45,6 +45,16 @@ Contoh: Role "Admin Penuh" bisa akses semua menu, sedangkan Role "Admin Terbatas
 ### View
 `resources/js/Pages/OperatorSaas/RolePerusahaan.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\Role` | `roles` | Model utama — role dengan scope `admin-company` |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_140234_create_roles_table` | `roles` |
+
 ### Test Case
 | File | Keterangan |
 |------|-----------|

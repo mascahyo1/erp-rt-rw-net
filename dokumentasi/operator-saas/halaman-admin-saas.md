@@ -51,6 +51,16 @@ Admin SaaS adalah pengelola tertinggi yang bertugas mengawasi seluruh perusahaan
 ### View
 `resources/js/Pages/OperatorSaas/AdminSaaS.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\AdminSaas` | `admin_saas` | Model utama — akun admin operator SaaS |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_12_000505_create_admin_saas_table` | `admin_saas` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

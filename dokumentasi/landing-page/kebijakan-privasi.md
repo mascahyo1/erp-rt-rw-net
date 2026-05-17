@@ -25,6 +25,12 @@ Closure (inline route) — loads `contact.email_privacy` from `App\Models\SaasCo
 ### View
 `resources/js/Pages/Landing/KebijakanPrivasi.vue`
 
+### Model
+Tidak ada — halaman statis.
+
+### Migration
+Tidak ada.
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|

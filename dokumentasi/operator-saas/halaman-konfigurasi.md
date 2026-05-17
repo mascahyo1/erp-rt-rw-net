@@ -40,6 +40,16 @@ Konfigurasi ini akan digunakan di halaman landing page seperti Hubungi Kami dan 
 ### View
 `resources/js/Pages/OperatorSaas/Konfigurasi.vue`
 
+### Model
+| Model | Tabel | Keterangan |
+|-------|-------|------------|
+| `App\Models\SaasConfig` | `saas_configs` | Model utama — konfigurasi global SaaS |
+
+### Migration
+| Migration | Tabel |
+|-----------|-------|
+| `2026_05_11_224754_create_saas_configs_table` | `saas_configs` |
+
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|
