@@ -50,57 +50,61 @@ class PermissionSeeder extends Seeder
             ]);
         });
 
-        // --- Operator Perusahaan: "Admin" ---
-        $perusahaanRole = Role::firstOrCreate(
-            ['scope' => 'admin_perusahaan', 'name' => 'Admin'],
-            [
-                'id' => Str::uuid(),
-                'display_order' => 1,
-                'is_active' => true,
-                'description' => 'Role default dengan semua akses penuh di Operator Perusahaan.',
-            ]
-        );
+        // --- Operator Perusahaan: "Admin" (PER COMPANY) ---
         $perusahaanPermIds = Permission::where('scope', 'admin_perusahaan')->pluck('id');
-        $this->syncPermissions($perusahaanRole, $perusahaanPermIds);
 
-        // Assign to existing AdminCompany users
-        \App\Models\AdminCompany::all()->each(function ($admin) use ($perusahaanRole) {
-            \DB::table('model_has_roles')->updateOrInsert([
-                'role_id' => $perusahaanRole->id,
-                'model_type' => 'App\Models\AdminCompany',
-                'model_id' => $admin->id,
-            ], [
-                'id' => Str::uuid(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        });
+        foreach (\App\Models\Company::all() as $company) {
+            $perusahaanRole = Role::firstOrCreate(
+                ['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'Admin'],
+                [
+                    'id' => Str::uuid(),
+                    'display_order' => 1,
+                    'is_active' => true,
+                    'description' => 'Role default dengan semua akses penuh.',
+                ]
+            );
+            $this->syncPermissions($perusahaanRole, $perusahaanPermIds);
 
-        // --- Karyawan: "Default" ---
-        $karyawanRole = Role::firstOrCreate(
-            ['scope' => 'karyawan_perusahaan', 'name' => 'Default'],
-            [
-                'id' => Str::uuid(),
-                'display_order' => 1,
-                'is_active' => true,
-                'description' => 'Role default dengan akses standard di Web Karyawan.',
-            ]
-        );
+            \App\Models\AdminCompany::where('company_id', $company->id)->each(function ($admin) use ($perusahaanRole) {
+                \DB::table('model_has_roles')->updateOrInsert([
+                    'role_id' => $perusahaanRole->id,
+                    'model_type' => 'App\Models\AdminCompany',
+                    'model_id' => $admin->id,
+                ], [
+                    'id' => Str::uuid(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            });
+        }
+
+        // --- Karyawan: "Default" (PER COMPANY) ---
         $karyawanPermIds = Permission::where('scope', 'karyawan_perusahaan')->pluck('id');
-        $this->syncPermissions($karyawanRole, $karyawanPermIds);
 
-        // Assign to existing Employee users
-        \App\Models\Employee::all()->each(function ($emp) use ($karyawanRole) {
-            \DB::table('model_has_roles')->updateOrInsert([
-                'role_id' => $karyawanRole->id,
-                'model_type' => 'App\Models\Employee',
-                'model_id' => $emp->id,
-            ], [
-                'id' => Str::uuid(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        });
+        foreach (\App\Models\Company::all() as $company) {
+            $karyawanRole = Role::firstOrCreate(
+                ['scope' => 'karyawan_perusahaan', 'company_id' => $company->id, 'name' => 'Default'],
+                [
+                    'id' => Str::uuid(),
+                    'display_order' => 1,
+                    'is_active' => true,
+                    'description' => 'Role default dengan akses standard.',
+                ]
+            );
+            $this->syncPermissions($karyawanRole, $karyawanPermIds);
+
+            \App\Models\Employee::where('company_id', $company->id)->each(function ($emp) use ($karyawanRole) {
+                \DB::table('model_has_roles')->updateOrInsert([
+                    'role_id' => $karyawanRole->id,
+                    'model_type' => 'App\Models\Employee',
+                    'model_id' => $emp->id,
+                ], [
+                    'id' => Str::uuid(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            });
+        }
     }
 
     private function seedPermissions(string $scope): void

@@ -49,7 +49,6 @@ class AdminCompanySessionController extends Controller
     {
         Auth::guard('admin-company')->logout();
 
-        $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect()->route('landing.home');
