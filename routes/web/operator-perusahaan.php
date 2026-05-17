@@ -120,6 +120,7 @@ Route::middleware('auth:admin-company')->group(function () {
         });
         Route::middleware('permission:role-perusahaan-op.restore')->group(function () {
             Route::patch('/role-perusahaan/{id}/restore', [RolePerusahaanController::class, 'restore'])->name('role-perusahaan.restore');
+            Route::post('/role-perusahaan/bulk-restore', [RolePerusahaanController::class, 'bulkRestore'])->name('role-perusahaan.bulkRestore');
         });
 
         // Role Web Karyawan
@@ -139,6 +140,7 @@ Route::middleware('auth:admin-company')->group(function () {
         });
         Route::middleware('permission:role-web-karyawan.restore')->group(function () {
             Route::patch('/role-web-karyawan/{id}/restore', [RoleWebKaryawanController::class, 'restore'])->name('role-web-karyawan.restore');
+            Route::post('/role-web-karyawan/bulk-restore', [RoleWebKaryawanController::class, 'bulkRestore'])->name('role-web-karyawan.bulkRestore');
         });
 
         // Admin Role Perusahaan
@@ -228,6 +230,7 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:langganan.restore')->group(function () {
         Route::patch('/operator-perusahaan/langganan-customer/{id}/restore', [LanggananController::class, 'restore'])->name('operator-perusahaan.langganan.restore');
+        Route::post('/operator-perusahaan/langganan-customer/bulk-restore', [LanggananController::class, 'bulkRestore'])->name('operator-perusahaan.langganan.bulkRestore');
     });
 
     // Tagihan
@@ -247,6 +250,7 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:tagihan.restore')->group(function () {
         Route::patch('/operator-perusahaan/tagihan/{id}/restore', [TagihanController::class, 'restore'])->name('operator-perusahaan.tagihan.restore');
+        Route::post('/operator-perusahaan/tagihan/bulk-restore', [TagihanController::class, 'bulkRestore'])->name('operator-perusahaan.tagihan.bulkRestore');
     });
 
     // Riwayat Pembayaran
@@ -265,6 +269,7 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:riwayat-pembayaran.restore')->group(function () {
         Route::patch('/operator-perusahaan/riwayat-pembayaran/{id}/restore', [PembayaranController::class, 'restore'])->name('operator-perusahaan.pembayaran.restore');
+        Route::post('/operator-perusahaan/riwayat-pembayaran/bulk-restore', [PembayaranController::class, 'bulkRestore'])->name('operator-perusahaan.pembayaran.bulkRestore');
     });
     Route::middleware('permission:riwayat-pembayaran.persetujuan')->group(function () {
         Route::post('/operator-perusahaan/riwayat-pembayaran/{id}/approve', [PembayaranController::class, 'approve'])->name('operator-perusahaan.pembayaran.approve');
@@ -287,6 +292,7 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:insentif.restore')->group(function () {
         Route::patch('/operator-perusahaan/insentif/{id}/restore', [InsentifController::class, 'restore'])->name('operator-perusahaan.insentif.restore');
+        Route::post('/operator-perusahaan/insentif/bulk-restore', [InsentifController::class, 'bulkRestore'])->name('operator-perusahaan.insentif.bulkRestore');
     });
 
     // Riwayat Insentif
@@ -305,6 +311,7 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:riwayat-insentif.restore')->group(function () {
         Route::patch('/operator-perusahaan/riwayat-insentif/{id}/restore', [RiwayatInsentifController::class, 'restore'])->name('operator-perusahaan.riwayat-insentif.restore');
+        Route::post('/operator-perusahaan/riwayat-insentif/bulk-restore', [RiwayatInsentifController::class, 'bulkRestore'])->name('operator-perusahaan.riwayat-insentif.bulkRestore');
     });
     Route::middleware('permission:riwayat-insentif.persetujuan')->group(function () {
         Route::post('/operator-perusahaan/riwayat-insentif/{id}/approve', [RiwayatInsentifController::class, 'approve'])->name('operator-perusahaan.riwayat-insentif.approve');
