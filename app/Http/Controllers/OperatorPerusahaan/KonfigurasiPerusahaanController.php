@@ -111,4 +111,12 @@ class KonfigurasiPerusahaanController extends Controller
 
         return back()->with('success', "{$count} konfigurasi berhasil dihapus.");
     }
+
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) return back()->with('error', 'Tidak ada konfigurasi yang dipilih.');
+        $count = SaasConfig::onlyTrashed()->whereIn('id', $ids)->restore();
+        return back()->with('success', "{$count} konfigurasi berhasil dipulihkan.");
+    }
 }

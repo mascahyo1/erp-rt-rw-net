@@ -194,4 +194,12 @@ class CustomerController extends Controller
 
         return back()->with('success', "{$count} pelanggan berhasil {$label}.");
     }
+
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) return back()->with('error', 'Tidak ada pelanggan yang dipilih.');
+        $count = Customer::onlyTrashed()->whereIn('id', $ids)->restore();
+        return back()->with('success', "{$count} pelanggan berhasil dipulihkan.");
+    }
 }

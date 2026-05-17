@@ -155,4 +155,10 @@ class RolePerusahaanController extends Controller
         $label = $status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan';
         return back()->with('success', "{$count} role perusahaan berhasil {$label}.");
     }
-}
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) return back()->with('error', 'Tidak ada role yang dipilih.');
+        $count = Role::onlyTrashed()->whereIn('id', $ids)->restore();
+        return back()->with('success', "{$count} role berhasil dipulihkan.");
+    }}

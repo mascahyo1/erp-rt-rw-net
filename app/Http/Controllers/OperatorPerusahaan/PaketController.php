@@ -96,4 +96,11 @@ class PaketController extends Controller
         $c = InternetPackage::whereIn('id',$ids)->update(['is_active'=>$s==='Aktif']);
         return back()->with('success',"{$c} paket di".($s==='Aktif'?'aktifkan':'nonaktifkan').".");
     }
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids',[]);
+        if (empty($ids)) return back()->with('error','Tidak ada paket yang dipilih.');
+        $c = InternetPackage::onlyTrashed()->whereIn('id',$ids)->restore();
+        return back()->with('success',"{$c} paket berhasil dipulihkan.");
+    }
 }

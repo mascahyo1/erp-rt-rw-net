@@ -147,4 +147,12 @@ class InsentifController extends Controller
         $label = $status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan';
         return back()->with('success', "{$count} insentif berhasil {$label}.");
     }
+
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) return back()->with('error', 'Tidak ada insentif yang dipilih.');
+        $count = EmpIncentive::onlyTrashed()->whereIn('id', $ids)->restore();
+        return back()->with('success', "{$count} insentif berhasil dipulihkan.");
+    }
 }

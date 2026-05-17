@@ -41,8 +41,7 @@ function fetchData(o = {}) {
 }
 function applySearch() { fetchData({ search: searchInput.value || undefined, status: statusFilter.value || undefined, terhapus: terhapusFilter.value, page: 1 }); }
 function clearSearch() { searchInput.value = ''; fetchData({ search: undefined, status: statusFilter.value || undefined, terhapus: terhapusFilter.value, page: 1 }); }
-function applyFilters(s) { statusFilter.value = s; fetchData({ status: s || undefined, terhapus: terhapusFilter.value, page: 1 }); }
-function applyTerhapus(t) { terhapusFilter.value = t; statusFilter.value = ''; fetchData({ terhapus: t, status: undefined, page: 1 }); }
+function applyFilters() { fetchData({ page: 1 }); }
 function resetFilters() { searchInput.value = ''; statusFilter.value = ''; terhapusFilter.value = 'tidak'; fetchData({ search: undefined, status: undefined, terhapus: 'tidak', page: 1 }); }
 function sort(f) {
   if (sortField.value === f) { if (sortDir.value === 'asc') sortDir.value = 'desc'; else { sortField.value = ''; sortDir.value = 'asc'; } }

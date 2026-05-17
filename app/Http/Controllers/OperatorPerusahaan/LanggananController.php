@@ -153,4 +153,12 @@ class LanggananController extends Controller
         $label = $status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan';
         return back()->with('success', "{$count} langganan berhasil {$label}.");
     }
+
+    public function bulkRestore(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) return back()->with('error', 'Tidak ada langganan yang dipilih.');
+        $count = CustInternet::onlyTrashed()->whereIn('id', $ids)->restore();
+        return back()->with('success', "{$count} langganan berhasil dipulihkan.");
+    }
 }

@@ -52,6 +52,7 @@ Route::middleware('auth:admin-company')->group(function () {
         });
         Route::middleware('permission:customer.restore')->group(function () {
             Route::patch('/customer/{id}/restore', [CustomerController::class, 'restore'])->name('customer.restore');
+            Route::post('/customer/bulk-restore', [CustomerController::class, 'bulkRestore'])->name('customer.bulkRestore');
         });
 
         // Karyawan
@@ -71,6 +72,7 @@ Route::middleware('auth:admin-company')->group(function () {
         });
         Route::middleware('permission:karyawan.restore')->group(function () {
             Route::patch('/karyawan/{id}/restore', [KaryawanController::class, 'restore'])->name('karyawan.restore');
+            Route::post('/karyawan/bulk-restore', [KaryawanController::class, 'bulkRestore'])->name('karyawan.bulkRestore');
         });
 
         // Admin Perusahaan
@@ -206,6 +208,7 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:paket.restore')->group(function () {
         Route::patch('/operator-perusahaan/daftar-paket/{id}/restore', [PaketController::class, 'restore'])->name('operator-perusahaan.paket.restore');
+        Route::post('/operator-perusahaan/daftar-paket/bulk-restore', [PaketController::class, 'bulkRestore'])->name('operator-perusahaan.paket.bulkRestore');
     });
 
     // Langganan
