@@ -20,7 +20,7 @@ class Employee extends Authenticatable
         'id',
         'company_id',
         'no_nik',
-        'photo_nik',
+        'photo_ktp',
         'no_kk',
         'photo_kk',
         'photo_profile',

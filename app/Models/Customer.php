@@ -24,7 +24,7 @@ class Customer extends Authenticatable
         'phone_country_code',
         'phone_number',
         'no_nik',
-        'photo_nik',
+        'photo_ktp',
         'no_kk',
         'photo_kk',
         'photo_profile',

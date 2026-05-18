@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('phone_country_code');
             $table->string('phone_number');
             $table->string('no_nik')->nullable();
-            $table->string('photo_nik')->nullable();
+            $table->string('photo_ktp')->nullable();
             $table->string('no_kk')->nullable();
             $table->string('photo_kk')->nullable();
             $table->string('photo_profile')->nullable();

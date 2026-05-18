@@ -7,6 +7,8 @@ use App\Models\Customer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -46,6 +48,16 @@ class CustomerController extends Controller
         $perPage = min((int) $request->input('per_page', 10), 100);
 
         $customers = $query->paginate($perPage)->through(function ($customer) {
+            $photoKtpUrl = $customer->photo_ktp
+                ? Storage::disk('minio')->temporaryUrl($customer->photo_ktp, now()->addMinutes(10))
+                : null;
+            $photoKkUrl = $customer->photo_kk
+                ? Storage::disk('minio')->temporaryUrl($customer->photo_kk, now()->addMinutes(10))
+                : null;
+            $photoProfileUrl = $customer->photo_profile
+                ? Storage::disk('minio')->url($customer->photo_profile)
+                : null;
+
             return [
                 'id' => $customer->id,
                 'nama' => $customer->name,
@@ -54,6 +66,12 @@ class CustomerController extends Controller
                 'no_telp' => $customer->phone_number,
                 'no_nik' => $customer->no_nik,
                 'no_kk' => $customer->no_kk,
+                'photo_ktp' => $customer->photo_ktp,
+                'photo_ktp_url' => $photoKtpUrl,
+                'photo_kk' => $customer->photo_kk,
+                'photo_kk_url' => $photoKkUrl,
+                'photo_profile' => $customer->photo_profile,
+                'photo_profile_url' => $photoProfileUrl,
                 'alamat' => $customer->address,
                 'status' => $customer->is_active ? 'Aktif' : 'Nonaktif',
                 'is_active' => $customer->is_active,
@@ -89,10 +107,33 @@ class CustomerController extends Controller
             'no_telp' => ['required', 'string', 'max:20'],
             'no_nik' => ['nullable', 'string', 'max:50'],
             'no_kk' => ['nullable', 'string', 'max:50'],
+            'photo_ktp' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_kk' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_profile' => ['nullable', 'file', 'image', 'max:2048'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['required', 'string', 'min:8'],
         ]);
+
+        $photoKtpPath = null;
+        $photoKkPath = null;
+        $photoProfilePath = null;
+
+        if ($request->hasFile('photo_ktp')) {
+            $file = $request->file('photo_ktp');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $photoKtpPath = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'private']);
+        }
+        if ($request->hasFile('photo_kk')) {
+            $file = $request->file('photo_kk');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $photoKkPath = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'private']);
+        }
+        if ($request->hasFile('photo_profile')) {
+            $file = $request->file('photo_profile');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $photoProfilePath = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'public']);
+        }
 
         Customer::create([
             'company_id' => auth()->user()->company_id,
@@ -102,6 +143,9 @@ class CustomerController extends Controller
             'phone_number' => $validated['no_telp'],
             'no_nik' => $validated['no_nik'] ?? null,
             'no_kk' => $validated['no_kk'] ?? null,
+            'photo_ktp' => $photoKtpPath,
+            'photo_kk' => $photoKkPath,
+            'photo_profile' => $photoProfilePath,
             'address' => $validated['alamat'] ?? null,
             'is_active' => $validated['status'] === 'Aktif',
             'password' => Hash::make($validated['password']),
@@ -124,6 +168,9 @@ class CustomerController extends Controller
             'no_telp' => ['required', 'string', 'max:20'],
             'no_nik' => ['nullable', 'string', 'max:50'],
             'no_kk' => ['nullable', 'string', 'max:50'],
+            'photo_ktp' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_kk' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_profile' => ['nullable', 'file', 'image', 'max:2048'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['nullable', 'string', 'min:8'],
@@ -139,6 +186,33 @@ class CustomerController extends Controller
             'address' => $validated['alamat'] ?? null,
             'is_active' => $validated['status'] === 'Aktif',
         ];
+
+        if ($request->hasFile('photo_ktp')) {
+            if ($customer->photo_ktp) {
+                Storage::disk('minio')->delete($customer->photo_ktp);
+            }
+            $file = $request->file('photo_ktp');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $data['photo_ktp'] = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'private']);
+        }
+
+        if ($request->hasFile('photo_kk')) {
+            if ($customer->photo_kk) {
+                Storage::disk('minio')->delete($customer->photo_kk);
+            }
+            $file = $request->file('photo_kk');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $data['photo_kk'] = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'private']);
+        }
+
+        if ($request->hasFile('photo_profile')) {
+            if ($customer->photo_profile) {
+                Storage::disk('minio')->delete($customer->photo_profile);
+            }
+            $file = $request->file('photo_profile');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $data['photo_profile'] = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'public']);
+        }
 
         if (!empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);

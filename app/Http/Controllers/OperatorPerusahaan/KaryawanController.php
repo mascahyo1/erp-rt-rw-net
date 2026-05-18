@@ -7,6 +7,8 @@ use App\Models\Employee;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -46,12 +48,30 @@ class KaryawanController extends Controller
         $perPage = min((int) $request->input('per_page', 10), 100);
 
         $karyawans = $query->paginate($perPage)->through(function ($employee) {
+            $photoKtpUrl = $employee->photo_ktp
+                ? Storage::disk('s3')->temporaryUrl($employee->photo_ktp, now()->addMinutes(10))
+                : null;
+            $photoKkUrl = $employee->photo_kk
+                ? Storage::disk('s3')->temporaryUrl($employee->photo_kk, now()->addMinutes(10))
+                : null;
+            $photoProfileUrl = $employee->photo_profile
+                ? Storage::disk('s3')->url($employee->photo_profile)
+                : null;
+
             return [
                 'id' => $employee->id,
                 'nama' => $employee->name,
                 'email' => $employee->email,
                 'kode_negara' => $employee->phone_country_code,
                 'no_telp' => $employee->phone_number,
+                'no_nik' => $employee->no_nik,
+                'no_kk' => $employee->no_kk,
+                'photo_ktp' => $employee->photo_ktp,
+                'photo_ktp_url' => $photoKtpUrl,
+                'photo_kk' => $employee->photo_kk,
+                'photo_kk_url' => $photoKkUrl,
+                'photo_profile' => $employee->photo_profile,
+                'photo_profile_url' => $photoProfileUrl,
                 'status' => $employee->is_active ? 'Aktif' : 'Nonaktif',
                 'is_active' => $employee->is_active,
                 'company_id' => $employee->company_id,
@@ -84,9 +104,34 @@ class KaryawanController extends Controller
             ],
             'kode_negara' => ['required', 'string', 'max:10'],
             'no_telp' => ['required', 'string', 'max:20'],
+            'no_nik' => ['nullable', 'string', 'max:50'],
+            'no_kk' => ['nullable', 'string', 'max:50'],
+            'photo_ktp' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_kk' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_profile' => ['nullable', 'file', 'image', 'max:2048'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['required', 'string', 'min:8'],
         ]);
+
+        $photoKtpPath = null;
+        $photoKkPath = null;
+        $photoProfilePath = null;
+
+        if ($request->hasFile('photo_ktp')) {
+            $file = $request->file('photo_ktp');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $photoKtpPath = $file->storeAs('employees/photos', $filename, ['disk' => 's3', 'visibility' => 'private']);
+        }
+        if ($request->hasFile('photo_kk')) {
+            $file = $request->file('photo_kk');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $photoKkPath = $file->storeAs('employees/photos', $filename, ['disk' => 's3', 'visibility' => 'private']);
+        }
+        if ($request->hasFile('photo_profile')) {
+            $file = $request->file('photo_profile');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $photoProfilePath = $file->storeAs('employees/photos', $filename, ['disk' => 's3', 'visibility' => 'public']);
+        }
 
         Employee::create([
             'company_id' => auth()->user()->company_id,
@@ -94,6 +139,11 @@ class KaryawanController extends Controller
             'email' => $validated['email'],
             'phone_country_code' => $validated['kode_negara'],
             'phone_number' => $validated['no_telp'],
+            'no_nik' => $validated['no_nik'] ?? null,
+            'no_kk' => $validated['no_kk'] ?? null,
+            'photo_ktp' => $photoKtpPath,
+            'photo_kk' => $photoKkPath,
+            'photo_profile' => $photoProfilePath,
             'is_active' => $validated['status'] === 'Aktif',
             'password' => Hash::make($validated['password']),
         ]);
@@ -113,6 +163,11 @@ class KaryawanController extends Controller
             ],
             'kode_negara' => ['required', 'string', 'max:10'],
             'no_telp' => ['required', 'string', 'max:20'],
+            'no_nik' => ['nullable', 'string', 'max:50'],
+            'no_kk' => ['nullable', 'string', 'max:50'],
+            'photo_ktp' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_kk' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_profile' => ['nullable', 'file', 'image', 'max:2048'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['nullable', 'string', 'min:8'],
         ]);
@@ -122,8 +177,37 @@ class KaryawanController extends Controller
             'email' => $validated['email'],
             'phone_country_code' => $validated['kode_negara'],
             'phone_number' => $validated['no_telp'],
+            'no_nik' => $validated['no_nik'] ?? null,
+            'no_kk' => $validated['no_kk'] ?? null,
             'is_active' => $validated['status'] === 'Aktif',
         ];
+
+        if ($request->hasFile('photo_ktp')) {
+            if ($employee->photo_ktp) {
+                Storage::disk('s3')->delete($employee->photo_ktp);
+            }
+            $file = $request->file('photo_ktp');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $data['photo_ktp'] = $file->storeAs('employees/photos', $filename, ['disk' => 's3', 'visibility' => 'private']);
+        }
+
+        if ($request->hasFile('photo_kk')) {
+            if ($employee->photo_kk) {
+                Storage::disk('s3')->delete($employee->photo_kk);
+            }
+            $file = $request->file('photo_kk');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $data['photo_kk'] = $file->storeAs('employees/photos', $filename, ['disk' => 's3', 'visibility' => 'private']);
+        }
+
+        if ($request->hasFile('photo_profile')) {
+            if ($employee->photo_profile) {
+                Storage::disk('s3')->delete($employee->photo_profile);
+            }
+            $file = $request->file('photo_profile');
+            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
+            $data['photo_profile'] = $file->storeAs('employees/photos', $filename, ['disk' => 's3', 'visibility' => 'public']);
+        }
 
         if (!empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);
