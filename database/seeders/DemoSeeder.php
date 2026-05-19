@@ -524,11 +524,7 @@ class DemoSeeder extends Seeder
                     'customer_id' => $customer->id,
                     'internet_package_id' => \App\Models\InternetPackage::where('company_id', $companyId)->where('name', $pkg['name'])->first()->id,
                     'account_number' => 'NET-' . strtoupper(Str::random(8)),
-                    'internet_status' => 'active',
-                    'billing_amount' => $pkg['price'],
-                    'billing_status' => 'unpaid',
-                    'billing_cycle_start' => now()->startOfMonth(),
-                    'billing_cycle_end' => now()->endOfMonth(),
+                    'internet_status' => 'active'
                 ]);
 
                 // Generate 2-3 invoice untuk tiap langganan
