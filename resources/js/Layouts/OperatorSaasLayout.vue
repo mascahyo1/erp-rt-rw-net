@@ -143,7 +143,7 @@ onUnmounted(() => {
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1">
+      <nav class="flex-1 overflow-y-auto py-4 px-2 space-y-1 sidebar-nav">
         <Link
           v-for="item in menuItems"
           :key="item.href"
@@ -308,5 +308,25 @@ onUnmounted(() => {
 .dropdown-leave-to {
   opacity: 0;
   transform: scale(0.95);
+}
+
+/* Sidebar scrollbar */
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+/* Firefox */
+.sidebar-nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 </style>
