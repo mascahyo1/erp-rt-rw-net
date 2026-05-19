@@ -66,6 +66,8 @@ enum Permissions: string
     case PaketDetail = 'paket.detail';
     case PaketDelete = 'paket.delete';
     case PaketRestore = 'paket.restore';
+    case PaketExport   = 'paket.export';
+    case PaketImport   = 'paket.import';
 
     // Customer (full CRUD)
     case CustomerList   = 'customer.list';
@@ -252,6 +254,8 @@ enum Permissions: string
                 self::PaketDetail->value,
                 self::PaketDelete->value,
                 self::PaketRestore->value,
+                self::PaketExport->value,
+                self::PaketImport->value,
                 self::AdminPerusahaanList->value,
                 self::AdminPerusahaanCreate->value,
                 self::AdminPerusahaanEdit->value,

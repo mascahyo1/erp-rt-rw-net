@@ -5,40 +5,115 @@
 Halaman untuk **mengelola paket layanan internet** yang tersedia untuk dipilih pelanggan.
 Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket internet termasuk konfigurasi FUP (Fair Usage Policy).
 
-### form create / edit / detail
-nama paket
-billing_cycle
-max_devices
-harga
-speed_down_kbps
-speed_up_kbps
-fup_quota_down
-fup_quota_up
-fup_speed_down_kbps
-fup_speed_up_kbps
-is_active
-description
+---
 
-### kolom datatable
-nama paket
-speed
-billing cycle
-quota fup
-harga
-status
+## Form Create / Edit / Detail
 
+| Field | Type | Wajib | Keterangan |
+|-------|------|-------|-----------|
+| Nama Paket | text | ✅ | Nama paket internet |
+| Billing Cycle | select | ✅ | daily / weekly / monthly / yearly |
+| Max Devices | number | — | Maksimal perangkat (opsional) |
+| Is Unlimited | checkbox | — | Centang bila kuota unlimited |
+| Harga | number | ✅ | Harga per billing cycle |
+| Speed Down (kbps) | number | ✅ | Kecepatan download default |
+| Speed Up (kbps) | number | ✅ | Kecepatan upload default |
+| Quota (GB) | number | — | Kuota dalam GB |
+| FUP Quota Down (GB) | number | — | Batas download sebelum limit FUP |
+| FUP Quota Up (GB) | number | — | Batas upload sebelum limit FUP |
+| FUP Speed Down (kbps) | number | — | Kecepatan setelah kena limit FUP |
+| FUP Speed Up (kbps) | number | — | Kecepatan upload setelah FUP |
+| Status | select | ✅ | Aktif / Nonaktif |
+| Deskripsi | textarea | — | Keterangan tambahan |
+
+---
+
+## Kolom Datatable
+
+| Kolom | Sortable | Keterangan |
+|-------|----------|-----------|
+| ☐ | — | Checkbox bulk select |
+| Nama Paket | ✅ | Nama + avatar initial |
+| Speed | — | Download ↓ / Upload ↑ kbps |
+| Billing Cycle | ✅ | Harian / Mingguan / Bulanan / Tahunan |
+| Quota FUP | — | Quota GB (Unlimited bila is_unlimited) + FUP |
+| Harga | ✅ | Format Rp |
+| Status | ✅ | Badge: Aktif (hijau) / Nonaktif (merah) / Terhapus (merah dicoret) |
+| Aksi | — | Detail, Edit, Hapus / Pulihkan |
+
+---
+
+## Import / Export Excel
+
+Menggunakan **PhpSpreadsheet** (`phpoffice/phpspreadsheet`).
+
+### Aturan Wajib
+1. **Tidak ada angka notasi ilmiah.** Semua cell numerik yang berpotensi panjang (telepon, NIK, nomor akun) wajib pakai:
+   ```php
+   $sheet->setCellValueExplicit(
+       $this->excelColumn($col++) . $row,
+       trim($value) ?: '-',
+       \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
+   );
+   ```
+2. **Export:** Download file `.xlsx` dengan format rapi — header bold, auto-width, border tipis.
+3. **Import:** Upload file `.xlsx` / `.csv`, validasi per baris, insert batch (chunk 500 baris), return jumlah sukses + error rows.
+4. **Template:** Endpoint download template kosong dengan header kolom sesuai format import.
+
+### Permission Import / Export
+
+| Permission | Keterangan |
+|-----------|------------|
+| `paket.export` | Download export Excel (semua / selected via checkbox) |
+| `paket.import` | Upload import Excel + download template import |
+
+### Route Import / Export
+
+| Method | URI | Permission | Keterangan |
+|--------|-----|-----------|------------|
+| GET | `/operator-perusahaan/daftar-paket/export` | `paket.export` | Download semua paket (.xlsx) |
+| GET | `/operator-perusahaan/daftar-paket/export?ids=` | `paket.export` | Download selected via checkbox |
+| GET | `/operator-perusahaan/daftar-paket/template` | `paket.import` | Download template import kosong (nebeng import) |
+| POST | `/operator-perusahaan/daftar-paket/import` | `paket.import` | Upload + proses file import |
+
+### Controller Methods (PaketController)
+
+```
+index()           → list + filter + sort + pagination
+store()           → create
+update()          → edit
+destroy()         → soft delete
+restore()         → restore
+bulkDelete()      → bulk soft delete
+bulkToggleStatus()→ bulk aktif/nonaktif
+bulkRestore()     → bulk restore
+export()          → download Excel semua data
+export() + ?ids=  → download Excel selected
+template()        → download template import kosong
+import()          → upload + validasi + insert batch
+```
+
+---
 
 ## Fitur
-- **Tabel daftar paket** — menampilkan semua paket dengan nama, harga, kecepatan, kuota, billing cycle, dan status
+
+- **Tabel daftar paket** — menampilkan semua paket dengan nama, speed, billing cycle, quota FUP, harga, status
 - **Pencarian** — mencari paket berdasarkan nama atau deskripsi (tekan Enter)
-- **Filter Status** — menyaring paket berdasarkan status (Aktif / Nonaktif)
-- **Filter Terhapus** — menampilkan paket yang sudah dihapus (soft delete)
+- **Filter Status** — select dropdown: Semua / Aktif / Nonaktif
+- **Filter Terhapus** — select dropdown: Tidak / Ya (tampilkan yg sudah dihapus)
 - **Urutkan** — klik judul kolom untuk mengurutkan (nama, harga, status)
 - **Pagination** — pilih jumlah data per halaman: 5, 10, 25, 50, 100
-- **Bulk Action** — pilih beberapa paket untuk diaktifkan/dinonaktifkan/dihapus/pulihkan sekaligus
+- **Bulk Action** — Aktifkan / Nonaktifkan / Hapus / Pulihkan / Export banyak paket sekaligus
+- **Import Excel** — upload file, validasi per baris, insert batch
+- **Export Excel** — download semua data atau selected via checkbox
+- **Template Import** — download template kosong untuk diisi
+
+---
 
 ## Aksi
+
 Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403 Forbidden).
+
 | Aksi | Izin Diperlukan | Keterangan |
 |------|----------------|------------|
 | **Lihat Daftar** | `paket.list` | Melihat tabel paket dan sidebar menu |
@@ -50,9 +125,15 @@ Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403
 | **Bulk Aktif/Nonaktif** | `paket.edit` | Toggle status banyak paket sekaligus (nebeng edit) |
 | **Bulk Hapus** | `paket.delete` | Hapus banyak paket sekaligus (nebeng delete) |
 | **Bulk Pulihkan** | `paket.restore` | Pulihkan banyak paket sekaligus (nebeng restore) |
+| **Export Excel** | `paket.export` | Download Excel — semua data atau selected via checkbox |
+| **Import Excel** | `paket.import` | Upload .xlsx/.csv, validasi, insert batch + download template |
+
+---
 
 ## Teknis
+
 ### Route
+
 | Method | URI | Permission |
 |--------|-----|------------|
 | GET | `/operator-perusahaan/daftar-paket` | `paket.list` |
@@ -62,6 +143,11 @@ Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403
 | PATCH | `/operator-perusahaan/daftar-paket/{id}/restore` | `paket.restore` |
 | POST | `/operator-perusahaan/daftar-paket/bulk-status` | `paket.edit` |
 | POST | `/operator-perusahaan/daftar-paket/bulk-delete` | `paket.delete` |
+| POST | `/operator-perusahaan/daftar-paket/bulk-restore` | `paket.restore` |
+| GET | `/operator-perusahaan/daftar-paket/export` | `paket.export` |
+| GET | `/operator-perusahaan/daftar-paket/export?ids=` | `paket.export` |
+| GET | `/operator-perusahaan/daftar-paket/template` | `paket.import` |
+| POST | `/operator-perusahaan/daftar-paket/import` | `paket.import` |
 
 ### Controller
 `App\Http\Controllers\OperatorPerusahaan\PaketController`
@@ -91,6 +177,22 @@ Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403
 | `is_active` | boolean | Status aktif |
 | `description` | text, nullable | Deskripsi |
 
+### Permission Enum (tambahan)
+
+Tambahkan di `app/Enums/Permissions.php`:
+
+```php
+case PaketExport  = 'paket.export';
+case PaketImport  = 'paket.import';
+```
+
+Dan di method `forScope('admin_perusahaan')`:
+
+```php
+self::PaketExport->value,
+self::PaketImport->value,
+```
+
 ### Migration
 `database/migrations/2026_05_11_141134_create_internet_packages_table.php`
 
@@ -98,4 +200,6 @@ Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403
 | File | Keterangan |
 |------|-----------|
 | `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketViewTest.php` | Browser view test |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketCRUDTest.php` | Browser CRUD test |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketImportExportTest.php` | Browser import/export test |
 | `tests/Browser/Feature/OperatorPerusahaan/LanggananPermissionTest.php` | Granular permission test |

@@ -214,6 +214,15 @@ Route::middleware('auth:admin-company')->group(function () {
         Route::post('/operator-perusahaan/daftar-paket/bulk-restore', [PaketController::class, 'bulkRestore'])->name('operator-perusahaan.paket.bulkRestore');
     });
 
+    Route::middleware('permission:paket.export')->group(function () {
+        Route::get('/operator-perusahaan/daftar-paket/export', [PaketController::class, 'export'])->name('operator-perusahaan.paket.export');
+    });
+
+    Route::middleware('permission:paket.import')->group(function () {
+        Route::get('/operator-perusahaan/daftar-paket/template', [PaketController::class, 'template'])->name('operator-perusahaan.paket.template');
+        Route::post('/operator-perusahaan/daftar-paket/import', [PaketController::class, 'import'])->name('operator-perusahaan.paket.import');
+    });
+
     // Langganan
     Route::middleware('permission:langganan.list')->group(function () {
         Route::get('/operator-perusahaan/langganan-customer', [LanggananController::class, 'index'])->name('operator-perusahaan.langganan.index');

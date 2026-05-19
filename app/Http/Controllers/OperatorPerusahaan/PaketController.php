@@ -103,4 +103,193 @@ class PaketController extends Controller
         $c = InternetPackage::onlyTrashed()->whereIn('id',$ids)->restore();
         return back()->with('success',"{$c} paket berhasil dipulihkan.");
     }
+
+    /**
+     * Export Excel — semua data atau selected via ?ids=
+     */
+    public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $query = InternetPackage::where('company_id', $companyId);
+
+        if ($ids = $request->input('ids')) {
+            $query->whereIn('id', explode(',', $ids));
+        }
+
+        $items = $query->orderBy('name')->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Daftar Paket');
+
+        $headers = ['Nama Paket', 'Harga', 'Billing Cycle', 'Speed Down (kbps)', 'Speed Up (kbps)', 'Kuota (GB)', 'Unlimited', 'Max Devices', 'FUP Quota Down', 'FUP Quota Up', 'FUP Speed Down', 'FUP Speed Up', 'Status', 'Deskripsi'];
+        foreach ($headers as $i => $h) {
+            $col = $this->excelColumn($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+        }
+
+        $row = 2;
+        foreach ($items as $item) {
+            $col = 1;
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->name, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, (string) $item->price, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->billing_cycle);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->speed_down_kbps);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->speed_up_kbps);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->quota_gb);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->is_unlimited ? 'Ya' : 'Tidak');
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->max_devices);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->fup_quota_down);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->fup_quota_up);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->fup_speed_down_kbps);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->fup_speed_up_kbps);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->is_active ? 'Aktif' : 'Nonaktif');
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->description ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $row++;
+        }
+
+        // Auto-width
+        foreach (range(1, count($headers)) as $i) {
+            $sheet->getColumnDimension($this->excelColumn($i))->setAutoSize(true);
+        }
+
+        $file = storage_path('app/temp/paket_' . now()->format('YmdHis') . '.xlsx');
+        $dir = dirname($file);
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($file);
+
+        return response()->download($file)->deleteFileAfterSend();
+    }
+
+    /**
+     * Template import kosong
+     */
+    public function template(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Import');
+
+        $headers = ['Nama Paket', 'Harga', 'Billing Cycle', 'Speed Down (kbps)', 'Speed Up (kbps)', 'Kuota (GB)', 'Unlimited (Ya/Tidak)', 'Max Devices', 'FUP Quota Down', 'FUP Quota Up', 'FUP Speed Down', 'FUP Speed Up', 'Status (Aktif/Nonaktif)', 'Deskripsi'];
+        foreach ($headers as $i => $h) {
+            $col = $this->excelColumn($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+        }
+
+        // Contoh row
+        $example = ['Basic 10Mbps', 150000, 'monthly', 10240, 5120, 100, 'Tidak', 5, 50, 25, 5120, 2560, 'Aktif', 'Paket basic'];
+        foreach ($example as $i => $v) {
+            $sheet->setCellValueExplicit($this->excelColumn($i + 1) . '2', (string) $v, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        }
+
+        foreach (range(1, count($headers)) as $i) {
+            $sheet->getColumnDimension($this->excelColumn($i))->setAutoSize(true);
+        }
+
+        $file = storage_path('app/temp/template_paket.xlsx');
+        $dir = dirname($file);
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($file);
+
+        return response()->download($file)->deleteFileAfterSend();
+    }
+
+    /**
+     * Import dari Excel
+     */
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,csv|max:2048']);
+
+        $file = $request->file('file');
+        $fullPath = $file->getRealPath();
+
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($fullPath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($fullPath);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        // Hapus header row
+        array_shift($rows);
+
+        $companyId = auth()->user()->company_id;
+        $success = 0;
+        $errors = [];
+
+        $inserts = [];
+        foreach ($rows as $i => $row) {
+            $line = $i + 2; // line 1 header, line 2 example/start
+            $name = trim($row[0] ?? '');
+            if (empty($name)) continue;
+
+            $price = (float) ($row[1] ?? 0);
+            $billingCycle = strtolower(trim($row[2] ?? 'monthly'));
+            $speedDown = (float) ($row[3] ?? 0);
+            $speedUp = (float) ($row[4] ?? 0);
+            $quotaGb = (int) ($row[5] ?? 0);
+            $isUnlimited = strtolower(trim($row[6] ?? '')) === 'ya';
+            $maxDevices = (int) ($row[7] ?? 0) ?: null;
+            $status = strtolower(trim($row[12] ?? 'aktif')) === 'nonaktif' ? false : true;
+
+            if (empty($name) || $price <= 0) {
+                $errors[] = "Baris {$line}: Nama/Harga tidak valid.";
+                continue;
+            }
+            if (!in_array($billingCycle, ['daily', 'weekly', 'monthly', 'yearly'])) {
+                $billingCycle = 'monthly';
+            }
+
+            $inserts[] = [
+                'id' => \Illuminate\Support\Str::uuid(),
+                'company_id' => $companyId,
+                'name' => $name,
+                'price' => $price,
+                'billing_cycle' => $billingCycle,
+                'speed_down_kbps' => $speedDown,
+                'speed_up_kbps' => $speedUp,
+                'quota_gb' => $quotaGb,
+                'is_unlimited' => $isUnlimited,
+                'max_devices' => $maxDevices,
+                'fup_quota_down' => $row[8] ? (int) $row[8] : null,
+                'fup_quota_up' => $row[9] ? (int) $row[9] : null,
+                'fup_speed_down_kbps' => $row[10] ? (float) $row[10] : null,
+                'fup_speed_up_kbps' => $row[11] ? (float) $row[11] : null,
+                'is_active' => $status,
+                'description' => trim($row[13] ?? '') ?: null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+            $success++;
+        }
+
+        // Batch insert chunk 500
+        foreach (array_chunk($inserts, 500) as $chunk) {
+            InternetPackage::insert($chunk);
+        }
+
+        $msg = "{$success} paket berhasil diimport.";
+        if ($errors) {
+            $msg .= ' ' . count($errors) . ' baris error: ' . implode('; ', array_slice($errors, 0, 5));
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    private function excelColumn(int $n): string
+    {
+        $col = '';
+        while ($n > 0) {
+            $n--;
+            $col = chr(65 + $n % 26) . $col;
+            $n = intdiv($n, 26);
+        }
+        return $col;
+    }
 }
