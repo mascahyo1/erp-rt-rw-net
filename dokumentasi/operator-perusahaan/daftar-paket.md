@@ -5,6 +5,29 @@
 Halaman untuk **mengelola paket layanan internet** yang tersedia untuk dipilih pelanggan.
 Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket internet termasuk konfigurasi FUP (Fair Usage Policy).
 
+### form create / edit / detail
+nama paket
+billing_cycle
+max_devices
+harga
+speed_down_kbps
+speed_up_kbps
+fup_quota_down
+fup_quota_up
+fup_speed_down_kbps
+fup_speed_up_kbps
+is_active
+description
+
+### kolom datatable
+nama paket
+speed
+billing cycle
+quota fup
+harga
+status
+
+
 ## Fitur
 - **Tabel daftar paket** — menampilkan semua paket dengan nama, harga, kecepatan, kuota, billing cycle, dan status
 - **Pencarian** — mencari paket berdasarkan nama atau deskripsi (tekan Enter)

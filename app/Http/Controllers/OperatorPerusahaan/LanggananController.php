@@ -53,18 +53,13 @@ class LanggananController extends Controller
                 'internet_package_id' => $item->internet_package_id,
                 'internet_package_name' => $item->internetPackage?->name,
                 'internet_status' => $item->internet_status,
-                'billing_amount' => $item->billing_amount,
-                'billing_cycle_start' => $item->billing_cycle_start?->format('Y-m-d'),
-                'billing_cycle_end' => $item->billing_cycle_end?->format('Y-m-d'),
+                'usage_upload_kb' => $item->usage_upload_kb,
+                'usage_download_kb' => $item->usage_download_kb,
+                'company_notes' => $item->company_notes,
+                'account_number' => $item->account_number,
                 'dihapus' => $item->trashed(),
                 'deleted_at' => $item->deleted_at?->format('Y-m-d H:i'),
                 'created_at' => $item->created_at->format('Y-m-d H:i'),
-                'updated_at' => $item->updated_at->format('Y-m-d H:i'),
-                'restored_at' => $item->restored_at?->format('Y-m-d H:i'),
-                'created_by' => $item->createdBy?->name,
-                'updated_by' => $item->updatedBy?->name,
-                'deleted_by' => $item->deletedBy?->name,
-                'restored_by' => $item->restoredBy?->name,
             ];
         });
 
@@ -79,10 +74,10 @@ class LanggananController extends Controller
         $validated = $request->validate([
             'customer_id' => ['required', 'string', 'exists:customers,id'],
             'internet_package_id' => ['required', 'string', 'exists:internet_packages,id'],
-            'internet_status' => ['required', 'string', Rule::in(['active', 'inactive', 'terminated'])],
-            'billing_cycle_start' => ['nullable', 'date'],
-            'billing_cycle_end' => ['nullable', 'date'],
-            'billing_amount' => ['nullable', 'numeric'],
+            'internet_status' => ['required', 'string', Rule::in(['active', 'inactive', 'suspended', 'terminated', 'company_notes'])],
+            'usage_upload_kb' => ['nullable', 'numeric'],
+            'usage_download_kb' => ['nullable', 'numeric'],
+            'company_notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         CustInternet::create($validated);
@@ -95,10 +90,10 @@ class LanggananController extends Controller
         $validated = $request->validate([
             'customer_id' => ['required', 'string', 'exists:customers,id'],
             'internet_package_id' => ['required', 'string', 'exists:internet_packages,id'],
-            'internet_status' => ['required', 'string', Rule::in(['active', 'inactive', 'terminated'])],
-            'billing_cycle_start' => ['nullable', 'date'],
-            'billing_cycle_end' => ['nullable', 'date'],
-            'billing_amount' => ['nullable', 'numeric'],
+            'internet_status' => ['required', 'string', Rule::in(['active', 'inactive', 'suspended', 'terminated', 'company_notes'])],
+            'usage_upload_kb' => ['nullable', 'numeric'],
+            'usage_download_kb' => ['nullable', 'numeric'],
+            'company_notes' => ['nullable', 'string', 'max:500'],
         ]);
 
         $custInternet->update($validated);

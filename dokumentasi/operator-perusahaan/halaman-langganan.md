@@ -5,6 +5,19 @@
 Halaman untuk mengelola **data langganan pelanggan** — paket internet apa yang dipakai pelanggan, harganya, dan status aktifnya.
 Langganan adalah hubungan antara pelanggan dengan paket layanan internet yang mereka pilih.
 
+### form create / edit / detail
+nama pelanggan
+nama paket
+usage_upload_kb
+usage_download_kb
+internet_status select option: active,inactive,suspended,terminated,company_notes
+
+### kolom datatable
+nama customer
+paket customer
+status
+aksi
+
 ## Fitur
 - **Tabel daftar langganan** — menampilkan semua langganan dengan pelanggan, paket, harga, dan status
 - **Pencarian** — mencari langganan berdasarkan nama pelanggan atau paket (tekan Enter untuk mencari)

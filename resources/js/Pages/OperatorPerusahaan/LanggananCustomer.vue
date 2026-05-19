@@ -58,12 +58,12 @@ function statusBadgeClass(s) {
   return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
 }
 
-const createForm = useForm({ customer_id: '', internet_package_id: '', internet_status: 'active', billing_cycle_start: '', billing_cycle_end: '', billing_amount: '' });
-const editForm = useForm({ customer_id: '', internet_package_id: '', internet_status: '', billing_cycle_start: '', billing_cycle_end: '', billing_amount: '' });
+const createForm = useForm({ customer_id: '', internet_package_id: '', internet_status: 'active', usage_upload_kb: '', usage_download_kb: '', company_notes: '' });
+const editForm = useForm({ customer_id: '', internet_package_id: '', internet_status: '', usage_upload_kb: '', usage_download_kb: '', company_notes: '' });
 
 function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; }
 function submitCreate() { createForm.post('/operator-perusahaan/langganan-customer', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Langganan berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal.') }); }
-function openEdit(item) { editForm.customer_id = item.customer_id; editForm.internet_package_id = item.internet_package_id; editForm.internet_status = item.internet_status; editForm.billing_cycle_start = item.billing_cycle_start; editForm.billing_cycle_end = item.billing_cycle_end; editForm.billing_amount = item.billing_amount; editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; }
+function openEdit(item) { editForm.customer_id = item.customer_id; editForm.internet_package_id = item.internet_package_id; editForm.internet_status = item.internet_status; editForm.usage_upload_kb = item.usage_upload_kb; editForm.usage_download_kb = item.usage_download_kb; editForm.company_notes = item.company_notes; editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; }
 function submitEdit() { editForm.put('/operator-perusahaan/langganan-customer/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Langganan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal.') }); }
 function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }

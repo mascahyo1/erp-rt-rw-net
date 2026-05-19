@@ -18,7 +18,11 @@ class CustInternet extends Model
         'id',
         'customer_id',
         'internet_package_id',
+        'account_number',
+        'usage_upload_kb',
+        'usage_download_kb',
         'internet_status',
+        'company_notes',
         'billing_amount',
         'billing_cycle_start',
         'billing_cycle_end',
@@ -30,6 +34,8 @@ class CustInternet extends Model
             'billing_cycle_start' => 'date',
             'billing_cycle_end' => 'date',
             'billing_amount' => 'decimal:2',
+            'usage_upload_kb' => 'decimal:2',
+            'usage_download_kb' => 'decimal:2',
         ];
     }
 
