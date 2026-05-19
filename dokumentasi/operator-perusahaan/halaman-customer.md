@@ -12,6 +12,29 @@ Pelanggan adalah pengguna akhir yang berlangganan layanan internet dari perusaha
 - **Urutkan** — klik judul kolom untuk mengurutkan data (bisa multi-kolom)
 - **Pagination** — pilih jumlah data per halaman: 5, 10, 25, 50, 100
 
+
+### form create / edit / detail
+nama pelanggan
+company_id (diurus backend)
+email
+phone_country_code
+phone_number
+no_nik
+photo_ktp
+no_kk
+photo_kk
+photo_profile
+address
+
+### kolom datatable
+nama_pelanggan
+email
+no telp
+status
+
+
+
+
 ## Aksi
 | Aksi | Izin Diperlukan | Keterangan |
 |------|----------------|------------|
