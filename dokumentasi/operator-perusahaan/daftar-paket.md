@@ -201,7 +201,7 @@ self::PaketImport->value,
 ### Test Case
 | File | Keterangan |
 |------|-----------|
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketViewTest.php` | Browser view test |
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketCRUDTest.php` | Browser CRUD test |
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketImportExportTest.php` | Browser import/export test |
-| `tests/Browser/Feature/OperatorPerusahaan/LanggananPermissionTest.php` | Granular permission test |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketViewTest.php` | Browser view test — render + kolom |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketCRUDTest.php` | Browser CRUD test — search, filter, sort, delete, bulk delete, langganan+estimasi |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketImportExportTest.php` | Browser import/export test — template, export, import modal |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketPermissionTest.php` | Granular permission test — list, create, export, import |
