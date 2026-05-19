@@ -49,13 +49,13 @@ class KaryawanController extends Controller
 
         $karyawans = $query->paginate($perPage)->through(function ($employee) {
             $photoKtpUrl = $employee->photo_ktp
-                ? Storage::disk('s3')->temporaryUrl($employee->photo_ktp, now()->addMinutes(10))
+                ? route('file.proxy', ['path' => $employee->photo_ktp, 'disk' => 's3'])
                 : null;
             $photoKkUrl = $employee->photo_kk
-                ? Storage::disk('s3')->temporaryUrl($employee->photo_kk, now()->addMinutes(10))
+                ? route('file.proxy', ['path' => $employee->photo_kk, 'disk' => 's3'])
                 : null;
             $photoProfileUrl = $employee->photo_profile
-                ? Storage::disk('s3')->url($employee->photo_profile)
+                ? route('file.proxy', ['path' => $employee->photo_profile, 'disk' => 's3'])
                 : null;
 
             return [

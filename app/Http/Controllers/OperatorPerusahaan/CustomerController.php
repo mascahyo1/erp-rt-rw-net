@@ -49,13 +49,13 @@ class CustomerController extends Controller
 
         $customers = $query->paginate($perPage)->through(function ($customer) {
             $photoKtpUrl = $customer->photo_ktp
-                ? Storage::disk('minio')->temporaryUrl($customer->photo_ktp, now()->addMinutes(10))
+                ? route('file.proxy', ['path' => $customer->photo_ktp, 'disk' => 'minio'])
                 : null;
             $photoKkUrl = $customer->photo_kk
-                ? Storage::disk('minio')->temporaryUrl($customer->photo_kk, now()->addMinutes(10))
+                ? route('file.proxy', ['path' => $customer->photo_kk, 'disk' => 'minio'])
                 : null;
             $photoProfileUrl = $customer->photo_profile
-                ? Storage::disk('minio')->url($customer->photo_profile)
+                ? route('file.proxy', ['path' => $customer->photo_profile, 'disk' => 'minio'])
                 : null;
 
             return [

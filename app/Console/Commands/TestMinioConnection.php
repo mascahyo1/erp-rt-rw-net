@@ -53,8 +53,7 @@ class TestMinioConnection extends Command
         $this->info('4. Testing exists...');
         try {
             $exists = Storage::disk('minio')->exists($testFile);
-            $this->info("url: " . Storage::disk('minio')->temporaryUrl($testFile, now()->addMinutes(5)));
-            die;
+            $this->info(' url: ' . Storage::disk('minio')->temporaryUrl($testFile, now()->addMinutes(5)));die;
             $this->info('  ✓ File exists: ' . ($exists ? 'yes' : 'no'));
         } catch (\Throwable $e) {
             $this->error('  ✗ Exists check failed: ' . $e->getMessage());
