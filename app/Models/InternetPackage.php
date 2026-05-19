@@ -33,4 +33,5 @@ class InternetPackage extends Model
     }
 
     public function company(): BelongsTo { return $this->belongsTo(Company::class); }
+    public function subscriptions() { return $this->hasMany(CustInternet::class, 'internet_package_id'); }
 }

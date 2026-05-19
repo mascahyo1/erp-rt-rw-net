@@ -17,19 +17,30 @@ class PaketController extends Controller
         $companyId = auth()->user()->company_id;
         $query = InternetPackage::query()->with(['createdBy','updatedBy'])->where('company_id', $companyId);
 
+        // Subquery SQL untuk sortable columns
+        $query->select('internet_packages.*')
+            ->selectRaw('(SELECT COUNT(*) FROM cust_internets WHERE cust_internets.internet_package_id = internet_packages.id AND cust_internets.internet_status = ? AND cust_internets.deleted_at IS NULL) as subscriptions_count', ['active'])
+            ->selectRaw('(SELECT COUNT(*) FROM cust_internets WHERE cust_internets.internet_package_id = internet_packages.id AND cust_internets.internet_status = ? AND cust_internets.deleted_at IS NULL) * internet_packages.price as estimasi_pendapatan', ['active']);
+
         if ($request->input('terhapus') === 'ya') $query->onlyTrashed();
         if ($search = $request->input('search')) {
             $query->where(fn($q) => $q->where('name','like',"%{$search}%")->orWhere('description','like',"%{$search}%"));
         }
         if ($status = $request->input('status')) $query->where('is_active', $status === 'Aktif' || $status === 'aktif');
+
+        $allowedSort = ['name','price','billing_cycle','is_active','subscriptions_count','estimasi_pendapatan'];
         if ($sortField = $request->input('sort_field')) {
-            $query->orderBy($sortField, $request->input('sort_dir','asc'));
+            $sortDir = $request->input('sort_dir','asc');
+            if (in_array($sortField, $allowedSort)) {
+                $query->orderBy($sortField, $sortDir);
+            }
         } else $query->latest();
 
         $items = $query->paginate(min((int)$request->input('per_page',10),100))->through(fn($p) => [
             'id'=>$p->id, 'name'=>$p->name, 'price'=>$p->price, 'speed_down_kbps'=>$p->speed_down_kbps,
             'speed_up_kbps'=>$p->speed_up_kbps, 'quota_gb'=>$p->quota_gb, 'billing_cycle'=>$p->billing_cycle,
-            'is_unlimited'=>$p->is_unlimited, 'max_devices'=>$p->max_devices,
+            'is_unlimited'=>$p->is_unlimited, 'langganan_aktif'=>(int)$p->subscriptions_count,
+            'estimasi_pendapatan'=>(int)$p->subscriptions_count * (float)$p->price,'max_devices'=>$p->max_devices,
             'fup_quota_down'=>$p->fup_quota_down, 'fup_quota_up'=>$p->fup_quota_up,
             'fup_speed_down_kbps'=>$p->fup_speed_down_kbps, 'fup_speed_up_kbps'=>$p->fup_speed_up_kbps,
             'is_active'=>$p->is_active, 'status'=>$p->is_active?'Aktif':'Nonaktif',
@@ -116,13 +127,14 @@ class PaketController extends Controller
             $query->whereIn('id', explode(',', $ids));
         }
 
-        $items = $query->orderBy('name')->get();
+        $items = $query->withCount(['subscriptions' => fn($q) => $q->where('internet_status', 'active')])
+            ->orderBy('name')->get();
 
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Daftar Paket');
 
-        $headers = ['Nama Paket', 'Harga', 'Billing Cycle', 'Speed Down (kbps)', 'Speed Up (kbps)', 'Kuota (GB)', 'Unlimited', 'Max Devices', 'FUP Quota Down', 'FUP Quota Up', 'FUP Speed Down', 'FUP Speed Up', 'Status', 'Deskripsi'];
+        $headers = ['Nama Paket', 'Harga', 'Billing Cycle', 'Speed Down (kbps)', 'Speed Up (kbps)', 'Kuota (GB)', 'Unlimited', 'Max Devices', 'FUP Quota Down', 'FUP Quota Up', 'FUP Speed Down', 'FUP Speed Up', 'Langganan Aktif', 'Estimasi Pendapatan', 'Status', 'Deskripsi'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -144,6 +156,8 @@ class PaketController extends Controller
             $sheet->setCellValue($this->excelColumn($col++) . $row, $item->fup_quota_up);
             $sheet->setCellValue($this->excelColumn($col++) . $row, $item->fup_speed_down_kbps);
             $sheet->setCellValue($this->excelColumn($col++) . $row, $item->fup_speed_up_kbps);
+            $sheet->setCellValue($this->excelColumn($col++) . $row, (int) $item->subscriptions_count);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, (string) ((int)$item->subscriptions_count * (float)$item->price), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValue($this->excelColumn($col++) . $row, $item->is_active ? 'Aktif' : 'Nonaktif');
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->description ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $row++;

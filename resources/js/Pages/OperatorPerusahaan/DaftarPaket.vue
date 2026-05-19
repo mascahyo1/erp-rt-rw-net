@@ -131,10 +131,12 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
                 <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Speed</th>
                 <th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400">Quota</th>
                 <th @click="sort('billing_cycle')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Billing <i :class="['fas', sortIcon('billing_cycle'), 'text-[10px]', sortField === 'billing_cycle' ? 'text-sky-500' : 'text-gray-400']"></i></span></th>
+                <th @click="sort('subscriptions_count')" class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Langganan Aktif <i :class="['fas', sortIcon('subscriptions_count'), 'text-[10px]', sortField === 'subscriptions_count' ? 'text-sky-500' : 'text-gray-400']"></i></span></th>
+                <th @click="sort('estimasi_pendapatan')" class="px-4 py-3 text-right font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Estimasi Pendapatan <i :class="['fas', sortIcon('estimasi_pendapatan'), 'text-[10px]', sortField === 'estimasi_pendapatan' ? 'text-sky-500' : 'text-gray-400']"></i></span></th>
                 <th @click="sort('is_active')" class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Status <i :class="['fas', sortIcon('is_active'), 'text-[10px]', sortField === 'is_active' ? 'text-sky-500' : 'text-gray-400']"></i></span></th>
-                <th @click="sort('created_at')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Tgl <i :class="['fas', sortIcon('created_at'), 'text-[10px]', sortField === 'created_at' ? 'text-sky-500' : 'text-gray-400']"></i></span></th><th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400 w-24">Aksi</th></tr></thead>
+                <th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400 w-24">Aksi</th></tr></thead>
         <tbody>
-          <tr v-if="items.length === 0"><td colspan="8" class="px-4 py-16 text-center text-gray-400 dark:text-gray-500"><i class="fas fa-inbox text-4xl mb-3 block"></i><span class="text-sm">Tidak ada data langganan</span></td></tr>
+          <tr v-if="items.length === 0"><td colspan="9" class="px-4 py-16 text-center text-gray-400 dark:text-gray-500"><i class="fas fa-inbox text-4xl mb-3 block"></i><span class="text-sm">Tidak ada data paket</span></td></tr>
           <tr v-for="item in items" :key="item.id" class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors" :class="{'opacity-60': item.dihapus}">
             <td class="px-4 py-3"><input v-model="selectedIds" :value="item.id" type="checkbox" @change="toggleSelect(item.id)" class="rounded border-gray-300 text-sky-600" /></td>
             <td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-sky-900/40 flex items-center justify-center text-sky-600 dark:text-sky-400 font-semibold text-xs">{{ (item.name || '?')[0] }}</div><span class="font-medium text-gray-900 dark:text-white">{{ item.name }}</span></div></td>
@@ -142,8 +144,9 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">{{ item.speed_down_kbps }}↓ / {{ item.speed_up_kbps }}↑ kbps</td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs text-center">{{ item.quota_gb }} GB{{ item.is_unlimited ? ' ∞' : '' }}</td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">{{ formatBillingCycle(item.billing_cycle) }}</td>
+            <td class="px-4 py-3 text-center text-gray-900 dark:text-white font-semibold text-xs">{{ item.langganan_aktif ?? 0 }}</td>
+            <td class="px-4 py-3 text-right text-gray-900 dark:text-white font-mono text-xs">{{ fc(item.estimasi_pendapatan ?? 0) }}</td>
             <td class="px-4 py-3"><span :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(item.status)]">{{ item.status }}</span></td>
-            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{{ item.created_at }}</td>
             <td class="px-4 py-3">
               <div class="flex items-center justify-center gap-1">
                 <button v-if="!item.dihapus" @click="openDetail(item)" title="Detail" class="p-1.5 rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-indigo-900/30"><i class="fas fa-eye"></i></button>

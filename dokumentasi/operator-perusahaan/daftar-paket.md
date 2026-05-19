@@ -34,10 +34,12 @@ Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket inter
 |-------|----------|-----------|
 | ☐ | — | Checkbox bulk select |
 | Nama Paket | ✅ | Nama + avatar initial |
-| Speed | — | Download ↓ / Upload ↑ kbps |
-| Billing Cycle | ✅ | Harian / Mingguan / Bulanan / Tahunan |
-| Quota FUP | — | Quota GB (Unlimited bila is_unlimited) + FUP |
 | Harga | ✅ | Format Rp |
+| Speed | — | Download ↓ / Upload ↑ kbps |
+| Quota | — | Quota GB (+ Unlimited) |
+| Billing Cycle | ✅ | Harian / Mingguan / Bulanan / Tahunan |
+| Langganan Aktif | — | Jumlah langganan aktif pakai paket ini |
+| Estimasi Pendapatan | — | Rumus: Langganan Aktif × Harga |
 | Status | ✅ | Badge: Aktif (hijau) / Nonaktif (merah) / Terhapus (merah dicoret) |
 | Aksi | — | Detail, Edit, Hapus / Pulihkan |
 
@@ -97,7 +99,7 @@ import()          → upload + validasi + insert batch
 
 ## Fitur
 
-- **Tabel daftar paket** — menampilkan semua paket dengan nama, speed, billing cycle, quota FUP, harga, status
+- **Tabel daftar paket** — menampilkan semua paket dengan nama, harga, speed, quota, billing cycle, langganan aktif, pendapatan, status
 - **Pencarian** — mencari paket berdasarkan nama atau deskripsi (tekan Enter)
 - **Filter Status** — select dropdown: Semua / Aktif / Nonaktif
 - **Filter Terhapus** — select dropdown: Tidak / Ya (tampilkan yg sudah dihapus)
