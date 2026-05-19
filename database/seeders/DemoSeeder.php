@@ -524,6 +524,7 @@ class DemoSeeder extends Seeder
                     'customer_id' => $customer->id,
                     'internet_package_id' => \App\Models\InternetPackage::where('company_id', $companyId)->where('name', $pkg['name'])->first()->id,
                     'account_number' => 'NET-' . strtoupper(Str::random(8)),
+                    'router_sn' => 'rt-sn-' . Str::random(16),
                     'internet_status' => 'active'
                 ]);
 
