@@ -20,12 +20,7 @@ return new class extends Migration
             $table->decimal('usage_upload_kb', 15, 2)->default(0);
             $table->decimal('usage_download_kb', 15, 2)->default(0);
             $table->enum('internet_status', ['active', 'inactive', 'suspended', 'terminated'])->default('active');
-            $table->text('billing_description')->nullable();
-            $table->enum('billing_status', ['paid', 'unpaid', 'overdue'])->default('unpaid');
-            $table->text('billing_status_description')->nullable();
-            $table->date('billing_cycle_start')->nullable();
-            $table->date('billing_cycle_end')->nullable();
-            $table->decimal('billing_amount', 20, 2)->default(0);
+            $table->text('company_notes')->nullable();
 
             $table->timestamps();
             $table->blameable();

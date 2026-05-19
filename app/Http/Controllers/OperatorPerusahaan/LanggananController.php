@@ -16,7 +16,7 @@ class LanggananController extends Controller
     {
         $companyId = auth()->user()->company_id;
 
-        $query = CustInternet::query()->with(['customer', 'internetPackage', 'createdBy', 'updatedBy', 'deletedBy', 'restoredBy'])
+        $query = CustInternet::query()->with(['customer', 'internetPackage'])
             ->whereHas('customer', fn($q) => $q->where('company_id', $companyId));
 
         if ($request->input('terhapus') === 'ya') {
@@ -25,9 +25,7 @@ class LanggananController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->whereHas('customer', fn($sq) => $sq->where('name', 'like', "%{$search}%"))
-                  ->orWhere('account_number', 'like', "%{$search}%")
-                  ->orWhere('billing_description', 'like', "%{$search}%");
+                $q->whereHas('customer', fn($sq) => $sq->where('name', 'like', "%{$search}%"));
             });
         }
 
@@ -52,16 +50,12 @@ class LanggananController extends Controller
                 'id' => $item->id,
                 'customer_id' => $item->customer_id,
                 'customer_name' => $item->customer?->name,
-                'account_number' => $item->account_number,
                 'internet_package_id' => $item->internet_package_id,
                 'internet_package_name' => $item->internetPackage?->name,
                 'internet_status' => $item->internet_status,
-                'billing_description' => $item->billing_description,
-                'billing_status' => $item->billing_status,
                 'billing_amount' => $item->billing_amount,
                 'billing_cycle_start' => $item->billing_cycle_start?->format('Y-m-d'),
                 'billing_cycle_end' => $item->billing_cycle_end?->format('Y-m-d'),
-                'router_sn' => $item->router_sn,
                 'dihapus' => $item->trashed(),
                 'deleted_at' => $item->deleted_at?->format('Y-m-d H:i'),
                 'created_at' => $item->created_at->format('Y-m-d H:i'),
@@ -85,17 +79,13 @@ class LanggananController extends Controller
         $validated = $request->validate([
             'customer_id' => ['required', 'string', 'exists:customers,id'],
             'internet_package_id' => ['required', 'string', 'exists:internet_packages,id'],
-            'account_number' => ['nullable', 'string', 'max:255'],
-            'internet_status' => ['required', 'string', Rule::in(['active','inactive','suspended','terminated'])],
-            'billing_description' => ['nullable', 'string', 'max:500'],
+            'internet_status' => ['required', 'string', Rule::in(['active', 'inactive', 'terminated'])],
             'billing_cycle_start' => ['nullable', 'date'],
             'billing_cycle_end' => ['nullable', 'date'],
             'billing_amount' => ['nullable', 'numeric'],
         ]);
 
-        CustInternet::create($validated + [
-            'billing_status' => $validated['internet_status'] === 'active' ? 'active' : 'inactive',
-        ]);
+        CustInternet::create($validated);
 
         return back()->with('success', 'Langganan berhasil ditambahkan.');
     }
@@ -105,17 +95,13 @@ class LanggananController extends Controller
         $validated = $request->validate([
             'customer_id' => ['required', 'string', 'exists:customers,id'],
             'internet_package_id' => ['required', 'string', 'exists:internet_packages,id'],
-            'account_number' => ['nullable', 'string', 'max:255'],
-            'internet_status' => ['required', 'string', Rule::in(['active','inactive','suspended','terminated'])],
-            'billing_description' => ['nullable', 'string', 'max:500'],
+            'internet_status' => ['required', 'string', Rule::in(['active', 'inactive', 'terminated'])],
             'billing_cycle_start' => ['nullable', 'date'],
             'billing_cycle_end' => ['nullable', 'date'],
             'billing_amount' => ['nullable', 'numeric'],
         ]);
 
-        $custInternet->update($validated + [
-            'billing_status' => $validated['internet_status'] === 'active' ? 'active' : 'inactive',
-        ]);
+        $custInternet->update($validated);
 
         return back()->with('success', 'Langganan berhasil diperbarui.');
     }
@@ -145,12 +131,11 @@ class LanggananController extends Controller
     {
         $ids = $request->input('ids', []);
         $status = $request->input('status');
-        if (empty($ids) || !in_array($status, ['Aktif','Nonaktif'])) {
+        if (empty($ids) || !in_array($status, ['active', 'inactive'])) {
             return back()->with('error', 'Data tidak valid.');
         }
-        $internetStatus = $status === 'Aktif' ? 'active' : 'inactive';
-        $count = CustInternet::whereIn('id', $ids)->update(['internet_status' => $internetStatus]);
-        $label = $status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan';
+        $count = CustInternet::whereIn('id', $ids)->update(['internet_status' => $status]);
+        $label = $status === 'active' ? 'diaktifkan' : 'dinonaktifkan';
         return back()->with('success', "{$count} langganan berhasil {$label}.");
     }
 

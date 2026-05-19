@@ -15,11 +15,13 @@ class CustInternet extends Model
     protected $table = 'cust_internets';
 
     protected $fillable = [
-        'id', 'customer_id', 'internet_package_id', 'account_number',
-        'router_sn', 'usage_upload_kb', 'usage_download_kb',
-        'internet_status', 'billing_description', 'billing_status',
-        'billing_status_description', 'billing_cycle_start',
-        'billing_cycle_end', 'billing_amount',
+        'id',
+        'customer_id',
+        'internet_package_id',
+        'internet_status',
+        'billing_amount',
+        'billing_cycle_start',
+        'billing_cycle_end',
     ];
 
     protected function casts(): array
@@ -28,8 +30,6 @@ class CustInternet extends Model
             'billing_cycle_start' => 'date',
             'billing_cycle_end' => 'date',
             'billing_amount' => 'decimal:2',
-            'usage_upload_kb' => 'decimal:2',
-            'usage_download_kb' => 'decimal:2',
         ];
     }
 
