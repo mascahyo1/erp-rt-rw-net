@@ -224,7 +224,8 @@ private function seedInternetPackages(string $companyId): void
 Untuk company1Id, company2Id, company4Id, company5Id saja (company3Id tidak ada paket — nonaktif).
 
 ### Test Case
-
+test dengan laravel dusk
+browser dengan screenshot jangan headless biar debuggingnya mudah
 | File | Coverage |
 |------|----------|
 | `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketViewTest.php` | Page render + kolom visible |
