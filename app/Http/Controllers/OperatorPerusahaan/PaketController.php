@@ -24,7 +24,7 @@ class PaketController extends Controller
 
         if ($request->input('terhapus') === 'ya') $query->onlyTrashed();
         if ($search = $request->input('search')) {
-            $query->where(fn($q) => $q->where('name','like',"%{$search}%")->orWhere('description','like',"%{$search}%"));
+            $query->where(fn($q) => $q->where('code','like',"%{$search}%")->orWhere('name','like',"%{$search}%")->orWhere('description','like',"%{$search}%"));
         }
         if ($status = $request->input('status')) $query->where('is_active', $status === 'Aktif' || $status === 'aktif');
 
@@ -37,7 +37,7 @@ class PaketController extends Controller
         } else $query->latest();
 
         $items = $query->paginate(min((int)$request->input('per_page',10),100))->through(fn($p) => [
-            'id'=>$p->id, 'name'=>$p->name, 'price'=>$p->price, 'speed_down_kbps'=>$p->speed_down_kbps,
+            'id'=>$p->id, 'code'=>$p->code, 'name'=>$p->name, 'price'=>$p->price, 'speed_down_kbps'=>$p->speed_down_kbps,
             'speed_up_kbps'=>$p->speed_up_kbps, 'quota_gb'=>$p->quota_gb, 'billing_cycle'=>$p->billing_cycle,
             'is_unlimited'=>$p->is_unlimited, 'langganan_aktif'=>(int)$p->subscriptions_count,
             'estimasi_pendapatan'=>(int)$p->subscriptions_count * (float)$p->price,'max_devices'=>$p->max_devices,
@@ -56,6 +56,7 @@ class PaketController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $v = $request->validate([
+            'code'=>['required','string','max:50'],
             'name'=>['required','string','max:255'], 'price'=>['required','numeric'],
             'speed_down_kbps'=>['required','numeric'], 'speed_up_kbps'=>['required','numeric'],
             'quota_gb'=>['required','integer'], 'billing_cycle'=>['required',Rule::in(['daily','weekly','monthly','yearly'])],
@@ -71,6 +72,7 @@ class PaketController extends Controller
     public function update(Request $request, InternetPackage $internetPackage): RedirectResponse
     {
         $v = $request->validate([
+            'code'=>['required','string','max:50'],
             'name'=>['required','string','max:255'], 'price'=>['required','numeric'],
             'speed_down_kbps'=>['required','numeric'], 'speed_up_kbps'=>['required','numeric'],
             'quota_gb'=>['required','integer'], 'billing_cycle'=>['required',Rule::in(['daily','weekly','monthly','yearly'])],
@@ -144,7 +146,7 @@ class PaketController extends Controller
         $row = 2;
         foreach ($items as $item) {
             $col = 1;
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->name, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->name . ($item->code ? ' (' . $item->code . ')' : ''), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, (string) $item->price, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValue($this->excelColumn($col++) . $row, $item->billing_cycle);
             $sheet->setCellValue($this->excelColumn($col++) . $row, $item->speed_down_kbps);
@@ -187,7 +189,7 @@ class PaketController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Import');
 
-        $headers = ['Nama Paket', 'Harga', 'Billing Cycle', 'Speed Down (kbps)', 'Speed Up (kbps)', 'Kuota (GB)', 'Unlimited (Ya/Tidak)', 'Max Devices', 'FUP Quota Down', 'FUP Quota Up', 'FUP Speed Down', 'FUP Speed Up', 'Status (Aktif/Nonaktif)', 'Deskripsi'];
+        $headers = ['Kode Paket', 'Nama Paket', 'Harga', 'Billing Cycle', 'Speed Down (kbps)', 'Speed Up (kbps)', 'Kuota (GB)', 'Unlimited (Ya/Tidak)', 'Max Devices', 'FUP Quota Down', 'FUP Quota Up', 'FUP Speed Down', 'FUP Speed Up', 'Status (Aktif/Nonaktif)', 'Deskripsi'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -195,7 +197,7 @@ class PaketController extends Controller
         }
 
         // Contoh row
-        $example = ['Basic 10Mbps', 150000, 'monthly', 10240, 5120, 100, 'Tidak', 5, 50, 25, 5120, 2560, 'Aktif', 'Paket basic'];
+        $example = ['b10', 'Basic 10Mbps', 150000, 'monthly', 10240, 5120, 100, 'Tidak', 5, 50, 25, 5120, 2560, 'Aktif', 'Paket basic'];
         foreach ($example as $i => $v) {
             $sheet->setCellValueExplicit($this->excelColumn($i + 1) . '2', (string) $v, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
         }
@@ -240,20 +242,21 @@ class PaketController extends Controller
         $inserts = [];
         foreach ($rows as $i => $row) {
             $line = $i + 2; // line 1 header, line 2 example/start
-            $name = trim($row[0] ?? '');
-            if (empty($name)) continue;
+            $code = trim($row[0] ?? '');
+            $name = trim($row[1] ?? '');
+            if (empty($code) || empty($name)) continue;
 
-            $price = (float) ($row[1] ?? 0);
-            $billingCycle = strtolower(trim($row[2] ?? 'monthly'));
-            $speedDown = (float) ($row[3] ?? 0);
-            $speedUp = (float) ($row[4] ?? 0);
-            $quotaGb = (int) ($row[5] ?? 0);
-            $isUnlimited = strtolower(trim($row[6] ?? '')) === 'ya';
-            $maxDevices = (int) ($row[7] ?? 0) ?: null;
-            $status = strtolower(trim($row[12] ?? 'aktif')) === 'nonaktif' ? false : true;
+            $price = (float) ($row[2] ?? 0);
+            $billingCycle = strtolower(trim($row[3] ?? 'monthly'));
+            $speedDown = (float) ($row[4] ?? 0);
+            $speedUp = (float) ($row[5] ?? 0);
+            $quotaGb = (int) ($row[6] ?? 0);
+            $isUnlimited = strtolower(trim($row[7] ?? '')) === 'ya';
+            $maxDevices = (int) ($row[8] ?? 0) ?: null;
+            $status = strtolower(trim($row[13] ?? 'aktif')) === 'nonaktif' ? false : true;
 
-            if (empty($name) || $price <= 0) {
-                $errors[] = "Baris {$line}: Nama/Harga tidak valid.";
+            if (empty($code) || empty($name) || $price <= 0) {
+                $errors[] = "Baris {$line}: Kode/Nama/Harga tidak valid.";
                 continue;
             }
             if (!in_array($billingCycle, ['daily', 'weekly', 'monthly', 'yearly'])) {
@@ -263,6 +266,7 @@ class PaketController extends Controller
             $inserts[] = [
                 'id' => \Illuminate\Support\Str::uuid(),
                 'company_id' => $companyId,
+                'code' => $code,
                 'name' => $name,
                 'price' => $price,
                 'billing_cycle' => $billingCycle,
@@ -271,12 +275,12 @@ class PaketController extends Controller
                 'quota_gb' => $quotaGb,
                 'is_unlimited' => $isUnlimited,
                 'max_devices' => $maxDevices,
-                'fup_quota_down' => $row[8] ? (int) $row[8] : null,
-                'fup_quota_up' => $row[9] ? (int) $row[9] : null,
-                'fup_speed_down_kbps' => $row[10] ? (float) $row[10] : null,
-                'fup_speed_up_kbps' => $row[11] ? (float) $row[11] : null,
+                'fup_quota_down' => $row[9] ? (int) $row[9] : null,
+                'fup_quota_up' => $row[10] ? (int) $row[10] : null,
+                'fup_speed_down_kbps' => $row[11] ? (float) $row[11] : null,
+                'fup_speed_up_kbps' => $row[12] ? (float) $row[12] : null,
                 'is_active' => $status,
-                'description' => trim($row[13] ?? '') ?: null,
+                'description' => trim($row[14] ?? '') ?: null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

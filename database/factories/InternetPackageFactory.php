@@ -12,9 +12,11 @@ class InternetPackageFactory extends Factory
 
     public function definition(): array
     {
+        $codes = ['b10', 'p25', 'u50', 'b20', 'p50', 'u100', 'basic', 'pro', 'ultimate'];
         return [
             'id' => Str::uuid(),
             'company_id' => null,
+            'code' => $this->faker->unique()->randomElement($codes) . $this->faker->numerify('##'),
             'name' => $this->faker->words(3, true),
             'price' => $this->faker->randomElement([100000, 150000, 200000, 250000, 400000]),
             'speed_down_kbps' => $this->faker->randomElement([10240, 20480, 51200]),

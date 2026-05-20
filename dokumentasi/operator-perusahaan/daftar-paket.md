@@ -11,6 +11,7 @@ Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket inter
 
 | Field | Type | Wajib | Keterangan |
 |-------|------|-------|-----------|
+| Kode | text | ✅ | Kode paket internet (unique per company) |
 | Nama Paket | text | ✅ | Nama paket internet |
 | Billing Cycle | select | ✅ | daily / weekly / monthly / yearly |
 | Max Devices | number | — | Maksimal perangkat (opsional) |
@@ -26,6 +27,8 @@ Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket inter
 | Status | select | ✅ | Aktif / Nonaktif |
 | Deskripsi | textarea | — | Keterangan tambahan |
 
+> **Catatan:** Field `Kode` ada di form Create/Edit dan disimpan ke database. Di datatable web, kode ditampilkan di dalam cell Nama Paket (bukan kolom terpisah).
+
 ---
 
 ## Kolom Datatable
@@ -33,15 +36,17 @@ Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket inter
 | Kolom | Sortable | Keterangan |
 |-------|----------|-----------|
 | ☐ | — | Checkbox bulk select |
-| Nama Paket | ✅ | Nama + avatar initial |
-| Harga | ✅ | Format Rp |
+| Nama Paket | ✅ | Nama + avatar initial + kode (font-mono di bawah nama) |
+| Harga | ✅ | Format Rp, right-aligned |
 | Speed | — | Download ↓ / Upload ↑ kbps |
-| Quota | — | Quota GB (+ Unlimited) |
-| Billing Cycle | ✅ | Harian / Mingguan / Bulanan / Tahunan |
-| Langganan Aktif | — | Jumlah langganan aktif pakai paket ini |
-| Estimasi Pendapatan | — | Rumus: Langganan Aktif × Harga |
-| Status | ✅ | Badge: Aktif (hijau) / Nonaktif (merah) / Terhapus (merah dicoret) |
+| Quota | — | Quota GB (+ ∞ jika unlimited) |
+| Billing | ✅ | Harian / Mingguan / Bulanan / Tahunan |
+| Langganan Aktif | ✅ | Jumlah langganan aktif pakai paket ini |
+| Estimasi Pendapatan | ✅ | Rumus: Langganan Aktif × Harga, right-aligned |
+| Status | ✅ | Badge: Aktif (hijau) / Nonaktif (merah) / Terhapus (merah, opacity 60%) |
 | Aksi | — | Detail, Edit, Hapus / Pulihkan |
+
+> **Catatan:** Kode tidak单独的 kolom — tampil di dalam cell Nama Paket, di bawah nama paket (font-mono). Ini agar sesuai dengan desain web.
 
 ---
 
@@ -164,20 +169,23 @@ Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403
 |-------|------|-----------|
 | `id` | uuid | Primary key |
 | `company_id` | uuid | FK ke companies |
+| `code` | string | Kode paket (unique dengan company_id) |
 | `name` | string | Nama paket |
-| `price` | decimal | Harga paket |
-| `speed_down_kbps` | decimal | Kecepatan download (kbps) |
-| `speed_up_kbps` | decimal | Kecepatan upload (kbps) |
+| `price` | decimal(20,2) | Harga paket |
+| `speed_down_kbps` | decimal(20,2) | Kecepatan download (kbps) |
+| `speed_up_kbps` | decimal(20,2) | Kecepatan upload (kbps) |
 | `quota_gb` | integer | Kuota dalam GB |
 | `billing_cycle` | enum | daily, weekly, monthly, yearly |
 | `max_devices` | integer, nullable | Maksimal perangkat |
 | `is_unlimited` | boolean | Kuota unlimited |
 | `fup_quota_down` | integer, nullable | Batas FUP download (GB) |
 | `fup_quota_up` | integer, nullable | Batas FUP upload (GB) |
-| `fup_speed_down_kbps` | decimal, nullable | Speed setelah FUP download |
-| `fup_speed_up_kbps` | decimal, nullable | Speed setelah FUP upload |
+| `fup_speed_down_kbps` | decimal(20,2), nullable | Speed setelah FUP download |
+| `fup_speed_up_kbps` | decimal(20,2), nullable | Speed setelah FUP upload |
 | `is_active` | boolean | Status aktif |
-| `description` | text, nullable | Deskripsi |
+| `description` | string, nullable | Deskripsi |
+| SoftDeletes | — | Ada soft delete |
+| blameable | — | Ada created_by, updated_by, deleted_by |
 
 ### Permission Enum (tambahan)
 
@@ -198,10 +206,74 @@ self::PaketImport->value,
 ### Migration
 `database/migrations/2026_05_11_141134_create_internet_packages_table.php`
 
+### Demo Seeder (DemoSeeder.php)
+Method `seedInternetPackages(string $companyId)` membuat data per company:
+
+```php
+private function seedInternetPackages(string $companyId): void
+{
+    $packages = [
+        ['code' => 'b10', 'name' => 'Basic 10Mbps', 'price' => 150000, 'speed_down_kbps' => 10240, 'speed_up_kbps' => 5120, 'quota_gb' => 100, 'billing_cycle' => 'monthly', 'is_unlimited' => false],
+        ['code' => 'p25', 'name' => 'Pro 25Mbps', 'price' => 250000, 'speed_down_kbps' => 25600, 'speed_up_kbps' => 10240, 'quota_gb' => 300, 'billing_cycle' => 'monthly', 'is_unlimited' => false],
+        ['code' => 'u50', 'name' => 'Ultimate 50Mbps', 'price' => 400000, 'speed_down_kbps' => 51200, 'speed_up_kbps' => 20480, 'quota_gb' => 500, 'billing_cycle' => 'monthly', 'is_unlimited' => true],
+    ];
+    // ...
+}
+```
+
+Untuk company1Id, company2Id, company4Id, company5Id saja (company3Id tidak ada paket — nonaktif).
+
 ### Test Case
-| File | Keterangan |
-|------|-----------|
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketViewTest.php` | Browser view test — render + kolom |
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketCRUDTest.php` | Browser CRUD test — search, filter, sort, delete, bulk delete, langganan+estimasi |
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketImportExportTest.php` | Browser import/export test — template, export, import modal |
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketPermissionTest.php` | Granular permission test — list, create, export, import |
+
+| File | Coverage |
+|------|----------|
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketViewTest.php` | Page render + kolom visible |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketCRUDTest.php` | Search, filter status, sort, langganan+estimasi, delete, bulk delete |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketImportExportTest.php` | Template download, export all, export selected, import modal |
+| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketPermissionTest.php` | Granular permission: list, create, export, import visibility |
+
+#### Test Summary
+
+| Test | File | Deskripsi |
+|------|------|-----------|
+| `test_01_page_renders` | ViewTest | Halaman render, assert title, table, sidebar button |
+| `test_02_columns_visible` | ViewTest | Semua kolom visible (Kode, Nama, Harga, Speed, Quota, Billing, Langganan Aktif, Estimasi Pendapatan, Status) |
+| `test_01_page_renders` | CRUDTest | Page render + assert table & button |
+| `test_02_search` | CRUDTest | Pencarian by nama paket, Enter key |
+| `test_02b_search_by_code` | CRUDTest | Pencarian by kode paket (b10) |
+| `test_03_filter_status` | CRUDTest | Filter Aktif/Nonaktif + apply button |
+| `test_04_sort` | CRUDTest | Sort by kode, nama, harga, langganan aktif (click th) |
+| `test_05_langganan_aktif_and_estimasi` | CRUDTest | 3 langganan × 200000 = 600.000 estimasi |
+| `test_06_delete` | CRUDTest | Soft delete via modal konfirmasi |
+| `test_07_bulk_delete` | CRUDTest | Select checkbox + bulk delete |
+| `test_01_template_download` | ImportExportTest | Download template via link |
+| `test_02_export_all` | ImportExportTest | Export semua via direct URL, hasil file .xlsx berisi 17 kolom |
+| `test_03_export_selected` | ImportExportTest | Export selected via checkbox |
+| `test_04_import_modal` | ImportExportTest | Buka modal import + assert "Download template" |
+| Permission tests | PermissionTest | list/create/export/import visible/hidden berdasarkan permission |
+
+#### Import Excel Column Mapping
+
+| Index | Field | Keterangan |
+|-------|-------|-----------|
+| 0 | Kode Paket | Required, unique per company |
+| 1 | Nama Paket | Required |
+| 2 | Harga | Required, numeric |
+| 3 | Billing Cycle | daily/weekly/monthly/yearly |
+| 4 | Speed Down (kbps) | Numeric |
+| 5 | Speed Up (kbps) | Numeric |
+| 6 | Kuota (GB) | Integer |
+| 7 | Unlimited | Ya/Tidak |
+| 8 | Max Devices | Integer, nullable |
+| 9 | FUP Quota Down | Integer, nullable |
+| 10 | FUP Quota Up | Integer, nullable |
+| 11 | FUP Speed Down | Numeric, nullable |
+| 12 | FUP Speed Up | Numeric, nullable |
+| 13 | Status | Aktif/Nonaktif |
+| 14 | Deskripsi | String, nullable |
+
+#### Export Excel Column Headers
+
+['Nama Paket', 'Harga', 'Billing Cycle', 'Speed Down (kbps)', 'Speed Up (kbps)', 'Kuota (GB)', 'Unlimited', 'Max Devices', 'FUP Quota Down', 'FUP Quota Up', 'FUP Speed Down', 'FUP Speed Up', 'Langganan Aktif', 'Estimasi Pendapatan', 'Status', 'Deskripsi']
+
+> **Catatan:** Export 16 kolom — kode digabung dengan nama di kolom "Nama Paket" format: `Nama (Kode)` seperti di tampilan web.

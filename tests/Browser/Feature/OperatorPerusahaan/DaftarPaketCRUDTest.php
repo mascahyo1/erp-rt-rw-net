@@ -32,8 +32,8 @@ class DaftarPaketCRUDTest extends DuskTestCase
     public function test_02_search(): void
     {
         $user = AdminCompany::factory()->create(['is_active' => true]);
-        InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'Paket Premium', 'is_active' => true]);
-        InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'Paket Basic', 'is_active' => true]);
+        InternetPackage::factory()->create(['company_id' => $user->company_id, 'code' => 'b10', 'name' => 'Paket Premium', 'is_active' => true]);
+        InternetPackage::factory()->create(['company_id' => $user->company_id, 'code' => 'p25', 'name' => 'Paket Basic', 'is_active' => true]);
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'admin-company')
@@ -45,6 +45,26 @@ class DaftarPaketCRUDTest extends DuskTestCase
                 ->screenshot('operator-perusahaan/daftar-paket/02-search/01-result')
                 ->assertSee('Paket Premium')
                 ->assertDontSee('Paket Basic');
+        });
+    }
+
+    public function test_02b_search_by_code(): void
+    {
+        $user = AdminCompany::factory()->create(['is_active' => true]);
+        InternetPackage::factory()->create(['company_id' => $user->company_id, 'code' => 'b10', 'name' => 'Basic 10Mbps', 'is_active' => true]);
+        InternetPackage::factory()->create(['company_id' => $user->company_id, 'code' => 'p25', 'name' => 'Pro 25Mbps', 'is_active' => true]);
+
+        $this->browse(function (Browser $browser) use ($user) {
+            $browser->loginAs($user, 'admin-company')
+                ->visit('/operator-perusahaan/daftar-paket?per_page=100')
+                ->waitForText('Paket Customer', 10)
+                ->type('input[placeholder="Cari..."]', 'b10')
+                ->keys('input[placeholder="Cari..."]', '{enter}')
+                ->pause(1500)
+                ->screenshot('operator-perusahaan/daftar-paket/02-search/02-code-result')
+                ->assertSee('b10')
+                ->assertSee('Basic 10Mbps')
+                ->assertDontSee('Pro 25Mbps');
         });
     }
 
@@ -80,24 +100,33 @@ class DaftarPaketCRUDTest extends DuskTestCase
     public function test_04_sort(): void
     {
         $user = AdminCompany::factory()->create(['is_active' => true]);
-        InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'AAA Paket', 'price' => 100000, 'is_active' => true]);
-        InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'ZZZ Paket', 'price' => 500000, 'is_active' => true]);
+        InternetPackage::factory()->create(['company_id' => $user->company_id, 'code' => 'aaa01', 'name' => 'AAA Paket', 'price' => 100000, 'is_active' => true]);
+        InternetPackage::factory()->create(['company_id' => $user->company_id, 'code' => 'zzz02', 'name' => 'ZZZ Paket', 'price' => 500000, 'is_active' => true]);
 
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/daftar-paket?per_page=100')
-                ->waitForText('Paket Customer', 10)
-                ->screenshot('operator-perusahaan/daftar-paket/04-sort/01-name');
+                ->waitForText('Paket Customer', 10);
 
-            // Sort by Harga
+            // Sort by Kode
+            $browser->script("document.querySelectorAll('th[class*=\"cursor-pointer\"]')[0].click()");
+            $browser->pause(1500)
+                ->screenshot('operator-perusahaan/daftar-paket/04-sort/01-code');
+
+            // Sort by Nama
             $browser->script("document.querySelectorAll('th[class*=\"cursor-pointer\"]')[1].click()");
             $browser->pause(1500)
-                ->screenshot('operator-perusahaan/daftar-paket/04-sort/02-price');
+                ->screenshot('operator-perusahaan/daftar-paket/04-sort/02-name');
+
+            // Sort by Harga
+            $browser->script("document.querySelectorAll('th[class*=\"cursor-pointer\"]')[2].click()");
+            $browser->pause(1500)
+                ->screenshot('operator-perusahaan/daftar-paket/04-sort/03-price');
 
             // Sort by Langganan Aktif
             $browser->script("document.querySelectorAll('th[class*=\"cursor-pointer\"]')[6].click()");
             $browser->pause(1500)
-                ->screenshot('operator-perusahaan/daftar-paket/04-sort/03-langganan-aktif')
+                ->screenshot('operator-perusahaan/daftar-paket/04-sort/04-langganan-aktif')
                 ->assertSee('Paket Customer');
         });
     }

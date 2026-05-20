@@ -38,6 +38,7 @@ class DaftarPaketViewTest extends DuskTestCase
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/daftar-paket?per_page=100')
                 ->waitForText('Paket Customer', 10)
+                ->assertSee('Kode')
                 ->assertSee('Nama Paket')
                 ->assertSee('Harga')
                 ->assertSee('Speed')

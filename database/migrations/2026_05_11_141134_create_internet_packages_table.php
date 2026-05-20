@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('internet_packages', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('company_id')->constrained('companies')->onDelete('restrict');
+            $table->string('code');
             $table->string('name');
             $table->decimal('price', 20, 2);
             $table->decimal('speed_down_kbps', 20, 2);
@@ -31,6 +32,10 @@ return new class extends Migration
             $table->timestamps();
             $table->blameable();
             $table->softDelete();
+            $table->unique([
+                'company_id',
+                'code'
+            ]);
         });
     }
 
