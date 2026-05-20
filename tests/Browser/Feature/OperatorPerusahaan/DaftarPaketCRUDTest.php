@@ -229,7 +229,7 @@ class DaftarPaketCRUDTest extends DuskTestCase
                 ->waitForText('Delete Target', 10)
                 ->screenshot('operator-perusahaan/daftar-paket/06-delete/01-before');
 
-            $browser->click('.fa-trash-alt')
+            $browser->click('button[title="Hapus"]')
                 ->pause(500)
                 ->waitForText('Hapus Paket?', 10)
                 ->screenshot('operator-perusahaan/daftar-paket/06-delete/02-modal')
@@ -251,8 +251,8 @@ class DaftarPaketCRUDTest extends DuskTestCase
                 ->visit('/operator-perusahaan/daftar-paket?per_page=100')
                 ->waitForText('Paket Customer', 10);
 
-            $browser->script("document.querySelectorAll('tbody input[type=\"checkbox\"]')[0].click()");
-            $browser->script("document.querySelectorAll('tbody input[type=\"checkbox\"]')[1].click()");
+            $browser->script("document.querySelectorAll('tbody tr')[0].querySelector('input[type=\"checkbox\"]').click()");
+            $browser->script("document.querySelectorAll('tbody tr')[1].querySelector('input[type=\"checkbox\"]').click()");
             $browser->waitForText('2 data dipilih', 5000)
                 ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/01-selected')
                 ->press('Hapus')
