@@ -249,16 +249,18 @@ class DaftarPaketCRUDTest extends DuskTestCase
         $this->browse(function (Browser $browser) use ($user) {
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/daftar-paket?per_page=100')
-                ->waitForText('Paket Customer', 10);
+                ->waitForText('Paket Customer', 10)
+                ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/00-before');
 
-            $browser->script("document.querySelectorAll('tbody tr')[0].querySelector('input[type=\"checkbox\"]').click()");
-            $browser->script("document.querySelectorAll('tbody tr')[1].querySelector('input[type=\"checkbox\"]').click()");
-            $browser->waitForText('2 data dipilih', 5000)
+            $browser->check('tbody tr:first-child input[type="checkbox"]')
+                ->pause(500)
+                ->check('tbody tr:nth-child(2) input[type="checkbox"]')
+                ->pause(500)
+                ->waitForText('2 data dipilih', 5000)
                 ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/01-selected')
-                ->press('Hapus')
+                ->click('button:has-text("Hapus"):not([title])')
                 ->pause(2000)
                 ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/02-after');
         });
     }
-
-    }
+}
