@@ -99,12 +99,4 @@ class DaftarPaketViewTest extends DuskTestCase
         });
     }
 
-    public static function tearDownAfterClass(): void
-    {
-        \DB::table('model_has_roles')->whereIn('model_id', self::$cleanupUserIds)->delete();
-        AdminCompany::whereIn('id', self::$cleanupUserIds)->forceDelete();
-        \DB::table('role_permissions')->whereIn('role_id', self::$cleanupRoleIds)->delete();
-        Role::whereIn('id', self::$cleanupRoleIds)->delete();
-        parent::tearDownAfterClass();
     }
-}
