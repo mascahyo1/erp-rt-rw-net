@@ -14,6 +14,7 @@ Pelanggan adalah pengguna akhir yang berlangganan layanan internet dari perusaha
 
 
 ### form create / edit / detail
+kode
 nama pelanggan
 company_id (diurus backend)
 email
@@ -27,6 +28,7 @@ photo_profile
 address
 
 ### kolom datatable
+kode
 nama_pelanggan
 email
 no telp
@@ -82,6 +84,8 @@ status
 | `2026_05_11_142201_create_customers_table` | `customers` |
 
 ### Test Case
+test dengan laravel dusk
+browser dengan screenshot jangan headless biar debuggingnya mudah
 | File | Method | Description |
 |------|--------|-------------|
 | `tests/Feature/OperatorPerusahaan/CustomerTest.php` | Various | Feature CRUD test |
