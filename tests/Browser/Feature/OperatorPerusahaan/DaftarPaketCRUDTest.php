@@ -182,7 +182,7 @@ class DaftarPaketCRUDTest extends DuskTestCase
             'customer_id' => $customer->id,
             'internet_package_id' => $pkg->id,
             'internet_status' => 'active',
-            'account_number' => 'NET-TEST01',
+            'account_number' => 'NET-' . Str::random(8),
         ]);
         $custInternet->save();
 
@@ -190,7 +190,7 @@ class DaftarPaketCRUDTest extends DuskTestCase
             'customer_id' => $customer->id,
             'internet_package_id' => $pkg->id,
             'internet_status' => 'active',
-            'account_number' => 'NET-TEST02',
+            'account_number' => 'NET-' . Str::random(8),
         ]);
         $custInternet2->save();
 
@@ -198,7 +198,7 @@ class DaftarPaketCRUDTest extends DuskTestCase
             'customer_id' => $customer->id,
             'internet_package_id' => $pkg->id,
             'internet_status' => 'active',
-            'account_number' => 'NET-TEST03',
+            'account_number' => 'NET-' . Str::random(8),
         ]);
         $custInternet3->save();
 
