@@ -139,7 +139,7 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
         <tbody>
           <tr v-if="items.length === 0"><td colspan="10" class="px-4 py-16 text-center text-gray-400 dark:text-gray-500"><i class="fas fa-inbox text-4xl mb-3 block"></i><span class="text-sm">Tidak ada data paket</span></td></tr>
           <tr v-for="item in items" :key="item.id" class="border-t border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors" :class="{'opacity-60': item.dihapus}">
-            <td class="px-4 py-3"><input v-model="selectedIds" :value="item.id" type="checkbox" @change="toggleSelect(item.id)" class="rounded border-gray-300 text-sky-600" /></td>
+            <td class="px-4 py-3"><input v-model="selectedIds" :value="item.id" type="checkbox" class="rounded border-gray-300 text-sky-600" /></td>
             <td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-sky-900/40 flex items-center justify-center text-sky-600 dark:text-sky-400 font-semibold text-xs">{{ (item.name || '?')[0] }}</div><div><span class="font-medium text-gray-900 dark:text-white">{{ item.name }}</span><span v-if="item.code" class="ml-2 text-xs text-gray-400 font-mono">{{ item.code }}</span></div></div></td>
             <td class="px-4 py-3 text-right text-gray-900 dark:text-white font-mono text-xs whitespace-nowrap">{{ fc(item.price) }}</td>
             <td class="px-4 py-3 text-gray-600 dark:text-gray-400 text-xs whitespace-nowrap">{{ item.speed_down_kbps }}↓ / {{ item.speed_up_kbps }}↑ kbps</td>

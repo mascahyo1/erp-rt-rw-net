@@ -127,17 +127,15 @@ class DaftarPaketCRUDTest extends DuskTestCase
                 ->waitForText('Paket Customer', 10);
 
             $browser->select('select:first-of-type', 'Aktif')
-                ->pause(500)
-                ->press('Filter')
-                ->pause(1500)
+                ->click('button:has-text("Filter")')
+                ->pause(2000)
                 ->screenshot('operator-perusahaan/daftar-paket/03-filter-status/01-aktif')
                 ->assertSee('Paket Aktif')
                 ->assertDontSee('Paket Nonaktif');
 
             $browser->select('select:first-of-type', 'Nonaktif')
-                ->pause(500)
-                ->press('Filter')
-                ->pause(1500)
+                ->click('button:has-text("Filter")')
+                ->pause(2000)
                 ->screenshot('operator-perusahaan/daftar-paket/03-filter-status/02-nonaktif')
                 ->assertSee('Paket Nonaktif')
                 ->assertDontSee('Paket Aktif');
@@ -258,7 +256,7 @@ class DaftarPaketCRUDTest extends DuskTestCase
                 ->pause(500)
                 ->waitForText('2 data dipilih', 5000)
                 ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/01-selected')
-                ->click('button:has-text("Hapus"):not([title])')
+                ->click('button:has-text("Hapus")')
                 ->pause(2000)
                 ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/02-after');
         });
