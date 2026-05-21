@@ -10,10 +10,13 @@ use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Support\Str;
 use Laravel\Dusk\Browser;
+use Tests\Browser\Support\RecordsVideo;
 use Tests\DuskTestCase;
 
 class DaftarPaketCRUDTest extends DuskTestCase
 {
+    use RecordsVideo;
+    
     private static array $cleanupUserIds = [];
     private static array $cleanupRoleIds = [];
 
@@ -242,22 +245,27 @@ class DaftarPaketCRUDTest extends DuskTestCase
         $paket1 = InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'Bulk Delete 1', 'is_active' => true]);
         $paket2 = InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'Bulk Delete 2', 'is_active' => true]);
 
+        $this->startVideo('DaftarPaketCRUDTest_07_bulk_delete');
+
         $this->browse(function (Browser $browser) use ($user, $paket1, $paket2) {
             $this->logStep($browser, '01', 'Login & visit halaman');
 
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/daftar-paket?per_page=100')
                 ->waitForText('Paket Customer', 10);
+            $this->recordFrame('01-login-success');
             $this->logStep($browser, '02', 'Halaman loaded, take screenshot');
             $browser->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/00-before');
 
             $this->logStep($browser, '03', 'Check checkbox pertama');
             $browser->check('tbody tr:first-child input[type="checkbox"]')
                 ->pause(1000);
+            $this->recordFrame('02-first-checkbox');
 
             $this->logStep($browser, '04', 'Check checkbox kedua');
             $browser->check('tbody tr:nth-child(2) input[type="checkbox"]')
                 ->pause(2000);
+            $this->recordFrame('03-second-checkbox');
 
             $this->logStep($browser, '05', 'Take screenshot setelah check');
             $browser->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/01-checked');
@@ -265,21 +273,26 @@ class DaftarPaketCRUDTest extends DuskTestCase
             $this->logStep($browser, '06', 'Cari tombol Hapus di div bg-sky');
             $buttons = $browser->elements('div[class*="bg-sky"] button.bg-red-600');
             fwrite(STDERR, "[test_07] Found " . count($buttons) . " Hapus buttons\n");
+            $this->recordFrame('04-hapus-button-visible');
 
             $this->logStep($browser, '07', 'Klik tombol Hapus (tanpa dialog)');
             $browser->click('div[class*="bg-sky"] button.bg-red-600');
+            $this->recordFrame('05-after-click-hapus');
 
             $this->logStep($browser, '08', 'Tunggu response server');
             $browser->pause(3000);
 
             $this->logStep($browser, '09', 'Take screenshot hasil');
             $browser->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/02-after');
+            $this->recordFrame('06-final-result');
 
             $this->logStep($browser, '10', 'Verifikasi paket sudah tidak ada');
             $browser->assertDontSee('Bulk Delete 1')
                 ->assertDontSee('Bulk Delete 2')
                 ->assertSee('Paket berhasil dihapus');
         });
+
+        $this->finishVideo();
     }
 
     private function logStep(Browser $browser, string $step, string $message): void
