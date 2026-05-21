@@ -126,16 +126,14 @@ class DaftarPaketCRUDTest extends DuskTestCase
                 ->visit('/operator-perusahaan/daftar-paket?per_page=100')
                 ->waitForText('Paket Customer', 10);
 
-            $browser->select('select:first-of-type', 'Aktif')
-                ->click('button:has-text("Filter")')
-                ->pause(2000)
+            $browser->select('select:has(option[value="Aktif"])', 'Aktif')
+                ->pause(2500)
                 ->screenshot('operator-perusahaan/daftar-paket/03-filter-status/01-aktif')
                 ->assertSee('Paket Aktif')
                 ->assertDontSee('Paket Nonaktif');
 
-            $browser->select('select:first-of-type', 'Nonaktif')
-                ->click('button:has-text("Filter")')
-                ->pause(2000)
+            $browser->select('select:has(option[value="Nonaktif"])', 'Nonaktif')
+                ->pause(2500)
                 ->screenshot('operator-perusahaan/daftar-paket/03-filter-status/02-nonaktif')
                 ->assertSee('Paket Nonaktif')
                 ->assertDontSee('Paket Aktif');
@@ -241,24 +239,51 @@ class DaftarPaketCRUDTest extends DuskTestCase
     public function test_07_bulk_delete(): void
     {
         $user = $this->createUserWithPerms(['paket.list', 'paket.create', 'paket.edit', 'paket.delete', 'paket.export', 'paket.import']);
-        InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'Bulk Delete 1', 'is_active' => true]);
-        InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'Bulk Delete 2', 'is_active' => true]);
+        $paket1 = InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'Bulk Delete 1', 'is_active' => true]);
+        $paket2 = InternetPackage::factory()->create(['company_id' => $user->company_id, 'name' => 'Bulk Delete 2', 'is_active' => true]);
 
-        $this->browse(function (Browser $browser) use ($user) {
+        $this->browse(function (Browser $browser) use ($user, $paket1, $paket2) {
+            $this->logStep($browser, '01', 'Login & visit halaman');
+
             $browser->loginAs($user, 'admin-company')
                 ->visit('/operator-perusahaan/daftar-paket?per_page=100')
-                ->waitForText('Paket Customer', 10)
-                ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/00-before');
+                ->waitForText('Paket Customer', 10);
+            $this->logStep($browser, '02', 'Halaman loaded, take screenshot');
+            $browser->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/00-before');
 
+            $this->logStep($browser, '03', 'Check checkbox pertama');
             $browser->check('tbody tr:first-child input[type="checkbox"]')
-                ->pause(500)
-                ->check('tbody tr:nth-child(2) input[type="checkbox"]')
-                ->pause(500)
-                ->waitForText('2 data dipilih', 5000)
-                ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/01-selected')
-                ->click('button:has-text("Hapus")')
-                ->pause(2000)
-                ->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/02-after');
+                ->pause(1000);
+
+            $this->logStep($browser, '04', 'Check checkbox kedua');
+            $browser->check('tbody tr:nth-child(2) input[type="checkbox"]')
+                ->pause(2000);
+
+            $this->logStep($browser, '05', 'Take screenshot setelah check');
+            $browser->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/01-checked');
+
+            $this->logStep($browser, '06', 'Cari tombol Hapus di div bg-sky');
+            $buttons = $browser->elements('div[class*="bg-sky"] button.bg-red-600');
+            fwrite(STDERR, "[test_07] Found " . count($buttons) . " Hapus buttons\n");
+
+            $this->logStep($browser, '07', 'Klik tombol Hapus (tanpa dialog)');
+            $browser->click('div[class*="bg-sky"] button.bg-red-600');
+
+            $this->logStep($browser, '08', 'Tunggu response server');
+            $browser->pause(3000);
+
+            $this->logStep($browser, '09', 'Take screenshot hasil');
+            $browser->screenshot('operator-perusahaan/daftar-paket/07-bulk-delete/02-after');
+
+            $this->logStep($browser, '10', 'Verifikasi paket sudah tidak ada');
+            $browser->assertDontSee('Bulk Delete 1')
+                ->assertDontSee('Bulk Delete 2')
+                ->assertSee('Paket berhasil dihapus');
         });
+    }
+
+    private function logStep(Browser $browser, string $step, string $message): void
+    {
+        fwrite(STDERR, "[test_07] Step $step: $message\n");
     }
 }
