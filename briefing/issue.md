@@ -24,3 +24,25 @@ issue 6
 http://erp-rt-rw-net.test/operator-perusahaan/riwayat-insentif crud riwayat insentif input insentif dan invoice  menggunakan select option yang searchable infinite sroll ajax
 issue 7
 http://erp-rt-rw-net.test/operator-perusahaan/riwayat-pembayaran crud riwayat pembayaran id invoice menggunakan select option yang searchable infinite sroll ajax
+
+
+issue 
+laravel dusk susah membuat video jadi untuk testing menggunakan node js dan playwright saja. laravel dusk kurang stabil buat menjalankan test
+refactor semua test dusk ke playwright node js. jangan hapus file lama
+strukturnya gini untuk kode file
+./tests/Browser/Playwright/Feature/OperatorSaas/*
+./tests/Browser/Playwright/Feature/OperatorPerusahaan/*
+./tests/Browser/Playwright/Feature/Karyawan/*
+./tests/Browser/Playwright/Feature/Pelanggan/*
+untuk output test begitu
+./tests/Browser/Playwright/result/OperatorSaas/*
+./tests/Browser/Playwright/result/OperatorPerusahaan/*
+./tests/Browser/Playwright/result/Karyawan/*
+./tests/Browser/Playwright/result/Pelanggan/*
+contoh lagi
+./tests/Browser/Playwright/result/OperatorPerusahaan/DaftarPaket/TestCRUD/*
+./tests/Browser/Playwright/result/OperatorPerusahaan/DaftarPaket/TestPermission/*
+
+semua test dibuat seperti itu
+
+baca2 dulu file di ./dokumentasi/* dan di ./tests\Browser\deprecatedoldFeature\*
