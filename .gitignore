@@ -21,10 +21,17 @@
 /storage/*.key
 /storage/pail
 /tests/Browser/screenshots
+/tests/Browser/videos
+/tests/Browser/videos
 /tests/Browser/dusk-output
+/tests/Browser/*.webm
+/tests/Browser/*.png
 /vendor
 _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
 /.kilo/kilo.jsonc
+/ffmpeg.exe
+/test_ffmpeg.php
+tests/Browser/videos

@@ -12,8 +12,10 @@ class VideoRecorder
     private array $frames = [];
     private bool $isRecording = false;
     private string $sessionId;
-    private int $frameRate = 10;
     private float $startTime;
+    private string $ffmpegPath;
+    private int $frameCounter = 0;
+    private int $captureIntervalMs = 200;
 
     public function __construct(RemoteWebDriver $driver, string $outputDir, string $testName)
     {
@@ -21,267 +23,199 @@ class VideoRecorder
         $this->outputDir = $outputDir;
         $this->testName = $this->sanitizeFileName($testName);
         $this->sessionId = $driver->getSessionID();
+        $this->ffmpegPath = $this->detectFfmpeg();
+        $this->ensureOutputDir();
     }
 
-    public function start(): self
+    private function detectFfmpeg(): string
+    {
+        $paths = [
+            'c:\laragon\www\erp-rt-rw-net\ffmpeg.exe',
+            dirname(__DIR__, 4) . '\ffmpeg.exe',
+            'C:\ffmpeg\bin\ffmpeg.exe',
+            'C:\Program Files\ffmpeg\bin\ffmpeg.exe',
+            'ffmpeg',
+        ];
+
+        foreach ($paths as $path) {
+            if ($path === 'ffmpeg' || file_exists($path)) {
+                $cmd = $path === 'ffmpeg' ? "ffmpeg -version" : "\"$path\" -version";
+                $result = shell_exec($cmd . " 2>&1");
+                if ($result && strpos($result, 'ffmpeg version') !== false) {
+                    return $path === 'ffmpeg' ? $path : realpath($path) ?: $path;
+                }
+            }
+        }
+        return '';
+    }
+
+    public function isFfmpegAvailable(): bool
+    {
+        return !empty($this->ffmpegPath) && file_exists($this->ffmpegPath);
+    }
+
+    public function start(): void
     {
         $this->isRecording = true;
         $this->startTime = microtime(true);
         $this->frames = [];
-        
-        $this->ensureOutputDir();
-        
-        fwrite(STDERR, "[VideoRecorder] Started recording for: {$this->testName}\n");
-        
-        return $this;
+        $this->frameCounter = 0;
+
+        $ffmpegStatus = $this->isFfmpegAvailable() ? 'FFmpeg OK' : 'No FFmpeg';
+        fwrite(STDERR, "[VideoRecorder] START {$this->testName} | {$ffmpegStatus}\n");
+
+        $this->captureFrame('start');
     }
 
-    public function captureFrame(string $label = 'frame'): self
+    public function captureFrame(string $label = ''): string
     {
         if (!$this->isRecording) {
-            return $this;
+            return '';
         }
 
         try {
-            $timestamp = sprintf('%06f', microtime(true) - $this->startTime);
-            $frameName = $this->testName . '_' . $label . '_' . str_replace('.', '', $timestamp) . '.png';
-            $framePath = $this->outputDir . '/' . $frameName;
-            
+            $this->frameCounter++;
+            $timestamp = sprintf('%06.3f', microtime(true) - $this->startTime);
+            $prefix = $label ? "{$label}_" : "frame_";
+            $frameName = "{$this->testName}_{$prefix}{$this->frameCounter}_{$timestamp}s.png";
+            $framePath = $this->outputDir . '\\' . $frameName;
+
             $screenshot = $this->driver->takeScreenshot();
             file_put_contents($framePath, $screenshot);
-            
-            $this->frames[] = [
-                'path' => $framePath,
-                'label' => $label,
-                'timestamp' => $timestamp,
-            ];
-            
-            fwrite(STDERR, "[VideoRecorder] Captured frame: {$label}\n");
-        } catch (\Exception $e) {
-            fwrite(STDERR, "[VideoRecorder] Frame capture failed: " . $e->getMessage() . "\n");
-        }
 
-        return $this;
+            $this->frames[] = $framePath;
+
+            fwrite(STDERR, "[VideoRecorder] Frame {$this->frameCounter}: {$label}\n");
+
+            return $framePath;
+        } catch (\Exception $e) {
+            fwrite(STDERR, "[VideoRecorder] Capture error: " . $e->getMessage() . "\n");
+            return '';
+        }
     }
 
     public function stop(): string
     {
         $this->isRecording = false;
-        
+
         if (empty($this->frames)) {
             fwrite(STDERR, "[VideoRecorder] No frames captured\n");
             return '';
         }
 
-        $videoPath = $this->generateHtmlVideo();
-        
-        fwrite(STDERR, "[VideoRecorder] HTML video saved: {$videoPath}\n");
-        
-        return $videoPath;
-    }
+        $this->captureFrame('end');
 
-    private function generateHtmlVideo(): string
-    {
-        $htmlName = $this->testName . '_' . date('Ymd_His') . '.html';
-        $htmlPath = $this->outputDir . '/' . $htmlName;
-        
-        $totalDuration = count($this->frames) > 0 
-            ? round((float)end($this->frames)['timestamp'] * 1000) 
-            : 1000;
-        
-        $framesJson = json_encode(array_map(function($f) {
-            return [
-                'src' => basename($f['path']),
-                'label' => $f['label'],
-                'timestamp' => round((float)$f['timestamp'] * 1000),
-            ];
-        }, $this->frames));
+        fwrite(STDERR, "[VideoRecorder] Stopped. Total frames: " . count($this->frames) . "\n");
 
-        $framesCount = count($this->frames);
-        $testNameEsc = htmlspecialchars($this->testName, ENT_QUOTES, 'UTF-8');
-        
-        $frameItems = '';
-        foreach ($this->frames as $index => $frame) {
-            $frameTime = round((float)$frame['timestamp'], 1);
-            $labelEsc = htmlspecialchars($frame['label'], ENT_QUOTES, 'UTF-8');
-            $frameItems .= '<div class="frame-item" data-index="' . $index . '" onclick="goToFrame(' . $index . ')">';
-            $frameItems .= '<img src="' . htmlspecialchars(basename($frame['path']), ENT_QUOTES, 'UTF-8') . '" alt="' . $labelEsc . '">';
-            $frameItems .= '<div class="info"><div class="label">' . $labelEsc . '</div><div class="time">' . $frameTime . 's</div></div></div>';
-        }
-
-        $html = '<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recording: ' . $testNameEsc . '</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: "Segoe UI", system-ui, sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; }
-        .header h1 { font-size: 1.5rem; margin-bottom: 5px; }
-        .header .meta { font-size: 0.85rem; opacity: 0.9; }
-        .controls { display: flex; gap: 10px; padding: 15px; background: #16213e; flex-wrap: wrap; align-items: center; }
-        .controls button { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
-        .btn-play { background: #e94560; color: white; }
-        .btn-play:hover { background: #d63850; }
-        .btn-pause { background: #0f3460; color: white; }
-        .timeline { flex: 1; min-width: 200px; height: 8px; background: #0f3460; border-radius: 4px; cursor: pointer; position: relative; }
-        .timeline-progress { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 4px; width: 0; transition: width 0.1s; }
-        .time-display { font-size: 0.85rem; padding: 0 15px; color: #aaa; min-width: 120px; }
-        .frame-info { font-size: 0.8rem; color: #888; padding: 5px 15px; }
-        .viewer { display: flex; justify-content: center; align-items: center; padding: 20px; min-height: calc(100vh - 200px); }
-        .viewer img { max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        .frame-list { max-height: 200px; overflow-y: auto; padding: 15px; background: #16213e; }
-        .frame-list h3 { margin-bottom: 10px; font-size: 0.9rem; color: #aaa; }
-        .frame-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-bottom: 5px; transition: background 0.2s; }
-        .frame-item:hover { background: #0f3460; }
-        .frame-item.active { background: #667eea; }
-        .frame-item img { width: 60px; height: 40px; object-fit: cover; border-radius: 4px; }
-        .frame-item .info { flex: 1; }
-        .frame-item .label { font-size: 0.85rem; font-weight: 500; }
-        .frame-item .time { font-size: 0.75rem; color: #888; }
-        .status { position: fixed; bottom: 20px; right: 20px; padding: 10px 15px; background: rgba(0,0,0,0.8); border-radius: 8px; font-size: 0.85rem; }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .recording { display: inline-block; width: 10px; height: 10px; background: #e94560; border-radius: 50%; animation: blink 1s infinite; margin-right: 8px; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>📹 Test Recording: ' . $testNameEsc . '</h1>
-        <div class="meta">
-            <span class="recording"></span>Total ' . $totalDuration . 'ms | ' . $framesCount . ' frames | ' . $this->frameRate . ' fps
-        </div>
-    </div>
-    
-    <div class="controls">
-        <button class="btn-play" id="playBtn">▶ Play</button>
-        <button class="btn-pause" id="pauseBtn" style="display:none">⏸ Pause</button>
-        <div class="timeline" id="timeline">
-            <div class="timeline-progress" id="progress"></div>
-        </div>
-        <span class="time-display" id="timeDisplay">0.0s / ' . round($totalDuration/1000, 1) . 's</span>
-    </div>
-    
-    <div class="viewer">
-        <img id="currentFrame" src="" alt="Frame">
-    </div>
-    
-    <div class="frame-info">
-        <span id="currentLabel">Frame: start</span>
-        <span id="frameCount">0 / ' . $framesCount . '</span>
-    </div>
-    
-    <div class="frame-list">
-        <h3>📋 Frame List (' . $framesCount . ' frames)</h3>
-        <div id="frameListContainer">' . $frameItems . '</div>
-    </div>
-    
-    <div class="status">🟢 Recording playback ready</div>
-    
-    <script>
-        const frames = ' . $framesJson . ';
-        let currentFrame = 0;
-        let isPlaying = false;
-        let playInterval = null;
-        const totalDuration = ' . $totalDuration . ';
-        
-        const playBtn = document.getElementById("playBtn");
-        const pauseBtn = document.getElementById("pauseBtn");
-        const progress = document.getElementById("progress");
-        const timeDisplay = document.getElementById("timeDisplay");
-        const currentLabel = document.getElementById("currentLabel");
-        const frameCount = document.getElementById("frameCount");
-        const currentFrameImg = document.getElementById("currentFrame");
-        
-        function goToFrame(index) {
-            if (index < 0 || index >= frames.length) return;
-            currentFrame = index;
-            updateDisplay();
-            updateFrameList();
-        }
-        
-        function updateDisplay() {
-            const frame = frames[currentFrame];
-            currentFrameImg.src = frame.src;
-            currentLabel.textContent = "Frame: " + frame.label;
-            frameCount.textContent = (currentFrame + 1) + " / " + frames.length;
-            
-            const pct = (frame.timestamp / totalDuration) * 100;
-            progress.style.width = pct + "%";
-            
-            const currentTime = (frame.timestamp / 1000).toFixed(1);
-            const totalTime = (totalDuration / 1000).toFixed(1);
-            timeDisplay.textContent = currentTime + "s / " + totalTime + "s";
-        }
-        
-        function updateFrameList() {
-            document.querySelectorAll(".frame-item").forEach((el, i) => {
-                el.classList.toggle("active", i === currentFrame);
-            });
-            const container = document.querySelector(".frame-list");
-            const activeEl = document.querySelector(".frame-item.active");
-            if (activeEl) activeEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
-        }
-        
-        function play() {
-            isPlaying = true;
-            playBtn.style.display = "none";
-            pauseBtn.style.display = "inline-block";
-            
-            const frameDelay = 1000 / ' . $this->frameRate . ';
-            playInterval = setInterval(() => {
-                if (currentFrame < frames.length - 1) {
-                    currentFrame++;
-                    updateDisplay();
-                    updateFrameList();
-                } else {
-                    pause();
-                }
-            }, frameDelay);
-        }
-        
-        function pause() {
-            isPlaying = false;
-            playBtn.style.display = "inline-block";
-            pauseBtn.style.display = "none";
-            clearInterval(playInterval);
-        }
-        
-        playBtn.addEventListener("click", play);
-        pauseBtn.addEventListener("click", pause);
-        
-        document.getElementById("timeline").addEventListener("click", function(e) {
-            const rect = this.getBoundingClientRect();
-            const pct = (e.clientX - rect.left) / rect.width;
-            const targetTime = pct * totalDuration;
-            
-            let closest = 0;
-            for (let i = 0; i < frames.length; i++) {
-                if (frames[i].timestamp <= targetTime) closest = i;
+        if ($this->isFfmpegAvailable()) {
+            $mp4Path = $this->generateMp4();
+            if ($mp4Path) {
+                $this->cleanupFrames();
+                return $mp4Path;
             }
-            goToFrame(closest);
-        });
-        
-        document.addEventListener("keydown", function(e) {
-            if (e.code === "Space") { e.preventDefault(); isPlaying ? pause() : play(); }
-            if (e.code === "ArrowLeft") goToFrame(currentFrame - 1);
-            if (e.code === "ArrowRight") goToFrame(currentFrame + 1);
-        });
-        
-        if (frames.length > 0) goToFrame(0);
-    </script>
-</body>
-</html>';
+        }
 
-        file_put_contents($htmlPath, $html);
-        
-        return $htmlPath;
+        return $this->generateGif();
     }
 
-    private function sanitizeFileName(string $name): string
+    private function generateMp4(): string
     {
-        return preg_replace('/[^a-zA-Z0-9_\-]/', '_', $name);
+        $mp4Name = $this->testName . '_' . date('Ymd_His') . '.mp4';
+        $mp4Path = $this->outputDir . '\\' . $mp4Name;
+        $tempDir = $this->outputDir . '\\temp_' . uniqid();
+
+        if (!mkdir($tempDir, 0755, true) && !is_dir($tempDir)) {
+            fwrite(STDERR, "[VideoRecorder] Failed to create temp dir\n");
+            return '';
+        }
+
+        fwrite(STDERR, "[VideoRecorder] Creating " . count($this->frames) . " frames in temp dir...\n");
+
+        foreach ($this->frames as $index => $framePath) {
+            if (file_exists($framePath)) {
+                $destPath = $tempDir . '\\frame_' . str_pad($index + 1, 6, '0', STR_PAD_LEFT) . '.png';
+                copy($framePath, $destPath);
+            }
+        }
+
+        $inputPattern = $tempDir . '\\frame_%06d.png';
+
+        $command = sprintf(
+            '"%s" -y -framerate 10 -i "%s" -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -c:v libx264 -pix_fmt yuv420p -crf 23 -preset ultrafast "%s" 2>&1',
+            $this->ffmpegPath,
+            $inputPattern,
+            $mp4Path
+        );
+
+        fwrite(STDERR, "[VideoRecorder] Running FFmpeg...\n");
+        $output = shell_exec($command);
+
+        $this->cleanupDir($tempDir);
+
+        if (file_exists($mp4Path) && filesize($mp4Path) > 1000) {
+            fwrite(STDERR, "[VideoRecorder] MP4 created: " . filesize($mp4Path) . " bytes\n");
+            return $mp4Path;
+        }
+
+        fwrite(STDERR, "[VideoRecorder] FFmpeg failed, output: " . substr($output ?: 'no output', 0, 300) . "\n");
+        return '';
+    }
+
+    private function generateGif(): string
+    {
+        $gifName = $this->testName . '_' . date('Ymd_His') . '.gif';
+        $gifPath = $this->outputDir . '\\' . $gifName;
+
+        if ($this->isFfmpegAvailable() && !empty($this->frames)) {
+            $tempDir = $this->outputDir . '\\temp_' . uniqid();
+            mkdir($tempDir, 0755, true);
+
+            foreach ($this->frames as $index => $framePath) {
+                if (file_exists($framePath)) {
+                    $destPath = $tempDir . '\\frame_' . str_pad($index + 1, 6, '0', STR_PAD_LEFT) . '.png';
+                    copy($framePath, $destPath);
+                }
+            }
+
+            $command = sprintf(
+                '"%s" -y -framerate 5 -i "%s\\frame_%%06d.png" -vf "scale=960:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" "%s" 2>&1',
+                $this->ffmpegPath,
+                $tempDir,
+                $gifPath
+            );
+
+            shell_exec($command);
+            $this->cleanupDir($tempDir);
+        }
+
+        if (file_exists($gifPath) && filesize($gifPath) > 1000) {
+            return $gifPath;
+        }
+
+        return '';
+    }
+
+    private function cleanupFrames(): void
+    {
+        foreach ($this->frames as $frame) {
+            if (file_exists($frame)) {
+                @unlink($frame);
+            }
+        }
+        $this->frames = [];
+    }
+
+    private function cleanupDir(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            return;
+        }
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . '\\' . $file;
+            is_dir($path) ? $this->cleanupDir($path) : @unlink($path);
+        }
+        @rmdir($dir);
     }
 
     private function ensureOutputDir(): void
@@ -291,18 +225,10 @@ class VideoRecorder
         }
     }
 
-    private function cleanupFrames(): void
+    private function sanitizeFileName(string $name): string
     {
-        foreach ($this->frames as $frame) {
-            if (file_exists($frame['path'])) {
-                @unlink($frame['path']);
-            }
-        }
-        $this->frames = [];
-    }
-
-    public function getFrameCount(): int
-    {
-        return count($this->frames);
+        $name = preg_replace('/[^a-zA-Z0-9_-]/', '_', $name);
+        $name = preg_replace('/_+/', '_', $name);
+        return trim($name, '_') ?: 'test';
     }
 }

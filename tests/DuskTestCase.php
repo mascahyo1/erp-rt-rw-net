@@ -15,6 +15,7 @@ abstract class DuskTestCase extends BaseTestCase
     protected ?VideoRecorder $videoRecorder = null;
     protected static bool $enableVideoRecording = false;
     protected static string $videoOutputDir = 'tests/Browser/videos';
+    protected static bool $enableVideoByDefault = false;
 
     #[AfterClass]
     public static function cleanupVideoRecording(): void
@@ -31,6 +32,7 @@ abstract class DuskTestCase extends BaseTestCase
             '--no-sandbox',
             '--disable-dev-shm-usage',
             '--disable-gpu',
+            '--disable-software-rasterizer',
             '--disable-search-engine-choice-screen',
             '--disable-smooth-scrolling',
             '--disable-extensions',
@@ -40,6 +42,10 @@ abstract class DuskTestCase extends BaseTestCase
             '--disable-translate',
             '--metrics-recording-only',
             '--mute-audio',
+            '--ignore-certificate-errors',
+            '--disable-setuid-sandbox',
+            '--disable-accelerated-2d-canvas',
+            '--disable-gpu-sandbox',
             '--remote-debugging-port=9223',
         ];
 
@@ -48,9 +54,10 @@ abstract class DuskTestCase extends BaseTestCase
         }
 
         $options->addArguments($args);
+        $options->addExtensions(config('dusk.chrome_extensions', []));
 
         return RemoteWebDriver::create(
-            $_ENV['DUSK_DRIVER_URL'] ?? env('DUSK_DRIVER_URL') ?? 'http://localhost:9520',
+            $_ENV['DUSK_DRIVER_URL'] ?? config('dusk.driver_url', 'http://localhost:9515'),
             DesiredCapabilities::chrome()->setCapability(
                 ChromeOptions::CAPABILITY, $options
             )
@@ -88,6 +95,25 @@ abstract class DuskTestCase extends BaseTestCase
             return $path;
         }
         return '';
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        if (static::$enableVideoRecording) {
+            $testName = $this->getName() ?: 'test';
+            $this->startVideoRecording($testName);
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->videoRecorder && $this->videoRecorder->isRecording()) {
+            $this->videoRecorder->captureFrame('test-end');
+        }
+        $this->stopVideoRecording();
+        parent::tearDown();
     }
 
     public static function enableVideoRecording(bool $enable = true, string $outputDir = 'tests/Browser/videos'): void
