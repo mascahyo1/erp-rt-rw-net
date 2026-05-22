@@ -35,3 +35,4 @@ Thumbs.db
 /ffmpeg.exe
 /test_ffmpeg.php
 tests/Browser/videos
+tests/Browser/tests/Browser/videos
