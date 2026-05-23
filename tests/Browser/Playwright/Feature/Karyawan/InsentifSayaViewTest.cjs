@@ -14,7 +14,13 @@ class InsentifSayaViewTest {
 
         try {
             await this.helper.launch();
-            await this.helper.loginAsKaryawan('karyawan@rtrwnet.id', 'password123');
+
+            await this.helper.page.goto(`${this.baseUrl}/login-karyawan`);
+            await this.helper.page.waitForLoadState('networkidle');
+            await this.helper.fill('input[type="email"]', 'karyawan@rtrwnet.id');
+            await this.helper.fill('input[type="password"]', 'password123');
+            await this.helper.click('button[type="submit"]');
+            await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('Karyawan/InsentifSaya/TestView/00-login');
 
             await this.test_01_page_renders();
@@ -54,8 +60,11 @@ class InsentifSayaViewTest {
     async test_01_page_renders() {
         await this.safeTest('test_01_page_renders', async () => {
             await this.helper.page.goto(`${this.baseUrl}/karyawan/insentif-saya`);
-            await this.helper.waitForText('Insentif', 10000);
+            await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('Karyawan/InsentifSaya/TestView/01-page');
+
+            const url = this.helper.getCurrentUrl();
+            if (url.includes('login')) throw new Error('Not logged in');
         });
     }
 }

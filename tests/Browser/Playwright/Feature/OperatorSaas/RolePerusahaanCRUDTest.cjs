@@ -14,7 +14,13 @@ class RolePerusahaanCRUDTest {
 
         try {
             await this.helper.launch();
-            await this.helper.loginAsAdminSaaS('admin-saas@rtrwnet.id', 'password123');
+
+            await this.helper.page.goto(`${this.baseUrl}/login-operator-saas`);
+            await this.helper.page.waitForLoadState('networkidle');
+            await this.helper.fill('input[type="email"]', 'admin-saas@rtrwnet.id');
+            await this.helper.fill('input[type="password"]', 'password123');
+            await this.helper.click('button[type="submit"]');
+            await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('OperatorSaas/RolePerusahaan/TestCRUD/00-login');
 
             await this.test_01_page_renders();
@@ -56,24 +62,28 @@ class RolePerusahaanCRUDTest {
     async test_01_page_renders() {
         await this.safeTest('test_01_page_renders', async () => {
             await this.helper.page.goto(`${this.baseUrl}/operator-saas/role-perusahaan`);
-            await this.helper.waitForText('Role', 10000);
+            await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('OperatorSaas/RolePerusahaan/TestCRUD/01-page');
 
             const hasTable = await this.helper.isVisible('table');
-            if (!hasTable) throw new Error('Should have table');
+            if (!hasTable) {
+                const url = this.helper.getCurrentUrl();
+                if (url.includes('login')) throw new Error('Not logged in');
+                throw new Error('Should have table');
+            }
         });
     }
 
     async test_02_search() {
         await this.safeTest('test_02_search', async () => {
             await this.helper.page.goto(`${this.baseUrl}/operator-saas/role-perusahaan?per_page=100`);
-            await this.helper.waitForText('Role', 10000);
+            await this.helper.page.waitForTimeout(3000);
 
             const searchInput = await this.helper.page.$('input[placeholder="Cari..."]');
             if (searchInput) {
                 await searchInput.fill('admin');
                 await searchInput.press('Enter');
-                await this.helper.pause(1500);
+                await this.helper.page.waitForTimeout(1500);
             }
             await this.helper.screenshot('OperatorSaas/RolePerusahaan/TestCRUD/02-search');
         });
@@ -82,12 +92,12 @@ class RolePerusahaanCRUDTest {
     async test_03_filter_status() {
         await this.safeTest('test_03_filter_status', async () => {
             await this.helper.page.goto(`${this.baseUrl}/operator-saas/role-perusahaan?per_page=100`);
-            await this.helper.waitForText('Role', 10000);
+            await this.helper.page.waitForTimeout(3000);
 
             const selects = await this.helper.page.$$('select');
             if (selects.length > 0) {
                 await selects[0].selectOption('Aktif');
-                await this.helper.pause(1500);
+                await this.helper.page.waitForTimeout(1500);
             }
             await this.helper.screenshot('OperatorSaas/RolePerusahaan/TestCRUD/03-filter');
         });

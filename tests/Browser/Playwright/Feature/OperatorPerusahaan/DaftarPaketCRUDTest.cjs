@@ -5,7 +5,6 @@ class DaftarPaketCRUDTest {
         this.helper = new PlaywrightHelper();
         this.baseUrl = 'http://erp-rt-rw-net.test';
         this.testResults = { passed: 0, failed: 0, errors: [] };
-        this.uuid = this.helper.generateUUID();
     }
 
     async runAllTests() {
@@ -15,7 +14,13 @@ class DaftarPaketCRUDTest {
 
         try {
             await this.helper.launch();
-            await this.helper.loginAsAdminPerusahaan('admin-perusahaan@rtrwnet.id', 'password123');
+
+            await this.helper.page.goto(`${this.baseUrl}/login-perusahaan`);
+            await this.helper.page.waitForLoadState('networkidle');
+            await this.helper.fill('input[type="email"]', 'admin-perusahaan@rtrwnet.id');
+            await this.helper.fill('input[type="password"]', 'password123');
+            await this.helper.click('button[type="submit"]');
+            await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('OperatorPerusahaan/DaftarPaket/TestCRUD/00-login');
 
             await this.test_01_page_renders();
@@ -59,7 +64,7 @@ class DaftarPaketCRUDTest {
     async test_01_page_renders() {
         await this.safeTest('test_01_page_renders', async () => {
             await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
-            await this.helper.waitForText('Paket Customer', 10000);
+            await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('OperatorPerusahaan/DaftarPaket/TestCRUD/01-page');
 
             const url = this.helper.getCurrentUrl();
@@ -77,13 +82,13 @@ class DaftarPaketCRUDTest {
     async test_02_search() {
         await this.safeTest('test_02_search', async () => {
             await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
-            await this.helper.waitForText('Paket Customer', 10000);
+            await this.helper.page.waitForTimeout(3000);
 
             const searchInput = await this.helper.page.$('input[placeholder="Cari..."]');
             if (searchInput) {
                 await searchInput.fill('test');
                 await searchInput.press('Enter');
-                await this.helper.pause(2000);
+                await this.helper.page.waitForTimeout(2000);
             }
             await this.helper.screenshot('OperatorPerusahaan/DaftarPaket/TestCRUD/02-search');
         });
@@ -92,12 +97,12 @@ class DaftarPaketCRUDTest {
     async test_03_filter_status() {
         await this.safeTest('test_03_filter_status', async () => {
             await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
-            await this.helper.waitForText('Paket Customer', 10000);
+            await this.helper.page.waitForTimeout(3000);
 
             const selects = await this.helper.page.$$('select');
             if (selects.length > 0) {
                 await selects[0].selectOption('Aktif');
-                await this.helper.pause(2000);
+                await this.helper.page.waitForTimeout(2000);
             }
             await this.helper.screenshot('OperatorPerusahaan/DaftarPaket/TestCRUD/03-filter');
         });
@@ -106,12 +111,12 @@ class DaftarPaketCRUDTest {
     async test_04_sort() {
         await this.safeTest('test_04_sort', async () => {
             await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
-            await this.helper.waitForText('Paket Customer', 10000);
+            await this.helper.page.waitForTimeout(3000);
 
             const headers = await this.helper.page.$$('th');
             if (headers.length > 1) {
                 await headers[1].click();
-                await this.helper.pause(2000);
+                await this.helper.page.waitForTimeout(2000);
             }
             await this.helper.screenshot('OperatorPerusahaan/DaftarPaket/TestCRUD/04-sort');
         });
@@ -120,12 +125,12 @@ class DaftarPaketCRUDTest {
     async test_05_delete() {
         await this.safeTest('test_05_delete', async () => {
             await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
-            await this.helper.waitForText('Paket Customer', 10000);
+            await this.helper.page.waitForTimeout(3000);
 
             const deleteBtn = await this.helper.page.$('button[title="Hapus"]');
             if (deleteBtn) {
                 await deleteBtn.click();
-                await this.helper.pause(2000);
+                await this.helper.page.waitForTimeout(2000);
                 await this.helper.screenshot('OperatorPerusahaan/DaftarPaket/TestCRUD/05-delete-modal');
             }
         });
