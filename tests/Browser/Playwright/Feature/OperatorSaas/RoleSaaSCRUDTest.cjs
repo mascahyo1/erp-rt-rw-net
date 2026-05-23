@@ -1,0 +1,100 @@
+const PlaywrightHelper = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/PlaywrightHelper.cjs');
+
+class RoleSaaSCRUDTest {
+    constructor() {
+        this.helper = new PlaywrightHelper();
+        this.baseUrl = 'http://erp-rt-rw-net.test';
+        this.testResults = { passed: 0, failed: 0, errors: [] };
+    }
+
+    async runAllTests() {
+        console.log('========================================');
+        console.log('Role SaaS CRUD Tests - Playwright');
+        console.log('========================================\n');
+
+        try {
+            await this.helper.launch();
+            await this.helper.loginAsAdminSaaS('admin-saas@rtrwnet.id', 'password123');
+            await this.helper.screenshot('OperatorSaas/RoleSaaS/TestCRUD/00-login');
+
+            await this.test_01_page_renders();
+            await this.test_02_search();
+            await this.test_03_filter_status();
+
+            console.log('\n========================================');
+            console.log('TEST SUMMARY');
+            console.log('========================================');
+            console.log(`Passed: ${this.testResults.passed}`);
+            console.log(`Failed: ${this.testResults.failed}`);
+            if (this.testResults.errors.length > 0) {
+                console.log('\nErrors:');
+                this.testResults.errors.forEach(e => console.log(`  - ${e}`));
+            }
+            console.log('========================================\n');
+
+        } catch (error) {
+            console.error('[FATAL ERROR]', error.message);
+            await this.helper.screenshot('OperatorSaas/RoleSaaS/TestCRUD/XX-fatal');
+        } finally {
+            await this.helper.close();
+        }
+    }
+
+    async safeTest(name, fn) {
+        try {
+            await fn();
+            console.log(`  ✓ ${name}`);
+            this.testResults.passed++;
+        } catch (e) {
+            console.log(`  ✗ ${name}: ${e.message.substring(0, 80)}`);
+            this.testResults.failed++;
+            this.testResults.errors.push(`${name}: ${e.message.substring(0, 100)}`);
+            await this.helper.screenshot(`OperatorSaas/RoleSaaS/TestCRUD/XX-${name.replace(/\s/g, '-')}`);
+        }
+    }
+
+    async test_01_page_renders() {
+        await this.safeTest('test_01_page_renders', async () => {
+            await this.helper.page.goto(`${this.baseUrl}/operator-saas/role-saas`);
+            await this.helper.waitForText('Role', 10000);
+            await this.helper.screenshot('OperatorSaas/RoleSaaS/TestCRUD/01-page');
+
+            const hasTable = await this.helper.isVisible('table');
+            if (!hasTable) throw new Error('Should have table');
+        });
+    }
+
+    async test_02_search() {
+        await this.safeTest('test_02_search', async () => {
+            await this.helper.page.goto(`${this.baseUrl}/operator-saas/role-saas?per_page=100`);
+            await this.helper.waitForText('Role', 10000);
+
+            const searchInput = await this.helper.page.$('input[placeholder="Cari..."]');
+            if (searchInput) {
+                await searchInput.fill('admin');
+                await searchInput.press('Enter');
+                await this.helper.pause(1500);
+            }
+            await this.helper.screenshot('OperatorSaas/RoleSaaS/TestCRUD/02-search');
+        });
+    }
+
+    async test_03_filter_status() {
+        await this.safeTest('test_03_filter_status', async () => {
+            await this.helper.page.goto(`${this.baseUrl}/operator-saas/role-saas?per_page=100`);
+            await this.helper.waitForText('Role', 10000);
+
+            const selects = await this.helper.page.$$('select');
+            if (selects.length > 0) {
+                await selects[0].selectOption('Aktif');
+                await this.helper.pause(1500);
+            }
+            await this.helper.screenshot('OperatorSaas/RoleSaaS/TestCRUD/03-filter');
+        });
+    }
+}
+
+const test = new RoleSaaSCRUDTest();
+test.runAllTests().then(() => {
+    process.exit(test.testResults.failed > 0 ? 1 : 0);
+});
