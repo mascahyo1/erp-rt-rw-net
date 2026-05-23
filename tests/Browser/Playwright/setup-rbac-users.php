@@ -38,7 +38,7 @@ $fullRole = Role::create([
     'display_order' => 1
 ]);
 
-$fullPerms = Permission::whereIn('name', ['paket.list','paket.create','paket.edit','paket.delete','paket.export','paket.import'])->get();
+$fullPerms = Permission::whereIn('name', ['paket.list','paket.create','paket.edit','paket.delete','paket.restore','paket.export','paket.import','paket.detail'])->get();
 foreach ($fullPerms as $p) {
     DB::table('role_permissions')->insert([
         'id' => Str::uuid()->toString(),
