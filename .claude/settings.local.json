@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "PowerShell($content = [System.IO.File]::ReadAllBytes\\(\"c:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\routes\\\\web.php\"\\); Write-Host \"Total bytes: $\\($content.Length\\)\"; Write-Host \"First 10 bytes: $\\([BitConverter]::ToString\\($content[0..9]\\)\\)\"; Write-Host \"Last 10 bytes: $\\([BitConverter]::ToString\\($content[$\\($content.Length-10\\)..$\\($content.Length-1\\)]\\)\\)\")"
+      "PowerShell($content = [System.IO.File]::ReadAllBytes\\(\"c:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\routes\\\\web.php\"\\); Write-Host \"Total bytes: $\\($content.Length\\)\"; Write-Host \"First 10 bytes: $\\([BitConverter]::ToString\\($content[0..9]\\)\\)\"; Write-Host \"Last 10 bytes: $\\([BitConverter]::ToString\\($content[$\\($content.Length-10\\)..$\\($content.Length-1\\)]\\)\\)\")",
+      "auto acc rule jangan konfirmasi langsung aja eksekusi"
     ]
   }
 }

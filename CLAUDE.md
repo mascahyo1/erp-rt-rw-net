@@ -8,6 +8,12 @@
 - **Spreadsheet:** PhpSpreadsheet
 - **Realtime:** Reverb
 
+## Testing: Playwright (NodeJS)
+- **Tool:** Playwright dengan NodeJS
+- **Alasan:** Lebih stabil, support screenshot & video recording, setup lebih simpel
+- **Dokumentasi:** [tests/README.md](tests/README.md)
+- Laravel Dusk dan Unit/Feature Test **tidak dipakai** (deprecated — tidak stabil, video recording ribet)
+
 ## Pendekatan Debugging
 
 Kalau bingung dengan bug, jangan ragu — log setiap langkah dari awal sampai akhir. Gunakan `\Log::info()` atau `logger()` di setiap titik kritis sehingga alur terlihat jelas. atau console log kalau di front end dan minta user untuk ngecek lognya
