@@ -46,6 +46,12 @@ class AuthenticatedSessionController extends Controller
 
         Auth::guard('admin-saas')->login($user, $request->boolean('remember'));
 
+        if ($request->hasSession()) {
+            $request->session()->put('auth_id', $user->getAuthIdentifier());
+            $request->session()->put('auth_guard', 'admin-saas');
+            $request->session()->regenerate();
+        }
+
         return redirect()->route('operator-saas.dashboard');
     }
 
@@ -53,7 +59,10 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('admin-saas')->logout();
 
-        $request->session()->regenerateToken();
+        if ($request->hasSession()) {
+            $request->session()->forget(['auth_id', 'auth_guard']);
+            $request->session()->regenerateToken();
+        }
 
         return redirect()->route('landing.home');
     }

@@ -42,6 +42,12 @@ class AdminCompanySessionController extends Controller
             ]);
         }
 
+        if ($request->hasSession()) {
+            $request->session()->put('auth_id', Auth::guard('admin-company')->user()->getAuthIdentifier());
+            $request->session()->put('auth_guard', 'admin-company');
+            $request->session()->regenerate();
+        }
+
         return redirect()->route('operator-perusahaan.dashboard');
     }
 
@@ -49,7 +55,10 @@ class AdminCompanySessionController extends Controller
     {
         Auth::guard('admin-company')->logout();
 
-        $request->session()->regenerateToken();
+        if ($request->hasSession()) {
+            $request->session()->forget(['auth_id', 'auth_guard']);
+            $request->session()->regenerateToken();
+        }
 
         return redirect()->route('landing.home');
     }

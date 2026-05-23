@@ -25,7 +25,7 @@ http://erp-rt-rw-net.test/operator-perusahaan/riwayat-insentif crud riwayat inse
 issue 7
 http://erp-rt-rw-net.test/operator-perusahaan/riwayat-pembayaran crud riwayat pembayaran id invoice menggunakan select option yang searchable infinite sroll ajax
 
-
+yg diatas solved semua tinggal yang bawah ini
 issue 
 laravel dusk susah membuat video jadi untuk testing menggunakan node js dan playwright saja. laravel dusk kurang stabil buat menjalankan test
 refactor semua test dusk ke playwright node js. jangan hapus file lama

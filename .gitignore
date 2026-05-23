@@ -36,3 +36,5 @@ Thumbs.db
 /test_ffmpeg.php
 tests/Browser/videos
 tests/Browser/tests/Browser/videos
+/tests/Browser/Playwright/result
+/tests/Browser/Playwright/videos
