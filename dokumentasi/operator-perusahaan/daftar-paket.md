@@ -27,8 +27,6 @@ Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket inter
 | Status | select | ✅ | Aktif / Nonaktif |
 | Deskripsi | textarea | — | Keterangan tambahan |
 
-> **Catatan:** Field `Kode` ada di form Create/Edit dan disimpan ke database. Di datatable web, kode ditampilkan di dalam cell Nama Paket (bukan kolom terpisah).
-
 ---
 
 ## Kolom Datatable
@@ -45,60 +43,6 @@ Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket inter
 | Estimasi Pendapatan | ✅ | Rumus: Langganan Aktif × Harga, right-aligned |
 | Status | ✅ | Badge: Aktif (hijau) / Nonaktif (merah) / Terhapus (merah, opacity 60%) |
 | Aksi | — | Detail, Edit, Hapus / Pulihkan |
-
-> **Catatan:** Kode tidak单独的 kolom — tampil di dalam cell Nama Paket, di bawah nama paket (font-mono). Ini agar sesuai dengan desain web.
-
----
-
-## Import / Export Excel
-
-Menggunakan **PhpSpreadsheet** (`phpoffice/phpspreadsheet`).
-
-### Aturan Wajib
-1. **Tidak ada angka notasi ilmiah.** Semua cell numerik yang berpotensi panjang (telepon, NIK, nomor akun) wajib pakai:
-   ```php
-   $sheet->setCellValueExplicit(
-       $this->excelColumn($col++) . $row,
-       trim($value) ?: '-',
-       \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING
-   );
-   ```
-2. **Export:** Download file `.xlsx` dengan format rapi — header bold, auto-width, border tipis.
-3. **Import:** Upload file `.xlsx` / `.csv`, validasi per baris, insert batch (chunk 500 baris), return jumlah sukses + error rows.
-4. **Template:** Endpoint download template kosong dengan header kolom sesuai format import.
-
-### Permission Import / Export
-
-| Permission | Keterangan |
-|-----------|------------|
-| `paket.export` | Download export Excel (semua / selected via checkbox) |
-| `paket.import` | Upload import Excel + download template import |
-
-### Route Import / Export
-
-| Method | URI | Permission | Keterangan |
-|--------|-----|-----------|------------|
-| GET | `/operator-perusahaan/daftar-paket/export` | `paket.export` | Download semua paket (.xlsx) |
-| GET | `/operator-perusahaan/daftar-paket/export?ids=` | `paket.export` | Download selected via checkbox |
-| GET | `/operator-perusahaan/daftar-paket/template` | `paket.import` | Download template import kosong (nebeng import) |
-| POST | `/operator-perusahaan/daftar-paket/import` | `paket.import` | Upload + proses file import |
-
-### Controller Methods (PaketController)
-
-```
-index()           → list + filter + sort + pagination
-store()           → create
-update()          → edit
-destroy()         → soft delete
-restore()         → restore
-bulkDelete()      → bulk soft delete
-bulkToggleStatus()→ bulk aktif/nonaktif
-bulkRestore()     → bulk restore
-export()          → download Excel semua data
-export() + ?ids=  → download Excel selected
-template()        → download template import kosong
-import()          → upload + validasi + insert batch
-```
 
 ---
 
@@ -117,23 +61,22 @@ import()          → upload + validasi + insert batch
 
 ---
 
-## Aksi
+## Permission & Aksi
 
 Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403 Forbidden).
 
-| Aksi | Izin Diperlukan | Keterangan |
-|------|----------------|------------|
-| **Lihat Daftar** | `paket.list` | Melihat tabel paket dan sidebar menu |
-| **Tambah Paket** | `paket.create` | Membuka modal form, POST ke backend |
-| **Edit Paket** | `paket.edit` | Mengubah data paket (nama, harga, speed, quota, FUP, dll) |
-| **Detail Paket** | `paket.detail` | Melihat informasi lengkap paket |
-| **Hapus Paket** | `paket.delete` | Soft delete (bisa dipulihkan), single & bulk |
-| **Pulihkan Paket** | `paket.restore` | Mengembalikan paket yang sudah dihapus, single & bulk |
-| **Bulk Aktif/Nonaktif** | `paket.edit` | Toggle status banyak paket sekaligus (nebeng edit) |
-| **Bulk Hapus** | `paket.delete` | Hapus banyak paket sekaligus (nebeng delete) |
-| **Bulk Pulihkan** | `paket.restore` | Pulihkan banyak paket sekaligus (nebeng restore) |
-| **Export Excel** | `paket.export` | Download Excel — semua data atau selected via checkbox |
-| **Import Excel** | `paket.import` | Upload .xlsx/.csv, validasi, insert batch + download template |
+| Aksi | Izin Diperlukan | Single | Bulk |
+|------|----------------|---------|------|
+| **Lihat Daftar** | `paket.list` | — | — |
+| **Tambah Paket** | `paket.create` | ✅ | — |
+| **Edit Paket** | `paket.edit` | ✅ | — |
+| **Detail Paket** | `paket.detail` | ✅ | — |
+| **Hapus Paket** | `paket.delete` | ✅ | ✅ |
+| **Pulihkan Paket** | `paket.restore` | ✅ | ✅ |
+| **Aktifkan Paket** | `paket.edit` | — | ✅ |
+| **Nonaktifkan Paket** | `paket.edit` | — | ✅ |
+| **Export Excel** | `paket.export` | — | ✅ |
+| **Import Excel** | `paket.import` | — | — |
 
 ---
 
@@ -156,6 +99,18 @@ Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403
 | GET | `/operator-perusahaan/daftar-paket/template` | `paket.import` |
 | POST | `/operator-perusahaan/daftar-paket/import` | `paket.import` |
 
+### Permissions (8 total)
+```
+paket.list    → Lihat halaman daftar paket
+paket.create  → Tambah paket baru
+paket.edit    → Edit paket + bulk aktif/nonaktif
+paket.detail  → Lihat detail paket
+paket.delete  → Hapus paket + bulk delete
+paket.restore → Pulihkan paket + bulk restore
+paket.export  → Download Excel
+paket.import  → Upload Excel + download template
+```
+
 ### Controller
 `App\Http\Controllers\OperatorPerusahaan\PaketController`
 
@@ -165,95 +120,82 @@ Kalau user tidak punya izin, tombol disembunyikan dan backend route dikunci (403
 ### Model
 `App\Models\InternetPackage`
 
-| Field | Type | Keterangan |
-|-------|------|-----------|
-| `id` | uuid | Primary key |
-| `company_id` | uuid | FK ke companies |
-| `code` | string | Kode paket (unique dengan company_id) |
-| `name` | string | Nama paket |
-| `price` | decimal(20,2) | Harga paket |
-| `speed_down_kbps` | decimal(20,2) | Kecepatan download (kbps) |
-| `speed_up_kbps` | decimal(20,2) | Kecepatan upload (kbps) |
-| `quota_gb` | integer | Kuota dalam GB |
-| `billing_cycle` | enum | daily, weekly, monthly, yearly |
-| `max_devices` | integer, nullable | Maksimal perangkat |
-| `is_unlimited` | boolean | Kuota unlimited |
-| `fup_quota_down` | integer, nullable | Batas FUP download (GB) |
-| `fup_quota_up` | integer, nullable | Batas FUP upload (GB) |
-| `fup_speed_down_kbps` | decimal(20,2), nullable | Speed setelah FUP download |
-| `fup_speed_up_kbps` | decimal(20,2), nullable | Speed setelah FUP upload |
-| `is_active` | boolean | Status aktif |
-| `description` | string, nullable | Deskripsi |
-| SoftDeletes | — | Ada soft delete |
-| blameable | — | Ada created_by, updated_by, deleted_by |
+---
 
-### Permission Enum (tambahan)
+## Testing
 
-Tambahkan di `app/Enums/Permissions.php`:
+### E2E Testing: Playwright (NodeJS)
 
-```php
-case PaketExport  = 'paket.export';
-case PaketImport  = 'paket.import';
-```
+| Test File | Coverage |
+|-----------|----------|
+| `DaftarPaketCRUDTest.cjs` | Search, filter, sort, create, delete, restore, checklist, bulk actions |
+| `DaftarPaketPermissionTest.cjs` | Granular permission check (HAS vs NOT HAS) |
+| `DaftarPaketResponsiveTest.cjs` | Responsive & dark/light mode |
 
-Dan di method `forScope('admin_perusahaan')`:
+### CRUD Test Cases (DaftarPaketCRUDTest.cjs)
 
-```php
-self::PaketExport->value,
-self::PaketImport->value,
-```
+| # | Test | Deskripsi |
+|---|------|-----------|
+| 01 | `test_01_page_renders` | Page load, HTTP 200, content rendered |
+| 02 | `test_02_search` | Pencarian by nama paket |
+| 03 | `test_03_filter_status` | Filter Aktif/Nonaktif |
+| 04 | `test_04_filter_terhapus` | Filter Terhapus (Ya/Tidak) |
+| 05 | `test_05_sort_all_columns` | Sort semua kolom (asc/desc) |
+| 06 | `test_06_create_paket` | Tambah paket baru |
+| 07 | `test_07_delete_paket` | Soft delete via modal |
+| 08 | `test_08_restore_paket` | Pulihkan paket yang dihapus |
+| 09 | `test_09_checklist` | Checklist items |
+| 10 | `test_10_bulk_delete` | Bulk delete via checkbox |
+| 11 | `test_11_bulk_restore` | Bulk restore deleted items |
+| 12 | `test_12_bulk_aktifkan` | Bulk aktifkan paket |
+| 13 | `test_13_bulk_nonaktifkan` | Bulk nonaktifkan paket |
 
-### Migration
-`database/migrations/2026_05_11_141134_create_internet_packages_table.php`
+### Permission Test Cases (DaftarPaketPermissionTest.cjs)
 
-### Demo Seeder (DemoSeeder.php)
-Method `seedInternetPackages(string $companyId)` membuat data per company:
+| Permission | HAS (rbac.full) | NOT HAS (rbac.list) |
+|------------|-----------------|---------------------|
+| `paket.list` | HTTP 200, sidebar visible | HTTP 403 |
+| `paket.create` | "Tambah Paket" button visible | Button hidden |
+| `paket.edit` | Edit button + bulk Aktifkan/Nonaktifkan visible | Hidden |
+| `paket.detail` | "Detail" button visible, modal opens | Hidden |
+| `paket.delete` | "Hapus" button + bulk visible | Hidden |
+| `paket.restore` | "Pulihkan" button + bulk visible | Hidden |
+| `paket.export` | "Export" button visible | Hidden |
+| `paket.import` | "Import" button + "Download Template" visible | Hidden |
 
-```php
-private function seedInternetPackages(string $companyId): void
-{
-    $packages = [
-        ['code' => 'b10', 'name' => 'Basic 10Mbps', 'price' => 150000, 'speed_down_kbps' => 10240, 'speed_up_kbps' => 5120, 'quota_gb' => 100, 'billing_cycle' => 'monthly', 'is_unlimited' => false],
-        ['code' => 'p25', 'name' => 'Pro 25Mbps', 'price' => 250000, 'speed_down_kbps' => 25600, 'speed_up_kbps' => 10240, 'quota_gb' => 300, 'billing_cycle' => 'monthly', 'is_unlimited' => false],
-        ['code' => 'u50', 'name' => 'Ultimate 50Mbps', 'price' => 400000, 'speed_down_kbps' => 51200, 'speed_up_kbps' => 20480, 'quota_gb' => 500, 'billing_cycle' => 'monthly', 'is_unlimited' => true],
-    ];
-    // ...
-}
-```
+### RBAC Users for Testing
 
-Untuk company1Id, company2Id, company4Id, company5Id saja (company3Id tidak ada paket — nonaktif).
+| User | Email | Permissions |
+|------|-------|-------------|
+| Full Access | `rbac.full@rtrwnet.id` | Semua (8 permissions) |
+| List Only | `rbac.list@rtrwnet.id` | `paket.list` only |
+| No Access | `rbac.no@rtrwnet.id` | None |
 
-### Test Case
-test dengan laravel dusk
-browser dengan screenshot jangan headless biar debuggingnya mudah
-| File | Coverage |
-|------|----------|
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketViewTest.php` | Page render + kolom visible |
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketCRUDTest.php` | Search, filter status, sort, langganan+estimasi, delete, bulk delete |
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketImportExportTest.php` | Template download, export all, export selected, import modal |
-| `tests/Browser/Feature/OperatorPerusahaan/DaftarPaketPermissionTest.php` | Granular permission: list, create, export, import visibility |
+Setup: `php tests/Browser/Playwright/setup-rbac-users.php`
 
-#### Test Summary
+### Responsive Test (DaftarPaketResponsiveTest.cjs)
 
-| Test | File | Deskripsi |
-|------|------|-----------|
-| `test_01_page_renders` | ViewTest | Halaman render, assert title, table, sidebar button |
-| `test_02_columns_visible` | ViewTest | Semua kolom visible (Kode, Nama, Harga, Speed, Quota, Billing, Langganan Aktif, Estimasi Pendapatan, Status) |
-| `test_01_page_renders` | CRUDTest | Page render + assert table & button |
-| `test_02_search` | CRUDTest | Pencarian by nama paket, Enter key |
-| `test_02b_search_by_code` | CRUDTest | Pencarian by kode paket (b10) |
-| `test_03_filter_status` | CRUDTest | Filter Aktif/Nonaktif + apply button |
-| `test_04_sort` | CRUDTest | Sort by kode, nama, harga, langganan aktif (click th) |
-| `test_05_langganan_aktif_and_estimasi` | CRUDTest | 3 langganan × 200000 = 600.000 estimasi |
-| `test_06_delete` | CRUDTest | Soft delete via modal konfirmasi |
-| `test_07_bulk_delete` | CRUDTest | Select checkbox + bulk delete |
-| `test_01_template_download` | ImportExportTest | Download template via link |
-| `test_02_export_all` | ImportExportTest | Export semua via direct URL, hasil file .xlsx berisi 17 kolom |
-| `test_03_export_selected` | ImportExportTest | Export selected via checkbox |
-| `test_04_import_modal` | ImportExportTest | Buka modal import + assert "Download template" |
-| Permission tests | PermissionTest | list/create/export/import visible/hidden berdasarkan permission |
+| Viewport | Resolution |
+|----------|------------|
+| Mobile | 375x667 |
+| Mobile Landscape | 812x375 |
+| Tablet | 768x1024 |
+| Laptop | 1366x768 |
+| Desktop | 1920x1080 |
 
-#### Import Excel Column Mapping
+Color schemes: Light & Dark mode
+
+---
+
+## Import / Export Excel
+
+### Aturan Wajib
+1. **Tidak ada angka notasi ilmiah** — gunakan `setCellValueExplicit` dengan `TYPE_STRING`
+2. **Export:** Header bold, auto-width, border tipis
+3. **Import:** Validasi per baris, insert batch (chunk 500)
+4. **Template:** Download template kosong via `/template`
+
+### Import Column Mapping
 
 | Index | Field | Keterangan |
 |-------|-------|-----------|
@@ -273,8 +215,32 @@ browser dengan screenshot jangan headless biar debuggingnya mudah
 | 13 | Status | Aktif/Nonaktif |
 | 14 | Deskripsi | String, nullable |
 
-#### Export Excel Column Headers
+### Export Column Headers (16 kolom)
 
-['Nama Paket', 'Harga', 'Billing Cycle', 'Speed Down (kbps)', 'Speed Up (kbps)', 'Kuota (GB)', 'Unlimited', 'Max Devices', 'FUP Quota Down', 'FUP Quota Up', 'FUP Speed Down', 'FUP Speed Up', 'Langganan Aktif', 'Estimasi Pendapatan', 'Status', 'Deskripsi']
+`Nama Paket, Harga, Billing Cycle, Speed Down, Speed Up, Kuota GB, Unlimited, Max Devices, FUP Quota Down, FUP Quota Up, FUP Speed Down, FUP Speed Up, Langganan Aktif, Estimasi Pendapatan, Status, Deskripsi`
 
-> **Catatan:** Export 16 kolom — kode digabung dengan nama di kolom "Nama Paket" format: `Nama (Kode)` seperti di tampilan web.
+---
+
+## Model Fields
+
+| Field | Type | Keterangan |
+|-------|------|-----------|
+| `id` | uuid | Primary key |
+| `company_id` | uuid | FK ke companies |
+| `code` | string | Kode paket (unique per company) |
+| `name` | string | Nama paket |
+| `price` | decimal(20,2) | Harga paket |
+| `speed_down_kbps` | decimal(20,2) | Kecepatan download (kbps) |
+| `speed_up_kbps` | decimal(20,2) | Kecepatan upload (kbps) |
+| `quota_gb` | integer | Kuota dalam GB |
+| `billing_cycle` | enum | daily, weekly, monthly, yearly |
+| `max_devices` | integer, nullable | Maksimal perangkat |
+| `is_unlimited` | boolean | Kuota unlimited |
+| `is_active` | boolean | Status aktif |
+| `fup_quota_down` | integer, nullable | Batas FUP download (GB) |
+| `fup_quota_up` | integer, nullable | Batas FUP upload (GB) |
+| `fup_speed_down_kbps` | decimal(20,2), nullable | Speed setelah FUP download |
+| `fup_speed_up_kbps` | decimal(20,2), nullable | Speed setelah FUP upload |
+| `description` | string, nullable | Deskripsi |
+| SoftDeletes | — | Ada soft delete |
+| blameable | — | created_by, updated_by, deleted_by, restored_by |
