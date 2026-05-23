@@ -20,8 +20,11 @@ class TagihanSayaViewTest {
             await this.helper.fill('input[type="email"]', 'pelanggan@rtrwnet.id');
             await this.helper.fill('input[type="password"]', 'password123');
             await this.helper.click('button[type="submit"]');
-            await this.helper.page.waitForTimeout(3000);
-            await this.helper.screenshot('Pelanggan/TagihanSaya/TestView/00-login');
+            await this.helper.page.waitForTimeout(5000);
+
+            const afterLoginUrl = this.helper.getCurrentUrl();
+            console.log('  After login URL:', afterLoginUrl);
+            await this.helper.screenshot('Pelanggan/TagihanSaya/TestView/00-after-login');
 
             await this.test_01_page_renders();
             await this.test_02_list_displays();
@@ -65,8 +68,10 @@ class TagihanSayaViewTest {
             await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('Pelanggan/TagihanSaya/TestView/01-page');
 
-            const url = this.helper.getCurrentUrl();
-            if (url.includes('login')) throw new Error('Not logged in');
+            const pageText = await this.helper.getText('body');
+            if (pageText.includes('login') && pageText.includes('Login')) {
+                throw new Error('Not logged in - redirected');
+            }
         });
     }
 

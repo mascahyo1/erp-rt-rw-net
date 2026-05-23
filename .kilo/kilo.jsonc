@@ -1,0 +1,20 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "provider": {
+    "openai": {
+      "baseUrl": "https://api.deepseek.com",
+      "apiKey": " sk-59dde15cca234e77bc3a36ba1b354379",
+
+      "models": {
+        "deepseek-v4-pro": {
+          "name": "DeepSeek V4 Pro BYOK Max",
+
+          "extra_body": {
+            "reasoningEffort": "max"
+          }
+        }
+      }
+    }
+  },
+  "snapshot": false
+}
