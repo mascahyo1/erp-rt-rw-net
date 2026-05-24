@@ -36,6 +36,10 @@ class LanggananController extends Controller
             $query->where('internet_status', $status);
         }
 
+        if ($paket = $request->input('paket')) {
+            $query->where('internet_package_id', $paket);
+        }
+
         $allowedSorts = ['internet_status', 'billing_amount', 'created_at', 'deleted_at'];
         if ($sortField = $request->input('sort_field')) {
             $sortDir = $request->input('sort_dir', 'asc');
@@ -49,10 +53,15 @@ class LanggananController extends Controller
         $perPage = min((int) $request->input('per_page', 10), 100);
 
         $items = $query->paginate($perPage)->through(function ($item) {
+            $phone = $item->customer?->phone_country_code && $item->customer?->phone_number
+                ? $item->customer->phone_country_code . $item->customer->phone_number
+                : null;
             return [
                 'id' => $item->id,
                 'customer_id' => $item->customer_id,
                 'customer_name' => $item->customer?->name,
+                'customer_email' => $item->customer?->email,
+                'customer_phone' => $phone,
                 'internet_package_id' => $item->internet_package_id,
                 'internet_package_name' => $item->internetPackage?->name,
                 'account_number' => $item->account_number,
@@ -73,7 +82,7 @@ class LanggananController extends Controller
 
         return Inertia::render($request->route()->defaults['view'] ?? 'OperatorPerusahaan/LanggananCustomer', [
             'langganans' => $items,
-            'filters' => $request->only(['search', 'status', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
+            'filters' => $request->only(['search', 'status', 'paket', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
         ]);
     }
 
@@ -185,7 +194,7 @@ class LanggananController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Daftar Langganan');
 
-        $headers = ['No. Akun', 'Nama Customer', 'Nama Paket', 'Router SN', 'Status', 'Usage Upload (KB)', 'Usage Download (KB)', 'Tagihan', 'Catatan', 'Tanggal Dibuat'];
+        $headers = ['No. Akun', 'Nama Customer', 'Email', 'No. HP', 'Nama Paket', 'Router SN', 'Status', 'Usage Upload (KB)', 'Usage Download (KB)', 'Tagihan', 'Catatan', 'Tanggal Dibuat'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -197,6 +206,11 @@ class LanggananController extends Controller
             $col = 1;
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->account_number ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->customer?->name ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->customer?->email ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $phone = $item->customer?->phone_country_code && $item->customer?->phone_number
+                ? $item->customer->phone_country_code . $item->customer->phone_number
+                : '-';
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $phone, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->internetPackage?->name ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->router_sn ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $statusLabel = match($item->internet_status) { 'active' => 'Aktif', 'inactive' => 'Nonaktif', 'suspended' => 'Suspend', 'terminated' => 'Terminasi', default => $item->internet_status };

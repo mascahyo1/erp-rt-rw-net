@@ -23,6 +23,8 @@ Langganan adalah hubungan antara pelanggan dengan paket layanan internet yang me
 |-------|------------|
 | Checkbox | Untuk pilih banyak data (bulk action) |
 | Nama Customer | Nama pelanggan yang langganan |
+| Email | Email pelanggan |
+| No. HP | Nomor HP pelanggan |
 | No. Akun | Nomor akun langganan (format: ACC-XXXX) |
 | Nama Paket | Nama paket internet yang dipilih |
 | Status | Status langganan: Aktif, Nonaktif, Suspend, Terminasi |
@@ -32,6 +34,7 @@ Langganan adalah hubungan antara pelanggan dengan paket layanan internet yang me
 - **Tabel daftar langganan** — menampilkan semua langganan dengan pelanggan, paket, no. akun, dan status
 - **Pencarian** — mencari langganan berdasarkan nama pelanggan atau nomor akun (tekan Enter untuk mencari)
 - **Filter status** — menyaring langganan berdasarkan status: Aktif, Nonaktif, Suspend, Terminasi
+- **Filter paket** — menyaring langganan berdasarkan paket internet
 - **Filter terhapus** — menampilkan data yang dihapus (soft delete) untuk dipulihkan
 - **Urutkan** — klik judul kolom untuk mengurutkan data
 - **Pagination** — pilih jumlah data per halaman: 5, 10, 25, 50, 100
@@ -134,7 +137,7 @@ Langganan adalah hubungan antara pelanggan dengan paket layanan internet yang me
 Template kolom: No. Akun, Customer ID (UUID), Paket ID (UUID), Router SN, Status, Usage Upload (KB), Usage Download (KB), Catatan
 
 ### Export Excel
-Kolom export: No. Akun, Nama Customer, Nama Paket, Router SN, Status, Usage Upload (KB), Usage Download (KB), Tagihan, Catatan, Tanggal Dibuat
+Kolom export: No. Akun, Nama Customer, Email, No. HP, Nama Paket, Router SN, Status, Usage Upload (KB), Usage Download (KB), Tagihan, Catatan, Tanggal Dibuat
 
 ### Test Case
 | File | Description |

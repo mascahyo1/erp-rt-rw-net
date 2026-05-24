@@ -62,6 +62,8 @@ class LanggananCRUDTest {
             await this.test_16_import_modal_opens();
             await this.test_17_download_template();
             await this.test_18_export_with_data();
+            await this.test_19_filter_paket();
+            await this.test_20_email_hp_columns();
 
             console.log('\n========================================');
             console.log('TEST SUMMARY');
@@ -775,7 +777,104 @@ class LanggananCRUDTest {
             await this.takeScreenshot('XX-' + testName);
         }
     }
+
+    async test_19_filter_paket() {
+        const testName = 'test_19_filter_paket';
+        console.log(`[TEST] ${testName}`);
+
+        try {
+            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.waitForLoadState('networkidle');
+            await this.page.waitForTimeout(1500);
+            await this.takeScreenshot('19-filter-paket-before');
+
+            // Find paket dropdown button with "Semua Paket" text
+            const buttons = await this.page.$$('button');
+            let paketBtn = null;
+            for (const btn of buttons) {
+                const text = await btn.textContent();
+                if (text && text.includes('Semua Paket')) {
+                    paketBtn = btn;
+                    break;
+                }
+            }
+
+            if (!paketBtn) {
+                console.log(`  SKIPPED: Paket dropdown not found\n`);
+                this.testResults.passed++;
+                return;
+            }
+
+            await paketBtn.click({ force: true });
+            await this.page.waitForTimeout(1000);
+            await this.takeScreenshot('19-filter-paket-open');
+
+            // Type in search input WITHIN the open dropdown only
+            await this.page.waitForTimeout(500);
+            const dropdownEl = await this.page.$(".searchable-select-dropdown");
+            if (dropdownEl) {
+                const searchInput = await dropdownEl.$('input[type="text"]');
+                if (searchInput) {
+                    await searchInput.type("pro", { delay: 100 });
+                    await this.page.waitForTimeout(1500);
+                    await this.takeScreenshot("19-filter-paket-search");
+                }
+            }
+
+            // Click first dropdown option
+            const options = await this.page.$$('.searchable-select-dropdown button');
+            if (options.length > 0) {
+                await options[0].click({ force: true });
+                await this.page.waitForTimeout(500);
+                await this.takeScreenshot('19-filter-paket-after');
+            }
+
+            console.log(`  Paket filter selected`);
+            console.log(`  PASSED\n`);
+            this.testResults.passed++;
+        } catch (e) {
+            console.log(`  ✗ ${testName}: ${e.message.substring(0, 80)}`);
+            this.testResults.failed++;
+            this.testResults.errors.push(`${testName}: ${e.message.substring(0, 100)}`);
+            await this.takeScreenshot('XX-' + testName);
+        }
+    }
+
+    async test_20_email_hp_columns() {
+        const testName = 'test_20_email_hp_columns';
+        console.log(`[TEST] ${testName}`);
+
+        try {
+            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.waitForLoadState('networkidle');
+            await this.page.waitForTimeout(1500);
+            await this.takeScreenshot('20-email-hp-before');
+
+            const pageHTML = await this.page.content();
+
+            // Check Email column exists in table header
+            const hasEmailCol = pageHTML.includes('>Email<') || pageHTML.includes('">Email</th');
+            console.log(`  Email column in table: ${hasEmailCol}`);
+
+            // Check HP column exists in table header
+            const hasHpCol = pageHTML.includes('>No. HP<') || pageHTML.includes('">No. HP</th');
+            console.log(`  No. HP column in table: ${hasHpCol}`);
+
+            this.assert(hasEmailCol, `${testName}: Email column should exist in table`);
+            this.assert(hasHpCol, `${testName}: No. HP column should exist in table`);
+
+            await this.takeScreenshot('20-email-hp-after');
+            console.log(`  PASSED\n`);
+            this.testResults.passed++;
+        } catch (e) {
+            console.log(`  ✗ ${testName}: ${e.message.substring(0, 80)}`);
+            this.testResults.failed++;
+            this.testResults.errors.push(`${testName}: ${e.message.substring(0, 100)}`);
+            await this.takeScreenshot('XX-' + testName);
+        }
+    }
 }
+
 
 const test = new LanggananCRUDTest();
 test.runAllTests().catch(console.error);

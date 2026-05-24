@@ -50,7 +50,6 @@ class SearchController extends Controller
     {
         $companyId = auth()->user()->company_id;
         $search = $request->input('search');
-        $perPage = min((int) $request->input('per_page', 25), 100);
 
         $query = InternetPackage::where('company_id', $companyId)
             ->where('is_active', true)
@@ -60,6 +59,15 @@ class SearchController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
+        if ($request->boolean('all')) {
+            $items = $query->get()->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+            ]);
+            return response()->json(['items' => $items]);
+        }
+
+        $perPage = min((int) $request->input('per_page', 25), 100);
         $packages = $query->paginate($perPage)
             ->through(fn($p) => [
                 'value' => $p->id,
