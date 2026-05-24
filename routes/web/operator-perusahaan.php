@@ -233,9 +233,12 @@ Route::middleware('auth:admin-company')->group(function () {
     // Langganan
     Route::middleware('permission:langganan.list')->group(function () {
         Route::get('/operator-perusahaan/langganan-customer', [LanggananController::class, 'index'])->name('operator-perusahaan.langganan.index');
+        Route::get('/operator-perusahaan/langganan-customer/export', [LanggananController::class, 'export'])->name('operator-perusahaan.langganan.export');
+        Route::get('/operator-perusahaan/langganan-customer/template', [LanggananController::class, 'template'])->name('operator-perusahaan.langganan.template');
     });
     Route::middleware('permission:langganan.create')->group(function () {
         Route::post('/operator-perusahaan/langganan-customer', [LanggananController::class, 'store'])->name('operator-perusahaan.langganan.store');
+        Route::post('/operator-perusahaan/langganan-customer/import', [LanggananController::class, 'import'])->name('operator-perusahaan.langganan.import');
     });
     Route::middleware('permission:langganan.edit')->group(function () {
         Route::put('/operator-perusahaan/langganan-customer/{custInternet}', [LanggananController::class, 'update'])->name('operator-perusahaan.langganan.update');

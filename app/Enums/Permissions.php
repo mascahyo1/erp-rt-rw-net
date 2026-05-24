@@ -86,6 +86,8 @@ enum Permissions: string
     case LanggananDetail = 'langganan.detail';
     case LanggananDelete = 'langganan.delete';
     case LanggananRestore = 'langganan.restore';
+    case LanggananExport  = 'langganan.export';
+    case LanggananImport  = 'langganan.import';
 
     // Tagihan (full CRUD)
     case TagihanList   = 'tagihan.list';
@@ -278,6 +280,8 @@ enum Permissions: string
                 self::LanggananDetail->value,
                 self::LanggananDelete->value,
                 self::LanggananRestore->value,
+                self::LanggananExport->value,
+                self::LanggananImport->value,
                 self::TagihanList->value,
                 self::TagihanCreate->value,
                 self::TagihanEdit->value,

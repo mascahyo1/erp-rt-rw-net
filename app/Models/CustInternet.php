@@ -19,6 +19,10 @@ class CustInternet extends Model
         'customer_id',
         'internet_package_id',
         'account_number',
+        'router_sn',
+        'customer_address',
+        'customer_address_long',
+        'customer_address_lat',
         'usage_upload_kb',
         'usage_download_kb',
         'internet_status',
@@ -36,6 +40,7 @@ class CustInternet extends Model
             'billing_amount' => 'decimal:2',
             'usage_upload_kb' => 'decimal:2',
             'usage_download_kb' => 'decimal:2',
+            'customer_address_lat' => 'decimal:7',
         ];
     }
 
