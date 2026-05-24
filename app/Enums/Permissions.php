@@ -76,6 +76,8 @@ enum Permissions: string
     case CustomerDetail = 'customer.detail';
     case CustomerDelete = 'customer.delete';
     case CustomerRestore = 'customer.restore';
+    case CustomerExport  = 'customer.export';
+    case CustomerImport  = 'customer.import';
 
     // Langganan (full CRUD)
     case LanggananList   = 'langganan.list';
@@ -268,6 +270,8 @@ enum Permissions: string
                 self::CustomerDetail->value,
                 self::CustomerDelete->value,
                 self::CustomerRestore->value,
+                self::CustomerExport->value,
+                self::CustomerImport->value,
                 self::LanggananList->value,
                 self::LanggananCreate->value,
                 self::LanggananEdit->value,

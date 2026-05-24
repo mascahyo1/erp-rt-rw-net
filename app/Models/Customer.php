@@ -19,6 +19,7 @@ class Customer extends Authenticatable
     protected $fillable = [
         'id',
         'company_id',
+        'code',
         'name',
         'email',
         'phone_country_code',
@@ -42,6 +43,10 @@ class Customer extends Authenticatable
     {
         return [
             'is_active' => 'boolean',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'deleted_at' => 'datetime',
+            'restored_at' => 'datetime',
         ];
     }
 

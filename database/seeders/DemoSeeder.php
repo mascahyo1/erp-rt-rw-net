@@ -322,6 +322,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company1Id,
+                'code' => 'CUST-001',
                 'name' => 'Pak Sugeng',
                 'email' => 'sugeng@gmail.com',
                 'phone_country_code' => '+62',
@@ -335,6 +336,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company1Id,
+                'code' => 'CUST-002',
                 'name' => 'Bu Rini',
                 'email' => 'rini@gmail.com',
                 'phone_country_code' => '+62',
@@ -348,6 +350,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company1Id,
+                'code' => 'CUST-003',
                 'name' => 'Pak Herman',
                 'email' => 'herman@gmail.com',
                 'phone_country_code' => '+62',
@@ -361,6 +364,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company1Id,
+                'code' => 'CUST-004',
                 'name' => 'Mbak Dewi',
                 'email' => 'dewi.w@gmail.com',
                 'phone_country_code' => '+62',
@@ -374,6 +378,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company2Id,
+                'code' => 'CUST-005',
                 'name' => 'Pak Slamet',
                 'email' => 'slamet@gmail.com',
                 'phone_country_code' => '+62',
@@ -387,6 +392,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company2Id,
+                'code' => 'CUST-006',
                 'name' => 'Bu Tuti',
                 'email' => 'tuti@gmail.com',
                 'phone_country_code' => '+62',
@@ -400,6 +406,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company2Id,
+                'code' => 'CUST-007',
                 'name' => 'Pak Joko',
                 'email' => 'joko@gmail.com',
                 'phone_country_code' => '+62',
@@ -413,6 +420,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company4Id,
+                'code' => 'CUST-008',
                 'name' => 'Pak Wahyu',
                 'email' => 'wahyu@gmail.com',
                 'phone_country_code' => '+62',
@@ -426,6 +434,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company4Id,
+                'code' => 'CUST-009',
                 'name' => 'Bu Ani',
                 'email' => 'ani@gmail.com',
                 'phone_country_code' => '+62',
@@ -439,6 +448,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company4Id,
+                'code' => 'CUST-010',
                 'name' => 'Pak Dodi',
                 'email' => 'dodi@gmail.com',
                 'phone_country_code' => '+62',
@@ -452,6 +462,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company5Id,
+                'code' => 'CUST-011',
                 'name' => 'Pak Ujang',
                 'email' => 'ujang@gmail.com',
                 'phone_country_code' => '+62',
@@ -465,6 +476,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company5Id,
+                'code' => 'CUST-012',
                 'name' => 'Bu Lilis',
                 'email' => 'lilis@gmail.com',
                 'phone_country_code' => '+62',
@@ -478,6 +490,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company5Id,
+                'code' => 'CUST-013',
                 'name' => 'Pak Cecep',
                 'email' => 'cecep@gmail.com',
                 'phone_country_code' => '+62',

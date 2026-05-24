@@ -9,27 +9,32 @@ use App\Models\Permission;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-$companyId = App\Models\Company::first()->id ?? 1;
+$companyId = App\Models\Company::first()->id ?? null;
+if (!$companyId) {
+    echo "ERROR: No company found. Run DemoSeeder first.\n";
+    exit(1);
+}
 
 // Get role IDs to delete role_permissions first
-$rolesToDelete = Role::whereIn('name', ['RBAC Full Access', 'RBAC List Only', 'RBAC No Paket'])->pluck('id');
+$rolesToDelete = Role::whereIn('name', ['RBAC Full Access', 'RBAC List Only', 'RBAC No Paket', 'RBAC Customer Full', 'RBAC Customer List'])->pluck('id');
 
-// Delete in correct order: model_has_roles -> role_permissions -> roles
 if ($rolesToDelete->count() > 0) {
-    // First delete model_has_roles entries
     DB::table('model_has_roles')->whereIn('role_id', $rolesToDelete)->delete();
-    // Then delete role_permissions
     DB::table('role_permissions')->whereIn('role_id', $rolesToDelete)->delete();
-    // Finally delete roles
     Role::whereIn('id', $rolesToDelete)->forceDelete();
 }
 
-// Delete existing RBAC users
+DB::table('model_has_roles')->whereIn('model_type', [AdminCompany::class])
+    ->whereIn('model_id', function($q) {
+        $q->select('id')->from('admin_companies')
+          ->whereIn('email', ['rbac.full@rtrwnet.id','rbac.list@rtrwnet.id','rbac.no@rtrwnet.id']);
+    })->delete();
+
 AdminCompany::whereIn('email', ['rbac.full@rtrwnet.id','rbac.list@rtrwnet.id','rbac.no@rtrwnet.id'])->forceDelete();
 
 echo "Deleted existing RBAC users/roles\n";
 
-// Full Access Role
+// ========== RBAC FULL ACCESS (ALL customer + paket permissions) ==========
 $fullRole = Role::create([
     'id' => Str::uuid()->toString(),
     'scope' => 'admin_perusahaan',
@@ -38,7 +43,10 @@ $fullRole = Role::create([
     'display_order' => 1
 ]);
 
-$fullPerms = Permission::whereIn('name', ['paket.list','paket.create','paket.edit','paket.delete','paket.restore','paket.export','paket.import','paket.detail'])->get();
+$fullPerms = Permission::whereIn('name', [
+    'paket.list','paket.create','paket.edit','paket.delete','paket.restore','paket.export','paket.import','paket.detail',
+    'customer.list','customer.create','customer.edit','customer.delete','customer.restore','customer.export','customer.import','customer.detail'
+])->get();
 foreach ($fullPerms as $p) {
     DB::table('role_permissions')->insert([
         'id' => Str::uuid()->toString(),
@@ -66,9 +74,9 @@ DB::table('model_has_roles')->insert([
     'model_type' => AdminCompany::class
 ]);
 
-echo "Created: rbac.full@rtrwnet.id / password (FULL)\n";
+echo "Created: rbac.full@rtrwnet.id / password (FULL - all customer + paket permissions)\n";
 
-// List Only Role
+// ========== RBAC LIST ONLY (customer.list only) ==========
 $listRole = Role::create([
     'id' => Str::uuid()->toString(),
     'scope' => 'admin_perusahaan',
@@ -77,14 +85,16 @@ $listRole = Role::create([
     'display_order' => 2
 ]);
 
-$listPerm = Permission::where('name','paket.list')->first();
-DB::table('role_permissions')->insert([
-    'id' => Str::uuid()->toString(),
-    'role_id' => $listRole->id,
-    'permission_id' => $listPerm->id,
-    'created_at' => now(),
-    'updated_at' => now()
-]);
+$listPerm = Permission::where('name', 'customer.list')->first();
+if ($listPerm) {
+    DB::table('role_permissions')->insert([
+        'id' => Str::uuid()->toString(),
+        'role_id' => $listRole->id,
+        'permission_id' => $listPerm->id,
+        'created_at' => now(),
+        'updated_at' => now()
+    ]);
+}
 
 $listUser = AdminCompany::create([
     'name' => 'RBAC List Only',
@@ -103,9 +113,9 @@ DB::table('model_has_roles')->insert([
     'model_type' => AdminCompany::class
 ]);
 
-echo "Created: rbac.list@rtrwnet.id / password (LIST ONLY)\n";
+echo "Created: rbac.list@rtrwnet.id / password (LIST only - customer.list)\n";
 
-// No Permission Role
+// ========== RBAC NO PERMISSION ==========
 $noRole = Role::create([
     'id' => Str::uuid()->toString(),
     'scope' => 'admin_perusahaan',
@@ -131,8 +141,8 @@ DB::table('model_has_roles')->insert([
     'model_type' => AdminCompany::class
 ]);
 
-echo "Created: rbac.no@rtrwnet.id / password (NO PERMISSION)\n";
+echo "Created: rbac.no@rtrwnet.id / password (NO permission)\n";
 echo "\n=== RBAC Users Ready ===\n";
-echo "rbac.full@rtrwnet.id / password (ALL permissions)\n";
-echo "rbac.list@rtrwnet.id / password (LIST only)\n";
+echo "rbac.full@rtrwnet.id / password (ALL customer + paket permissions)\n";
+echo "rbac.list@rtrwnet.id / password (customer.list only)\n";
 echo "rbac.no@rtrwnet.id / password (NO permission)\n";

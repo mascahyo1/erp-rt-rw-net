@@ -55,6 +55,13 @@ Route::middleware('auth:admin-company')->group(function () {
             Route::patch('/customer/{id}/restore', [CustomerController::class, 'restore'])->name('customer.restore');
             Route::post('/customer/bulk-restore', [CustomerController::class, 'bulkRestore'])->name('customer.bulkRestore');
         });
+        Route::middleware('permission:customer.export')->group(function () {
+            Route::get('/customer/export', [CustomerController::class, 'export'])->name('customer.export');
+        });
+        Route::middleware('permission:customer.import')->group(function () {
+            Route::get('/customer/template', [CustomerController::class, 'template'])->name('customer.template');
+            Route::post('/customer/import', [CustomerController::class, 'import'])->name('customer.import');
+        });
 
         // Karyawan
         Route::middleware('permission:karyawan.list')->group(function () {
