@@ -33,14 +33,14 @@ Langganan adalah hubungan antara pelanggan dengan paket layanan internet yang me
 ## Fitur
 - **Tabel daftar langganan** — menampilkan semua langganan dengan pelanggan, paket, no. akun, dan status
 - **Pencarian** — mencari langganan berdasarkan nama pelanggan atau nomor akun (tekan Enter untuk mencari)
-- **Filter status** — menyaring langganan berdasarkan status: Aktif, Nonaktif, Suspend, Terminasi
-- **Filter paket** — menyaring langganan berdasarkan paket internet
-- **Filter terhapus** — menampilkan data yang dihapus (soft delete) untuk dipulihkan
+- **Filter status** — menyaring langganan berdasarkan status: Aktif, Nonaktif, Suspend, Terminasi (apply saat klik tombol Filter)
+- **Filter paket** — menyaring langganan berdasarkan paket internet dengan dropdown searchable + infinite scroll (apply saat klik tombol Filter)
+- **Filter terhapus** — menampilkan data yang dihapus (soft delete) untuk dipulihkan (apply saat klik tombol Filter)
 - **Urutkan** — klik judul kolom untuk mengurutkan data
 - **Pagination** — pilih jumlah data per halaman: 5, 10, 25, 50, 100
 - **Select infinite scroll** — dropdown pelanggan & paket dengan pencarian ajax
 - **Bulk actions** — aktifkan, nonaktifkan, hapus, pulihkan beberapa data sekaligus
-- **Export Excel** — export data yang dipilih atau semua data
+- **Export Excel** — export data yang dipilih atau semua data (tombol Export muncul saat checklist dipilih, export semua saat tidak ada yang dipilih)
 - **Import Excel** — import data dari file Excel dengan template
 
 ## Aksi
@@ -142,6 +142,9 @@ Kolom export: No. Akun, Nama Customer, Email, No. HP, Nama Paket, Router SN, Sta
 ### Test Case
 | File | Description |
 |------|-------------|
-| `tests/Browser/Playwright/Feature/OperatorPerusahaan/LanggananCRUDTest.cjs` | CRUD test dengan Playwright NodeJS |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/LanggananCRUDTest.cjs` | CRUD test dengan Playwright NodeJS (termasuk filter paket, status, terhapus) |
 | `tests/Browser/Playwright/Feature/OperatorPerusahaan/LanggananPermissionTest.cjs` | Permission & RBAC test |
 | `tests/Browser/Playwright/Feature/OperatorPerusahaan/LanggananResponsiveTest.cjs` | Responsive UI test |
+
+### Catatan Filter
+Filter (status, paket, terhapus) hanya di-apply saat user mengklik tombol **Filter** — tidak auto-submit saat change. Ini untuk menghindari query server berlebihan.

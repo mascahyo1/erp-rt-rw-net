@@ -121,7 +121,12 @@ function handleClickOutside(e) {
   }
 }
 
-onMounted(() => document.addEventListener('click', handleClickOutside));
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+  if (props.modelValue) {
+    fetchOptions('', 1, false);
+  }
+});
 onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 </script>
 

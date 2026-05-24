@@ -50,14 +50,17 @@ Admin perusahaan dapat menambah, mengubah, menghapus, dan memulihkan paket inter
 
 - **Tabel daftar paket** — menampilkan semua paket dengan nama, harga, speed, quota, billing cycle, langganan aktif, pendapatan, status
 - **Pencarian** — mencari paket berdasarkan nama atau deskripsi (tekan Enter)
-- **Filter Status** — select dropdown: Semua / Aktif / Nonaktif
-- **Filter Terhapus** — select dropdown: Tidak / Ya (tampilkan yg sudah dihapus)
+- **Filter Status** — select dropdown: Semua / Aktif / Nonaktif (apply saat klik tombol Filter)
+- **Filter Terhapus** — select dropdown: Tidak / Ya (apply saat klik tombol Filter)
 - **Urutkan** — klik judul kolom untuk mengurutkan (nama, harga, status)
 - **Pagination** — pilih jumlah data per halaman: 5, 10, 25, 50, 100
 - **Bulk Action** — Aktifkan / Nonaktifkan / Hapus / Pulihkan / Export banyak paket sekaligus
 - **Import Excel** — upload file, validasi per baris, insert batch
-- **Export Excel** — download semua data atau selected via checkbox
+- **Export Excel** — download semua data atau selected via checkbox (tombol Export muncul saat checklist dipilih, export semua saat tidak ada yang dipilih)
 - **Template Import** — download template kosong untuk diisi
+
+### Catatan Filter
+Filter (status, terhapus) hanya di-apply saat user mengklik tombol **Filter** — tidak auto-submit saat change. Ini untuk menghindari query server berlebihan.
 
 ---
 
