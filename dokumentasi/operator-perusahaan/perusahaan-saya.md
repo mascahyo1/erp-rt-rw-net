@@ -2,25 +2,35 @@
 > Portal: Operator Perusahaan | URL: `/operator-perusahaan/perusahaan-saya`
 
 ## Fungsi
-Halaman untuk **melihat informasi perusahaan sendiri** — nama, alamat, kontak, dan status perusahaan yang dikelola oleh admin perusahaan.
-Ini adalah halaman profil perusahaan, bukan untuk mengedit (edit perusahaan dilakukan oleh operator SaaS).
+Halaman untuk **melihat dan mengedit informasi perusahaan sendiri** — nama, alamat, kontak, dan status perusahaan yang dikelola oleh admin perusahaan.
+Selalu visible di sidebar dan dropdown navbar untuk semua admin perusahaan.
 
 ## Fitur
 - **Tampilan detail perusahaan** — menampilkan nama, email, alamat, telepon, dan status perusahaan
+- **Edit perusahaan** — formulir edit dengan validasi (tombol Edit hanya muncul jika user punya izin `perusahaan-saya.edit`)
+- **Dark/Light mode** — mendukung tema gelap/terang
+- **Responsive** — tampilan menyesuaikan mobile, tablet, desktop
 
 ## Aksi
 | Aksi | Izin Diperlukan | Keterangan |
 |------|----------------|------------|
-| **Lihat Detail** | `perusahaan-saya.list` | Melihat informasi perusahaan sendiri |
+| **Lihat Detail** | Tidak ada (selalu accessible) | Melihat informasi perusahaan sendiri |
+| **Edit Perusahaan** | `perusahaan-saya.edit` | Mengubah data perusahaan |
+
+## Catatan RBAC
+- Halaman "Perusahaan Saya" **selalu visible** di sidebar dan dropdown navbar — tidak perlu permission `perusahaan-saya.list`
+- Tombol "Edit Perusahaan" hanya muncul jika user punya permission `perusahaan-saya.edit`
+- Semua admin perusahaan bisa melihat halaman ini, hanya yang punya permission edit yang bisa mengubah data
 
 ## Teknis
 ### Route
 | Method | URI | Name | Middleware | Permission |
 |--------|-----|------|-----------|------------|
-| GET | `/operator-perusahaan/perusahaan-saya` | — | `auth:admin-company` | `perusahaan-saya.list` |
+| GET | `/operator-perusahaan/perusahaan-saya` | perusahaan-saya.index | `auth:admin-company` | Tidak ada (selalu accessible) |
+| PUT | `/operator-perusahaan/perusahaan-saya/{company}` | perusahaan-saya.update | `auth:admin-company` | `perusahaan-saya.edit` |
 
 ### Controller
-Closure (inline route)
+`App\Http\Controllers\OperatorPerusahaan\PerusahaanSayaController`
 
 ### View
 `resources/js/Pages/OperatorPerusahaan/PerusahaanSaya.vue`
@@ -38,4 +48,4 @@ Closure (inline route)
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|
-| `tests/Browser/Feature/OperatorPerusahaan/PerusahaanSayaViewTest.php` | Various | Browser view test |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PerusahaanSayaCRUDTest.cjs` | Various | Playwright E2E test |

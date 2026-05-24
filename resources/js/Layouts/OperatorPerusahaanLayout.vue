@@ -25,7 +25,7 @@ const menuItems = computed(() => {
   const items = [
     { label: 'Dashboard', href: '/operator-perusahaan/dashboard', icon: 'fa-tachometer-alt' },
   ];
-  if (perms.includes('perusahaan-saya.list')) items.push({ label: 'Perusahaan Saya', href: '/operator-perusahaan/perusahaan-saya', icon: 'fa-building' });
+  items.push({ label: 'Perusahaan Saya', href: '/operator-perusahaan/perusahaan-saya', icon: 'fa-building' });
   if (perms.includes('paket.list')) items.push({ label: 'Daftar Paket', href: '/operator-perusahaan/daftar-paket', icon: 'fa-box' });
   if (perms.includes('customer.list')) items.push({ label: 'Customer', href: '/operator-perusahaan/customer', icon: 'fa-users' });
   if (perms.includes('langganan.list')) items.push({ label: 'Langganan Customer', href: '/operator-perusahaan/langganan-customer', icon: 'fa-link' });
