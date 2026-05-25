@@ -15,18 +15,22 @@ class CustInternetInvc extends Model
     protected $table = 'cust_internet_invcs';
 
     protected $fillable = [
-        'id', 'cust_internet_id', 'invoice_number', 'invoice_due_date',
+        'id', 'cust_internet_id', 'invoice_number',
+        'usage_start_date', 'usage_end_date',
         'amount', 'total_amount', 'discount_amount', 'tax_amount', 'grand_total',
         'due_date', 'paid_at', 'status', 'payment_status',
         'status_description', 'status_reason', 'description',
+        'restored_at', 'restored_by_type', 'restored_by_id',
     ];
 
     protected function casts(): array
     {
         return [
-            'invoice_due_date' => 'date',
+            'usage_start_date' => 'date',
+            'usage_end_date' => 'date',
             'due_date' => 'date',
             'paid_at' => 'datetime',
+            'restored_at' => 'datetime',
             'amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'discount_amount' => 'decimal:2',

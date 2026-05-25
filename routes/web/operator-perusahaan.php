@@ -257,6 +257,9 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:tagihan.create')->group(function () {
         Route::post('/operator-perusahaan/tagihan', [TagihanController::class, 'store'])->name('operator-perusahaan.tagihan.store');
+        Route::post('/operator-perusahaan/tagihan/generate', [TagihanController::class, 'generate'])->name('operator-perusahaan.tagihan.generate');
+        Route::get('/operator-perusahaan/tagihan/template', [TagihanController::class, 'downloadTemplate'])->name('operator-perusahaan.tagihan.template');
+        Route::post('/operator-perusahaan/tagihan/import', [TagihanController::class, 'import'])->name('operator-perusahaan.tagihan.import');
     });
     Route::middleware('permission:tagihan.edit')->group(function () {
         Route::put('/operator-perusahaan/tagihan/{custInternetInvc}', [TagihanController::class, 'update'])->name('operator-perusahaan.tagihan.update');
@@ -269,6 +272,9 @@ Route::middleware('auth:admin-company')->group(function () {
     Route::middleware('permission:tagihan.restore')->group(function () {
         Route::patch('/operator-perusahaan/tagihan/{id}/restore', [TagihanController::class, 'restore'])->name('operator-perusahaan.tagihan.restore');
         Route::post('/operator-perusahaan/tagihan/bulk-restore', [TagihanController::class, 'bulkRestore'])->name('operator-perusahaan.tagihan.bulkRestore');
+    });
+    Route::middleware('permission:tagihan.export')->group(function () {
+        Route::get('/operator-perusahaan/tagihan/export', [TagihanController::class, 'export'])->name('operator-perusahaan.tagihan.export');
     });
 
     // Riwayat Pembayaran

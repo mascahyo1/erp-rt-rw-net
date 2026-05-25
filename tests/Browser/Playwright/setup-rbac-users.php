@@ -47,7 +47,8 @@ $fullPerms = Permission::whereIn('name', [
     'perusahaan-saya.detail','perusahaan-saya.edit',
     'paket.list','paket.create','paket.edit','paket.delete','paket.restore','paket.export','paket.import','paket.detail',
     'customer.list','customer.create','customer.edit','customer.delete','customer.restore','customer.export','customer.import','customer.detail',
-    'langganan.list','langganan.create','langganan.edit','langganan.delete','langganan.restore','langganan.export','langganan.import'
+    'langganan.list','langganan.create','langganan.edit','langganan.delete','langganan.restore','langganan.export','langganan.import',
+    'tagihan.list','tagihan.create','tagihan.edit','tagihan.delete','tagihan.restore','tagihan.export','tagihan.generate','tagihan.detail'
 ])->get();
 foreach ($fullPerms as $p) {
     DB::table('role_permissions')->insert([

@@ -97,6 +97,9 @@ enum Permissions: string
     case TagihanDetail = 'tagihan.detail';
     case TagihanDelete = 'tagihan.delete';
     case TagihanRestore = 'tagihan.restore';
+    case TagihanExport  = 'tagihan.export';
+    case TagihanImport  = 'tagihan.import';
+    case TagihanGenerate = 'tagihan.generate';
 
     // Insentif (full CRUD)
     case InsentifList   = 'insentif.list';
@@ -289,6 +292,9 @@ enum Permissions: string
                 self::TagihanDetail->value,
                 self::TagihanDelete->value,
                 self::TagihanRestore->value,
+                self::TagihanExport->value,
+                self::TagihanImport->value,
+                self::TagihanGenerate->value,
                 self::InsentifList->value,
                 self::InsentifCreate->value,
                 self::InsentifEdit->value,
