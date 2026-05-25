@@ -63,7 +63,7 @@ onUnmounted(() => mediaQuery?.removeEventListener('change', applyTheme));
   <div class="min-h-screen flex bg-gray-100 dark:bg-gray-950 transition-colors">
     <div v-show="sidebarVisible" class="fixed inset-0 z-30 bg-black/50 lg:hidden" @click="closeSidebarOnMobile"></div>
 
-    <aside :class="['fixed inset-y-0 left-0 z-40 flex flex-col bg-gradient-to-b from-sky-700 via-sky-800 to-blue-900 text-white transition-all duration-300', sidebarVisible ? (sidebarExpanded ? 'w-64' : 'w-16') : '-translate-x-full lg:translate-x-0 lg:w-64 lg:overflow-visible']">
+    <aside :class="['fixed inset-y-0 left-0 z-40 flex flex-col bg-gradient-to-b from-sky-700 via-sky-800 to-blue-900 text-white transition-all duration-300', sidebarVisible ? (sidebarExpanded ? 'w-64' : 'w-16') : '-translate-x-full lg:translate-x-0 lg:w-0 lg:overflow-hidden']">
       <div class="flex items-center justify-between h-16 px-4 border-b border-white/10 shrink-0">
         <Link href="/operator-perusahaan/dashboard" class="flex items-center gap-2 overflow-hidden">
           <div class="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center shrink-0"><i class="fas fa-building text-white text-sm"></i></div>
