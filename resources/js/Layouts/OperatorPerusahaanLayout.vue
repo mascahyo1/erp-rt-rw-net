@@ -8,6 +8,10 @@ const user = computed(() => page.props.auth?.user);
 const companyName = computed(() => user.value?.company?.name ?? 'Perusahaan');
 const userName = computed(() => user.value?.name ?? 'Admin');
 const userEmail = computed(() => user.value?.email ?? '');
+const perms = computed(() => {
+  const p = page.props.permissions;
+  return Array.isArray(p) ? [...p] : [];
+});
 
 const sidebarVisible = ref(false);
 const sidebarExpanded = ref(true);
@@ -21,25 +25,24 @@ function toggleSidebar() {
 function closeSidebarOnMobile() { if (window.innerWidth < 1024) sidebarVisible.value = false; }
 
 const menuItems = computed(() => {
-  const perms = page.props.permissions || [];
   const items = [
     { label: 'Dashboard', href: '/operator-perusahaan/dashboard', icon: 'fa-tachometer-alt' },
   ];
-  items.push({ label: 'Perusahaan Saya', href: '/operator-perusahaan/perusahaan-saya', icon: 'fa-building' });
-  if (perms.includes('paket.list')) items.push({ label: 'Daftar Paket', href: '/operator-perusahaan/daftar-paket', icon: 'fa-box' });
-  if (perms.includes('customer.list')) items.push({ label: 'Customer', href: '/operator-perusahaan/customer', icon: 'fa-users' });
-  if (perms.includes('langganan.list')) items.push({ label: 'Langganan Customer', href: '/operator-perusahaan/langganan-customer', icon: 'fa-link' });
-  if (perms.includes('tagihan.list')) items.push({ label: 'Tagihan', href: '/operator-perusahaan/tagihan', icon: 'fa-file-invoice' });
-  if (perms.includes('insentif.list')) items.push({ label: 'Insentif', href: '/operator-perusahaan/insentif', icon: 'fa-coins' });
-  if (perms.includes('riwayat-insentif.list')) items.push({ label: 'Riwayat Insentif', href: '/operator-perusahaan/riwayat-insentif', icon: 'fa-receipt' });
-  if (perms.includes('riwayat-pembayaran.list')) items.push({ label: 'Riwayat Pembayaran', href: '/operator-perusahaan/riwayat-pembayaran', icon: 'fa-history' });
-  if (perms.includes('admin-perusahaan.list')) items.push({ label: 'Admin Perusahaan', href: '/operator-perusahaan/admin-perusahaan', icon: 'fa-user-tie' });
-  if (perms.includes('role-perusahaan-op.list')) items.push({ label: 'Role Perusahaan', href: '/operator-perusahaan/role-perusahaan', icon: 'fa-tags' });
-  if (perms.includes('admin-role-perusahaan-op.list')) items.push({ label: 'Admin Role Perusahaan', href: '/operator-perusahaan/admin-role-perusahaan', icon: 'fa-user-gear' });
-  if (perms.includes('karyawan.list')) items.push({ label: 'Karyawan', href: '/operator-perusahaan/karyawan', icon: 'fa-users' });
-  if (perms.includes('role-web-karyawan.list')) items.push({ label: 'Role Web Karyawan', href: '/operator-perusahaan/role-web-karyawan', icon: 'fa-globe' });
-  if (perms.includes('admin-role-web-karyawan.list')) items.push({ label: 'Admin Role Web Karyawan', href: '/operator-perusahaan/admin-role-web-karyawan', icon: 'fa-user-lock' });
-  if (perms.includes('konfigurasi-perusahaan.list')) items.push({ label: 'Konfigurasi Perusahaan', href: '/operator-perusahaan/konfigurasi-perusahaan', icon: 'fa-sliders' });
+  if (perms.value.includes('perusahaan-saya.detail')) items.push({ label: 'Perusahaan Saya', href: '/operator-perusahaan/perusahaan-saya', icon: 'fa-building' });
+  if (perms.value.includes('paket.list')) items.push({ label: 'Daftar Paket', href: '/operator-perusahaan/daftar-paket', icon: 'fa-box' });
+  if (perms.value.includes('customer.list')) items.push({ label: 'Customer', href: '/operator-perusahaan/customer', icon: 'fa-users' });
+  if (perms.value.includes('langganan.list')) items.push({ label: 'Langganan Customer', href: '/operator-perusahaan/langganan-customer', icon: 'fa-link' });
+  if (perms.value.includes('tagihan.list')) items.push({ label: 'Tagihan', href: '/operator-perusahaan/tagihan', icon: 'fa-file-invoice' });
+  if (perms.value.includes('insentif.list')) items.push({ label: 'Insentif', href: '/operator-perusahaan/insentif', icon: 'fa-coins' });
+  if (perms.value.includes('riwayat-insentif.list')) items.push({ label: 'Riwayat Insentif', href: '/operator-perusahaan/riwayat-insentif', icon: 'fa-receipt' });
+  if (perms.value.includes('riwayat-pembayaran.list')) items.push({ label: 'Riwayat Pembayaran', href: '/operator-perusahaan/riwayat-pembayaran', icon: 'fa-history' });
+  if (perms.value.includes('admin-perusahaan.list')) items.push({ label: 'Admin Perusahaan', href: '/operator-perusahaan/admin-perusahaan', icon: 'fa-user-tie' });
+  if (perms.value.includes('role-perusahaan-op.list')) items.push({ label: 'Role Perusahaan', href: '/operator-perusahaan/role-perusahaan', icon: 'fa-tags' });
+  if (perms.value.includes('admin-role-perusahaan-op.list')) items.push({ label: 'Admin Role Perusahaan', href: '/operator-perusahaan/admin-role-perusahaan', icon: 'fa-user-gear' });
+  if (perms.value.includes('karyawan.list')) items.push({ label: 'Karyawan', href: '/operator-perusahaan/karyawan', icon: 'fa-users' });
+  if (perms.value.includes('role-web-karyawan.list')) items.push({ label: 'Role Web Karyawan', href: '/operator-perusahaan/role-web-karyawan', icon: 'fa-globe' });
+  if (perms.value.includes('admin-role-web-karyawan.list')) items.push({ label: 'Admin Role Web Karyawan', href: '/operator-perusahaan/admin-role-web-karyawan', icon: 'fa-user-lock' });
+  if (perms.value.includes('konfigurasi-perusahaan.list')) items.push({ label: 'Konfigurasi Perusahaan', href: '/operator-perusahaan/konfigurasi-perusahaan', icon: 'fa-sliders' });
   return items;
 });
 
@@ -99,7 +102,7 @@ onUnmounted(() => mediaQuery?.removeEventListener('change', applyTheme));
               </button>
               <Transition name="dropdown"><div v-show="profileDropdownOpen" class="absolute right-0 mt-2 w-48 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-50">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700"><p class="text-sm font-medium text-gray-900 dark:text-white">{{ companyName }}</p><p class="text-xs text-gray-500 dark:text-gray-400">{{ userEmail }}</p></div>
-                <Link href="/operator-perusahaan/perusahaan-saya" @click.stop="profileDropdownOpen = false" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-building w-4 text-center"></i> Perusahaan Saya</Link>
+                <Link v-if="perms.includes('perusahaan-saya.detail')" href="/operator-perusahaan/perusahaan-saya" @click.stop="profileDropdownOpen = false" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-building w-4 text-center"></i> Perusahaan Saya</Link>
                 <Link href="/operator-perusahaan/dashboard" @click.stop="profileDropdownOpen = false" class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-user-cog w-4 text-center"></i> Profil Saya</Link>
                 <div class="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                 <Link href="/logout-perusahaan" method="post" as="button" @click.stop="profileDropdownOpen = false" class="flex items-center gap-2 px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors w-full text-left"><i class="fas fa-sign-out-alt w-4 text-center"></i> Logout</Link>

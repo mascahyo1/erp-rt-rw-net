@@ -64,7 +64,7 @@ function statusBadge(s) {
 
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div><h2 class="text-2xl font-bold text-gray-900 dark:text-white">Perusahaan Saya</h2><p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Kelola profil dan informasi perusahaan Anda.</p></div>
-        <button v-if="!editMode" @click="enterEdit" class="inline-flex items-center px-4 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm"><i class="fas fa-edit mr-1.5"></i> Edit Perusahaan</button>
+        <button v-if="!editMode && $page.props.permissions?.includes('perusahaan-saya.edit')" @click="enterEdit" class="inline-flex items-center px-4 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm"><i class="fas fa-edit mr-1.5"></i> Edit Perusahaan</button>
       </div>
 
       <div v-if="!editMode" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">

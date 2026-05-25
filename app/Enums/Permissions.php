@@ -59,6 +59,7 @@ enum Permissions: string
     // ADMIN PERUSAHAAN (16 module)
     // ============================================================
     case PerusahaanSayaList = 'perusahaan-saya.list';
+    case PerusahaanSayaDetail = 'perusahaan-saya.detail';
     case PerusahaanSayaEdit = 'perusahaan-saya.edit';
     case PaketList = 'paket.list';
     case PaketCreate = 'paket.create';
@@ -250,7 +251,7 @@ enum Permissions: string
                 self::AdminRoleSaaSDelete->value,
             ],
             'admin_perusahaan' => [
-                self::PerusahaanSayaList->value,
+                self::PerusahaanSayaDetail->value,
                 self::PerusahaanSayaEdit->value,
                 self::PaketList->value,
                 self::PaketCreate->value,

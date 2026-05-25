@@ -36,3 +36,5 @@
 /tests/Browser/Playwright/Feature/result/
 /tests/Browser/Playwright/Feature/result/
 /tests/Browser/tests/Browser/videos/
+# Debug screenshots
+debug-screenshots/
