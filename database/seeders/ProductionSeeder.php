@@ -133,6 +133,34 @@ class ProductionSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            // File upload settings
+            [
+                'id' => Str::uuid(),
+                'key' => 'default_upload_max_width_and_height_image',
+                'type' => 'number',
+                'value' => '1920',
+                'descripton' => 'Max width/height for image upload in pixels',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'key' => 'default_upload_max_file_size_in_kb',
+                'type' => 'number',
+                'value' => '2048',
+                'descripton' => 'Max file size for upload in KB (2048 = 2MB)',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'key' => 'default_auto_compress_file_upload',
+                'type' => 'boolean',
+                'value' => '1',
+                'descripton' => 'Auto compress image uploads to WebP (1=enabled, 0=disabled)',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
 
         AdminCompany::query()->insert([

@@ -19,9 +19,9 @@ Pelanggan adalah pengguna akhir yang berlangganan layanan internet dari perusaha
 | No. Telepon | text | ✅ | Nomor telepon aktif |
 | No. NIK | text | — | Nomor KTP |
 | No. KK | text | — | Nomor Kartu Keluarga |
-| Foto KTP | file | — | Gambar, max 2MB |
-| Foto KK | file | — | Gambar, max 2MB |
-| Foto Profil | file | — | Gambar, max 2MB |
+| Foto KTP | file | — | Gambar/PDF, max 2MB, ekstensi: jpg, jpeg, png, webp, pdf |
+| Foto KK | file | — | Gambar/PDF, max 2MB, ekstensi: jpg, jpeg, png, webp, pdf |
+| Foto Profil | file | — | Gambar, max 2MB, ekstensi: jpg, jpeg, png, webp, auto-compress ke WebP (max 1920x1920) |
 | Alamat | textarea | — | Alamat lengkap |
 | Status | select | ✅ | Aktif / Nonaktif |
 
@@ -211,6 +211,36 @@ Color schemes: Light & Dark mode
 ### Export Column Headers (8 kolom)
 
 `Kode, Nama, Email, No. Telepon, No. NIK, No. KK, Alamat, Status`
+
+---
+
+## File Upload & Compression
+
+### Konfigurasi (saas_configs)
+
+| Key | Type | Default | Keterangan |
+|-----|------|---------|-----------|
+| `default_upload_max_width_and_height_image` | number | 1920 | Max width/height pixel untuk resize |
+| `default_upload_max_file_size_in_kb` | number | 2048 | Max file size dalam KB (2048 = 2MB) |
+| `default_auto_compress_file_upload` | boolean | 1 | Enable/disable auto compress ke WebP (1=enabled) |
+
+### Aturan Upload
+
+| Field | Accepted Mimes | Max Size | Compression |
+|-------|----------------|----------|-------------|
+| Foto Profil | jpg, jpeg, png, webp | 2MB | Auto compress ke WebP (max 1920x1920, maintain aspect ratio) |
+| Foto KTP | jpg, jpeg, png, webp, pdf | 2MB | Stored as-is (PDF tidak dikompres) |
+| Foto KK | jpg, jpeg, png, webp, pdf | 2MB | Stored as-is (PDF tidak dikompres) |
+
+### Processing Flow
+
+1. File di-upload via form
+2. Backend validasi: mime type (前端 accept + backend mimes validation), file size (max:2048KB)
+3. Jika `auto_compress=1` dan file adalah gambar:
+   - Resize jika dimensi > max (maintain aspect ratio)
+   - Convert ke WebP dengan quality 80%
+   - Simpan ke MinIO storage
+4. Jika PDF atau auto_compress=0: simpan file asli
 
 ---
 

@@ -10,11 +10,20 @@ jadi testing detail ubahnya, dark / light mode, responsif
 
 crud pelanggan
 dokumentasi\operator-perusahaan\halaman-customer.md
-inputan foto profil dibawahnya ada ket max 2mb, ekstensi jpg, jpeg, png, webp.
-inputan ktp dan kk dibawahnya ada ket max 2mb ekstensi jpg, jpeg, png, webp, pdf
+inputan foto profil dibawahnya ada ket max 2mb, ekstensi jpg, jpeg, png, webp. validasi mime juga
+inputan ktp dan kk dibawahnya ada ket max 2mb ekstensi jpg, jpeg, png, webp, pdf mime juga
 auto dicompress biar hemat space kalau foto jadi webp max res 1980*1980 maintain aspect ratio.
 coba kalau pdf dicompress juga. 
 update fe,be,dokumentasi,test case
+untuk konfigurasi sebaiknya gini ya. dari tabel saas_configs 
+untuk where key = default_upload_max_width_and_height_image_in_kb -> value kasih 1920
+untuk file upload default_upload_max_file_size_in_kb -> value kasih 2mb
+autocompress file upload key = default_auto_compress_file_upload -> value 0/1
+tambahkan itu di 
+database\seeders\DemoSeeder.php
+database\seeders\ProductionSeeder.php
+
+
 http://erp-rt-rw-net.test/operator-perusahaan/tagihan
 cetak tagihan
 

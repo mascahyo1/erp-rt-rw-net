@@ -36,4 +36,10 @@ class SaasConfig extends Model
     {
         return $this->morphTo('updated_by');
     }
+
+    public static function getValue(string $key, mixed $default = null): mixed
+    {
+        $config = static::where('key', $key)->first();
+        return $config?->value ?? $default;
+    }
 }

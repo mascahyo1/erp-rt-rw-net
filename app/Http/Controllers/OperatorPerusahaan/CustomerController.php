@@ -4,6 +4,7 @@ namespace App\Http\Controllers\OperatorPerusahaan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -117,9 +118,9 @@ class CustomerController extends Controller
             ],
             'no_nik' => ['nullable', 'string', 'max:50'],
             'no_kk' => ['nullable', 'string', 'max:50'],
-            'photo_ktp' => ['nullable', 'file', 'image', 'max:2048'],
-            'photo_kk' => ['nullable', 'file', 'image', 'max:2048'],
-            'photo_profile' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_ktp' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'photo_kk' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'photo_profile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['required', 'string', 'min:8'],
@@ -132,21 +133,16 @@ class CustomerController extends Controller
         $photoKtpPath = null;
         $photoKkPath = null;
         $photoProfilePath = null;
+        $uploadService = new FileUploadService();
 
         if ($request->hasFile('photo_ktp')) {
-            $file = $request->file('photo_ktp');
-            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
-            $photoKtpPath = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'private']);
+            $photoKtpPath = $uploadService->processDocument($request->file('photo_ktp'), 'customers');
         }
         if ($request->hasFile('photo_kk')) {
-            $file = $request->file('photo_kk');
-            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
-            $photoKkPath = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'private']);
+            $photoKkPath = $uploadService->processDocument($request->file('photo_kk'), 'customers');
         }
         if ($request->hasFile('photo_profile')) {
-            $file = $request->file('photo_profile');
-            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
-            $photoProfilePath = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'public']);
+            $photoProfilePath = $uploadService->processImage($request->file('photo_profile'), 'customers');
         }
 
         Customer::create([
@@ -195,9 +191,9 @@ class CustomerController extends Controller
             ],
             'no_nik' => ['nullable', 'string', 'max:50'],
             'no_kk' => ['nullable', 'string', 'max:50'],
-            'photo_ktp' => ['nullable', 'file', 'image', 'max:2048'],
-            'photo_kk' => ['nullable', 'file', 'image', 'max:2048'],
-            'photo_profile' => ['nullable', 'file', 'image', 'max:2048'],
+            'photo_ktp' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'photo_kk' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'photo_profile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['nullable', 'string', 'min:8'],
@@ -219,31 +215,27 @@ class CustomerController extends Controller
             'is_active' => $validated['status'] === 'Aktif',
         ];
 
+        $uploadService = new FileUploadService();
+
         if ($request->hasFile('photo_ktp')) {
             if ($customer->photo_ktp) {
-                Storage::disk('minio')->delete($customer->photo_ktp);
+                $uploadService->deleteFile($customer->photo_ktp);
             }
-            $file = $request->file('photo_ktp');
-            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
-            $data['photo_ktp'] = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'private']);
+            $data['photo_ktp'] = $uploadService->processDocument($request->file('photo_ktp'), 'customers');
         }
 
         if ($request->hasFile('photo_kk')) {
             if ($customer->photo_kk) {
-                Storage::disk('minio')->delete($customer->photo_kk);
+                $uploadService->deleteFile($customer->photo_kk);
             }
-            $file = $request->file('photo_kk');
-            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
-            $data['photo_kk'] = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'private']);
+            $data['photo_kk'] = $uploadService->processDocument($request->file('photo_kk'), 'customers');
         }
 
         if ($request->hasFile('photo_profile')) {
             if ($customer->photo_profile) {
-                Storage::disk('minio')->delete($customer->photo_profile);
+                $uploadService->deleteFile($customer->photo_profile);
             }
-            $file = $request->file('photo_profile');
-            $filename = (string) Str::uuid7() . '.' . $file->getClientOriginalExtension();
-            $data['photo_profile'] = $file->storeAs('customers/photos', $filename, ['disk' => 'minio', 'visibility' => 'public']);
+            $data['photo_profile'] = $uploadService->processImage($request->file('photo_profile'), 'customers');
         }
 
         if (!empty($validated['password'])) {

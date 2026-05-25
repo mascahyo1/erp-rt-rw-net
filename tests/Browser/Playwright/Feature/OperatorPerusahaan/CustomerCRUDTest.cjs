@@ -823,7 +823,7 @@ class CustomerCRUDTest {
             if (phoneInputs.length > 0) await phoneInputs[0].fill(uniquePhone);
 
             // Set photo files
-            const fileInputs = await this.page.$$('input[type="file"][accept="image/*"]');
+            const fileInputs = await this.page.$$('input[type="file"]');
             console.log(`  Found ${fileInputs.length} file input(s) for photo upload`);
             if (fileInputs.length >= 1) {
                 await fileInputs[0].setInputFiles(imgFile);
@@ -1013,7 +1013,7 @@ class CustomerCRUDTest {
             const phoneInputs = await this.page.$$('input[placeholder="81234567890"]');
             if (phoneInputs.length > 0) await phoneInputs[0].fill('81234567890');
 
-            const fileInputs = await this.page.$$('input[type="file"][accept="image/*"]');
+            const fileInputs = await this.page.$$('input[type="file"]');
             if (fileInputs.length >= 1) await fileInputs[0].setInputFiles(imgFile1);
 
             const simpanBtn = await this.page.$('button[type="submit"]:has-text("Simpan")');
@@ -1061,7 +1061,7 @@ class CustomerCRUDTest {
             await this.takeScreenshot('17-replace-edit-modal');
 
             // Replace the photo
-            const editFileInputs = await this.page.$$('input[type="file"][accept="image/*"]');
+            const editFileInputs = await this.page.$$('input[type="file"]');
             console.log(`  Found ${editFileInputs.length} file inputs in edit modal`);
             if (editFileInputs.length >= 1) {
                 await editFileInputs[0].setInputFiles(imgFile2);
