@@ -78,7 +78,11 @@ class TagihanController extends Controller
                 'invoice_number' => $item->invoice_number,
                 'cust_internet_id' => $item->cust_internet_id,
                 'customer_name' => $item->custInternet?->customer?->name,
+                'customer_code' => $item->custInternet?->customer?->customer_code,
                 'account_number' => $item->custInternet?->account_number,
+                'phone_country_code' => $item->custInternet?->customer?->phone_country_code,
+                'phone_number' => $item->custInternet?->customer?->phone_number,
+                'email' => $item->custInternet?->customer?->email,
                 'usage_start_date' => $item->usage_start_date?->format('Y-m-d'),
                 'usage_end_date' => $item->usage_end_date?->format('Y-m-d'),
                 'total_amount' => $item->total_amount,
@@ -211,7 +215,7 @@ class TagihanController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Daftar Tagihan');
 
-        $headers = ['No. Invoice', 'Pelanggan', 'No. Langganan', 'Awal Usage', 'Akhir Usage', 'Total', 'Diskon', 'Pajak', 'Grand Total', 'Jatuh Tempo', 'Status'];
+        $headers = ['No. Invoice', 'No. Langganan', 'Kode Pelanggan', 'Nama Pelanggan', 'No. Telp Pelanggan', 'Email Pelanggan', 'Awal Usage', 'Akhir Usage', 'Total', 'Diskon', 'Pajak', 'Grand Total', 'Jatuh Tempo', 'Status'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -222,9 +226,12 @@ class TagihanController extends Controller
         $row = 2;
         foreach ($tagihans as $t) {
             $col = 1;
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->invoice_number, DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->custInternet?->customer?->name ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->invoice_number ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->custInternet?->account_number ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->custInternet?->customer?->customer_code ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->custInternet?->customer?->name ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, ($t->custInternet?->customer?->phone_country_code ?? '') . ' ' . ($t->custInternet?->customer?->phone_number ?? '-'), DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->custInternet?->customer?->email ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->usage_start_date?->format('Y-m-d') ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $t->usage_end_date?->format('Y-m-d') ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, number_format($t->total_amount ?? 0, 2, '.', ''), DataType::TYPE_STRING);
