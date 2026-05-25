@@ -28,7 +28,7 @@ class FileUploadService
     {
         $mime = $file->getMimeType();
 
-        // Check if PDF - compress with limited settings
+        // Check if PDF - don't compress
         if ($mime === 'application/pdf') {
             return $this->processPdf($file, $folder);
         }
@@ -57,7 +57,7 @@ class FileUploadService
     {
         try {
             $manager = new ImageManager(new Driver());
-            $image = $manager->read($file->getPathname());
+            $image = $manager->decodeBinary(file_get_contents($file->getPathname()));
 
             // Resize if needed maintaining aspect ratio
             $width = $image->width();
@@ -67,11 +67,13 @@ class FileUploadService
                 $image = $image->scaleDown($this->maxWidth, $this->maxHeight);
             }
 
-            // Convert to webp
+            // Convert to webp using encodeUsingMediaType
+            $encoded = $image->encodeUsingMediaType('image/webp');
             $filename = (string) Str::uuid7() . '.webp';
             $path = $folder . '/photos/' . $filename;
 
-            $image->toWebp(80)->saveInto(Storage::disk('minio')->path($path));
+            // Save to storage
+            Storage::disk('minio')->put($path, $encoded->toString(), ['visibility' => 'private']);
 
             return $path;
         } catch (\Exception $e) {
@@ -82,8 +84,7 @@ class FileUploadService
 
     private function processPdf(UploadedFile $file, string $folder): ?string
     {
-        // For PDF, just store as-is for now
-        // Future: implement PDF compression if needed
+        // For PDF, just store as-is
         return $this->storeFile($file, $folder);
     }
 
