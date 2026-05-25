@@ -303,6 +303,8 @@ enum Permissions: string
                 self::InsentifDetail->value,
                 self::InsentifDelete->value,
                 self::InsentifRestore->value,
+                self::InsentifExport->value,
+                self::InsentifImport->value,
                 self::RiwayatInsentifList->value,
                 self::RiwayatInsentifCreate->value,
                 self::RiwayatInsentifEdit->value,

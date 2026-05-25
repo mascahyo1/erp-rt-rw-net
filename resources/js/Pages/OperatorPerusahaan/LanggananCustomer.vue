@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Head, Link, router, useForm, page } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
 import { useToast } from '@/Composables/useToast';
@@ -10,6 +10,7 @@ defineOptions({ layout: OperatorPerusahaanLayout });
 
 const props = defineProps({ langganans: Object, filters: Object });
 const toast = useToast();
+const page = usePage();
 const can = (perm) => page.props.permissions?.includes(perm);
 
 const searchInput = ref(props.filters?.search || '');

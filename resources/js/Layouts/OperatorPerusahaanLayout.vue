@@ -53,7 +53,7 @@ const theme = ref(localStorage.getItem('theme') || 'system');
 const isDark = computed(() => theme.value === 'dark' || (theme.value === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches));
 const themeIcon = computed(() => theme.value === 'light' ? 'fa-sun' : theme.value === 'dark' ? 'fa-moon' : 'fa-circle-half-stroke');
 function applyTheme() { document.documentElement.classList.toggle('dark', isDark.value); }
-function toggleTheme() { if (theme.value === 'light') theme.value = 'dark'; else if (theme.value === 'dark') theme.value = 'system'; else theme.value = 'light'; localStorage.setItem('theme', theme.value); applyTheme(); }
+function toggleTheme() { if (theme.value === 'system') theme.value = 'light'; else if (theme.value === 'light') theme.value = 'dark'; else theme.value = 'system'; localStorage.setItem('theme', theme.value); applyTheme(); }
 let mediaQuery;
 onMounted(() => { applyTheme(); mediaQuery = window.matchMedia('(prefers-color-scheme: dark)'); mediaQuery.addEventListener('change', applyTheme); });
 onUnmounted(() => mediaQuery?.removeEventListener('change', applyTheme));
