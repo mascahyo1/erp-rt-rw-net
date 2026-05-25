@@ -108,6 +108,8 @@ enum Permissions: string
     case InsentifDetail = 'insentif.detail';
     case InsentifDelete = 'insentif.delete';
     case InsentifRestore = 'insentif.restore';
+    case InsentifExport  = 'insentif.export';
+    case InsentifImport  = 'insentif.import';
 
     // Riwayat Insentif (full CRUD + persetujuan)
     case RiwayatInsentifList        = 'riwayat-insentif.list';

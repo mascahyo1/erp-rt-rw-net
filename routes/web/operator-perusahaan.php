@@ -318,6 +318,13 @@ Route::middleware('auth:admin-company')->group(function () {
         Route::patch('/operator-perusahaan/insentif/{id}/restore', [InsentifController::class, 'restore'])->name('operator-perusahaan.insentif.restore');
         Route::post('/operator-perusahaan/insentif/bulk-restore', [InsentifController::class, 'bulkRestore'])->name('operator-perusahaan.insentif.bulkRestore');
     });
+    Route::middleware('permission:insentif.export')->group(function () {
+        Route::get('/operator-perusahaan/insentif/export', [InsentifController::class, 'export'])->name('operator-perusahaan.insentif.export');
+        Route::get('/operator-perusahaan/insentif/template', [InsentifController::class, 'downloadTemplate'])->name('operator-perusahaan.insentif.template');
+    });
+    Route::middleware('permission:insentif.import')->group(function () {
+        Route::post('/operator-perusahaan/insentif/import', [InsentifController::class, 'import'])->name('operator-perusahaan.insentif.import');
+    });
 
     // Riwayat Insentif
     Route::middleware('permission:riwayat-insentif.list')->group(function () {

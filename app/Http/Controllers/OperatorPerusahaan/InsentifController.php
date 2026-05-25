@@ -9,9 +9,23 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 
 class InsentifController extends Controller
 {
+    private function excelColumn(int $index): string
+    {
+        $col = '';
+        while ($index > 0) {
+            $index--;
+            $col = chr(65 + ($index % 26)) . $col;
+            $index = (int) ($index / 26);
+        }
+        return $col;
+    }
+
     public function index(Request $request): Response
     {
         $companyId = auth()->user()->company_id;
@@ -154,5 +168,152 @@ class InsentifController extends Controller
         if (empty($ids)) return back()->with('error', 'Tidak ada insentif yang dipilih.');
         $count = EmpIncentive::onlyTrashed()->whereIn('id', $ids)->restore();
         return back()->with('success', "{$count} insentif berhasil dipulihkan.");
+    }
+
+    public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $query = EmpIncentive::query()->where('company_id', $companyId);
+
+        if ($ids = $request->input('ids')) {
+            $query->whereIn('id', explode(',', $ids));
+        }
+
+        if ($search = $request->input('search')) {
+            $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")->orWhere('description', 'like', "%{$search}%"));
+        }
+        if ($status = $request->input('status')) {
+            $query->where('is_active', $status === 'Aktif');
+        }
+        if ($terhapus = $request->input('terhapus')) {
+            $terhapus === 'ya' ? $query->onlyTrashed() : $query->whereNull('deleted_at');
+        }
+
+        $insentifs = $query->orderBy('created_at', 'desc')->get();
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Daftar Insentif');
+
+        $headers = ['Nama', 'Tipe', 'Nilai', 'Status', 'Deskripsi'];
+        foreach ($headers as $i => $h) {
+            $col = $this->excelColumn($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $row = 2;
+        foreach ($insentifs as $i) {
+            $col = 1;
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->name, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->type === 'percentage' ? 'Persentase' : 'Tetap', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->type === 'percentage' ? $i->value . '%' : number_format($i->value ?? 0, 2, '.', ''), DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->is_active ? 'Aktif' : 'Nonaktif', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->description ?? '-', DataType::TYPE_STRING);
+            $row++;
+        }
+
+        $filename = 'insentif-' . now()->format('Ymd-His') . '.xlsx';
+        $tempPath = storage_path("app/temp/{$filename}");
+        if (!is_dir(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save($tempPath);
+
+        return response()->download($tempPath, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])->deleteFileAfterSend(true);
+    }
+
+    public function downloadTemplate(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Insentif');
+
+        $headers = ['Nama', 'Tipe (percentage/fixed)', 'Nilai', 'Status (Aktif/Nonaktif)', 'Deskripsi'];
+        foreach ($headers as $i => $h) {
+            $col = $this->excelColumn($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $sheet->setCellValueExplicit('A2', 'Insentif Penjualan', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('B2', 'percentage', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('C2', '10', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('D2', 'Aktif', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('E2', 'Insentif berdasarkan persentase penjualan', DataType::TYPE_STRING);
+
+        $filename = 'template-insentif.xlsx';
+        $tempPath = storage_path("app/temp/{$filename}");
+        if (!is_dir(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save($tempPath);
+
+        return response()->download($tempPath, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])->deleteFileAfterSend(true);
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+        ]);
+
+        $path = $request->file('file')->getRealPath();
+        $spreadsheet = IOFactory::load($path);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        if (count($rows) < 2) {
+            return back()->with('error', 'File tidak memiliki data.');
+        }
+
+        $header = array_map('strtolower', array_map('trim', $rows[0]));
+        $companyId = auth()->user()->company_id;
+        $imported = 0;
+        $errors = [];
+
+        foreach (array_slice($rows, 1) as $idx => $row) {
+            if (empty(array_filter($row))) continue;
+
+            $data = array_combine($header, $row);
+            $name = trim($data['nama'] ?? '');
+            $type = strtolower(trim($data['tipe (percentage/fixed)'] ?? 'percentage'));
+            $value = trim($data['nilai'] ?? '');
+            $status = ucfirst(strtolower(trim($data['status (aktif/nonaktif)'] ?? 'Aktif')));
+            $description = trim($data['deskripsi'] ?? '');
+
+            if (!$name || !$value) {
+                $errors[] = 'Baris ' . ($idx + 2) . ': Nama dan Nilai wajib diisi.';
+                continue;
+            }
+            if (!in_array($type, ['percentage', 'fixed'])) {
+                $errors[] = 'Baris ' . ($idx + 2) . ': Tipe harus "percentage" atau "fixed".';
+                continue;
+            }
+            if (!in_array($status, ['Aktif', 'Nonaktif'])) {
+                $status = 'Aktif';
+            }
+
+            EmpIncentive::create([
+                'company_id' => $companyId,
+                'name' => $name,
+                'type' => $type,
+                'value' => (float) $value,
+                'is_active' => $status === 'Aktif',
+                'description' => $description ?: null,
+            ]);
+            $imported++;
+        }
+
+        if ($imported > 0) {
+            return back()->with('success', "{$imported} insentif berhasil diimport." . (count($errors) > 0 ? ' ' . count($errors) . ' baris dilewati.' : ''));
+        }
+        return back()->with('error', 'Gagal mengimport insentif. ' . implode(' ', $errors));
     }
 }
