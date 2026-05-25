@@ -9,7 +9,8 @@
       "Bash(mv debug-*.png debug-screenshots/ && ls debug-screenshots/)",
       "Bash(curl -s -I \"http://erp-rt-rw-net.test/operator-perusahaan/perusahaan-saya\")",
       "Bash(rm -f debug-*.png)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(rm -f debug-contrast.png debug-sidebar.png debug-*.png && git add -A && git status)"
     ],
     "additionalDirectories": [
       "C:\\laragon\\www\\erp-rt-rw-net"
