@@ -261,7 +261,7 @@ class TagihanController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Tagihan');
 
-        $headers = ['No. Langganan', 'Awal Usage (YYYY-MM-DD)', 'Akhir Usage (YYYY-MM-DD)', 'Total', 'Diskon', 'Pajak', 'Jatuh Tempo (YYYY-MM-DD)', 'Deskripsi'];
+        $headers = ['No. Invoice', 'No. Langganan', 'Awal Usage (YYYY-MM-DD)', 'Akhir Usage (YYYY-MM-DD)', 'Total', 'Diskon', 'Pajak', 'Jatuh Tempo (YYYY-MM-DD)', 'Deskripsi'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -269,14 +269,15 @@ class TagihanController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        $sheet->setCellValueExplicit('A2', 'ACC-001', DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('B2', now()->startOfMonth()->format('Y-m-d'), DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('C2', now()->endOfMonth()->format('Y-m-d'), DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('D2', '0.00', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('A2', 'INV-2025-0001', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('B2', 'ACC-001', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('C2', now()->startOfMonth()->format('Y-m-d'), DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('D2', now()->endOfMonth()->format('Y-m-d'), DataType::TYPE_STRING);
         $sheet->setCellValueExplicit('E2', '0.00', DataType::TYPE_STRING);
         $sheet->setCellValueExplicit('F2', '0.00', DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('G2', now()->addDays(30)->format('Y-m-d'), DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('H2', 'Contoh deskripsi', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('G2', '0.00', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('H2', now()->addDays(30)->format('Y-m-d'), DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('I2', 'Contoh deskripsi', DataType::TYPE_STRING);
 
         $filename = 'template-tagihan.xlsx';
         $tempPath = storage_path("app/temp/{$filename}");
@@ -312,14 +313,15 @@ class TagihanController extends Controller
 
         foreach ($rows as $i => $row) {
             $line = $i + 2;
-            $accountNumber = trim($row[0] ?? '');
-            $usageStart = trim($row[1] ?? '');
-            $usageEnd = trim($row[2] ?? '');
-            $total = trim($row[3] ?? '0');
-            $diskon = trim($row[4] ?? '0');
-            $pajak = trim($row[5] ?? '0');
-            $jatuhTempo = trim($row[6] ?? '');
-            $deskripsi = trim($row[7] ?? '');
+            $invoiceNumber = trim($row[0] ?? '');
+            $accountNumber = trim($row[1] ?? '');
+            $usageStart = trim($row[2] ?? '');
+            $usageEnd = trim($row[3] ?? '');
+            $total = trim($row[4] ?? '0');
+            $diskon = trim($row[5] ?? '0');
+            $pajak = trim($row[6] ?? '0');
+            $jatuhTempo = trim($row[7] ?? '');
+            $deskripsi = trim($row[8] ?? '');
 
             if (empty($accountNumber)) {
                 $errors[] = "Baris {$line}: No. Langganan wajib diisi.";
@@ -335,12 +337,22 @@ class TagihanController extends Controller
                 continue;
             }
 
+            // Use provided invoice number or auto-generate
+            $finalInvoiceNumber = $invoiceNumber ?: ('INV-' . now()->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT));
+
+            // Check if invoice number already exists
+            $invoiceExists = CustInternetInvc::where('invoice_number', $finalInvoiceNumber)->exists();
+            if ($invoiceExists) {
+                $errors[] = "Baris {$line}: No. Invoice {$finalInvoiceNumber} sudah ada.";
+                continue;
+            }
+
             $grandTotal = (floatval($total) - floatval($diskon)) + floatval($pajak);
 
             $inserts[] = [
                 'id' => \Illuminate\Support\Str::uuid7(),
                 'cust_internet_id' => $custInternet->id,
-                'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'invoice_number' => $finalInvoiceNumber,
                 'usage_start_date' => $usageStart ?: null,
                 'usage_end_date' => $usageEnd ?: null,
                 'total_amount' => floatval($total),

@@ -15,7 +15,7 @@ class EmpIncentive extends Model
     protected $table = 'emp_incentives';
 
     protected $fillable = [
-        'id', 'company_id', 'name', 'type', 'value',
+        'id', 'company_id', 'code', 'name', 'type', 'value',
         'is_active', 'description',
     ];
 

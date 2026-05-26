@@ -239,6 +239,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company1Id,
+                'code' => 'KRY001',
                 'name' => 'Ahmad Fauzi',
                 'email' => 'ahmad@netsejahtera.com',
                 'phone_country_code' => '+62',
@@ -251,6 +252,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company1Id,
+                'code' => 'KRY002',
                 'name' => 'Siti Nuraini',
                 'email' => 'siti@netsejahtera.com',
                 'phone_country_code' => '+62',
@@ -263,6 +265,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company1Id,
+                'code' => 'KRY003',
                 'name' => 'Budi Santoso',
                 'email' => 'budi@netsejahtera.com',
                 'phone_country_code' => '+62',
@@ -275,6 +278,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company2Id,
+                'code' => 'KRY004',
                 'name' => 'Dewi Lestari',
                 'email' => 'dewi@digitalmedia.id',
                 'phone_country_code' => '+62',
@@ -287,6 +291,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company2Id,
+                'code' => 'KRY005',
                 'name' => 'Rudi Hermawan',
                 'email' => 'rudi@digitalmedia.id',
                 'phone_country_code' => '+62',
@@ -299,6 +304,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company4Id,
+                'code' => 'KRY006',
                 'name' => 'Hendra Gunawan',
                 'email' => 'hendra@jaringanprima.com',
                 'phone_country_code' => '+62',
@@ -311,6 +317,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company4Id,
+                'code' => 'KRY007',
                 'name' => 'Ratna Sari',
                 'email' => 'ratna@jaringanprima.com',
                 'phone_country_code' => '+62',
@@ -323,6 +330,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company5Id,
+                'code' => 'KRY008',
                 'name' => 'Andi Prasetyo',
                 'email' => 'andi@angkanet.id',
                 'phone_country_code' => '+62',
@@ -335,6 +343,7 @@ class DemoSeeder extends Seeder
             [
                 'id' => Str::uuid(),
                 'company_id' => $company5Id,
+                'code' => 'KRY009',
                 'name' => 'Maya Indah',
                 'email' => 'maya@angkanet.id',
                 'phone_country_code' => '+62',
@@ -600,7 +609,8 @@ class DemoSeeder extends Seeder
             $insentif = \App\Models\EmpIncentive::create([
                 'id' => Str::uuid(),
                 'company_id' => $companyId,
-                'name' => $name,
+                'code' => 'INS' . str_pad($idx + 1, 3, '0', STR_PAD_LEFT),
+                'name' => $incentiveNames[$idx],
                 'type' => $incentiveTypes[$idx],
                 'value' => $incentiveValues[$idx],
                 'is_active' => true,

@@ -195,7 +195,7 @@ class InsentifController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Daftar Insentif');
 
-        $headers = ['Nama', 'Tipe', 'Nilai', 'Status', 'Deskripsi'];
+        $headers = ['Kode', 'Nama', 'Tipe', 'Nilai', 'Status', 'Deskripsi'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -206,6 +206,7 @@ class InsentifController extends Controller
         $row = 2;
         foreach ($insentifs as $i) {
             $col = 1;
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->code ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->name, DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->type === 'percentage' ? 'Persentase' : 'Tetap', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $i->type === 'percentage' ? $i->value . '%' : number_format($i->value ?? 0, 2, '.', ''), DataType::TYPE_STRING);
@@ -232,7 +233,7 @@ class InsentifController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Insentif');
 
-        $headers = ['Nama', 'Tipe (percentage/fixed)', 'Nilai', 'Status (Aktif/Nonaktif)', 'Deskripsi'];
+        $headers = ['Kode', 'Nama', 'Tipe (percentage/fixed)', 'Nilai', 'Status (Aktif/Nonaktif)', 'Deskripsi'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -240,11 +241,12 @@ class InsentifController extends Controller
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
-        $sheet->setCellValueExplicit('A2', 'Insentif Penjualan', DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('B2', 'percentage', DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('C2', '10', DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('D2', 'Aktif', DataType::TYPE_STRING);
-        $sheet->setCellValueExplicit('E2', 'Insentif berdasarkan persentase penjualan', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('A2', 'INS001', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('B2', 'Insentif Penjualan', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('C2', 'percentage', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('D2', '10', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('E2', 'Aktif', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('F2', 'Insentif berdasarkan persentase penjualan', DataType::TYPE_STRING);
 
         $filename = 'template-insentif.xlsx';
         $tempPath = storage_path("app/temp/{$filename}");
@@ -276,12 +278,14 @@ class InsentifController extends Controller
         $header = array_map('strtolower', array_map('trim', $rows[0]));
         $companyId = auth()->user()->company_id;
         $imported = 0;
+        $updated = 0;
         $errors = [];
 
         foreach (array_slice($rows, 1) as $idx => $row) {
             if (empty(array_filter($row))) continue;
 
             $data = array_combine($header, $row);
+            $code = trim($data['kode'] ?? '');
             $name = trim($data['nama'] ?? '');
             $type = strtolower(trim($data['tipe (percentage/fixed)'] ?? 'percentage'));
             $value = trim($data['nilai'] ?? '');
@@ -300,19 +304,33 @@ class InsentifController extends Controller
                 $status = 'Aktif';
             }
 
-            EmpIncentive::create([
+            $payload = [
                 'company_id' => $companyId,
                 'name' => $name,
                 'type' => $type,
                 'value' => (float) $value,
                 'is_active' => $status === 'Aktif',
                 'description' => $description ?: null,
-            ]);
-            $imported++;
+            ];
+
+            if ($code) {
+                $existing = EmpIncentive::where('company_id', $companyId)->where('code', $code)->first();
+                if ($existing) {
+                    $existing->update($payload);
+                    $updated++;
+                } else {
+                    $payload['code'] = $code;
+                    EmpIncentive::create($payload);
+                    $imported++;
+                }
+            } else {
+                EmpIncentive::create($payload);
+                $imported++;
+            }
         }
 
-        if ($imported > 0) {
-            return back()->with('success', "{$imported} insentif berhasil diimport." . (count($errors) > 0 ? ' ' . count($errors) . ' baris dilewati.' : ''));
+        if ($imported > 0 || $updated > 0) {
+            return back()->with('success', ($imported > 0 ? "{$imported} insentif berhasil diimport." : '') . ($updated > 0 ? " {$updated} insentif berhasil diperbarui." : '') . (count($errors) > 0 ? ' ' . count($errors) . ' baris dilewati.' : ''));
         }
         return back()->with('error', 'Gagal mengimport insentif. ' . implode(' ', $errors));
     }
