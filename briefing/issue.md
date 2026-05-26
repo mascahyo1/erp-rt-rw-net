@@ -64,9 +64,47 @@ filter hanya berjalan ketika diklik tombol filter bukan on change biar gak mubas
 filter tambahkan
 dari tgl jatuh tempo
 sampai tgl jatuh tempo
+status
 nama paket(sebaiknya select option ajax dropdown  infinite scroll bisa searching seperti contoh lain mungkin ini http://erp-rt-rw-net.test/operator-perusahaan/tagihan yg bagian filter paket)
 pelanggan(sebaiknya select option ajax dropdown  infinite scroll bisa searching)
 kode invoice(sebaiknya select option ajax dropdown  infinite scroll bisa searching, chaining dia memperhatikan dari tgl jatuh tempo, sampai tgl jatuh tempo, nama paket, nama pelanggan)
 checklist per row tidak bisa diklik
 
 
+input create / edit fieldnya
+kode invoice 
+nama insentif
+tgl insentif
+amount(auto hitung tapi bisa diubah)
+diajukan untuk (submitted_by_type,submitted_by_id)
+alasan pengajuan
+bukti pengajuan
+
+detail fieldnya
+kode invoice 
+nama insentif
+tgl insentif
+amount
+diajukan untuk (submitted_by_type,submitted_by_id)
+alasan pengajuan
+bukti pengajuan
+status
+ditinjau oleh
+
+aksinya review per row
+review sekaligus dari checklist
+
+itu buka modal baru inputannya
+review_status
+review_reason(wajib diisi kalau ditolak)
+review_attachment(ga wajib, saya cek ini timestamp seharusnya string ubah aja migrasinya)
+
+kalau mau review user harus memiliki permission riwayat-insentif.persetujuan
+
+
+edit dan review hanya bisa dilakukan ketika status pending
+
+
+kalau disetujui / ditolak keisi otomatis ini
+reviewed_by_type 
+reviewed_by_id 

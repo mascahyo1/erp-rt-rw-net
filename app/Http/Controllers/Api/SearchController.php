@@ -163,4 +163,37 @@ class SearchController extends Controller
 
         return response()->json($items);
     }
+
+    /**
+     * Search employees — scoped ke company user login.
+     * Dipakai untuk "Diajukan Untuk" di riwayat insentif.
+     */
+    public function employees(Request $request): JsonResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $search = $request->input('search');
+        $perPage = min((int) $request->input('per_page', 25), 100);
+
+        $query = \App\Models\Employee::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->orderBy('name');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('no_nik', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->paginate($perPage)
+            ->through(fn($e) => [
+                'value' => $e->id,
+                'label' => $e->name . ' (' . ($e->no_nik ?? '-') . ')',
+                'email' => $e->email,
+                'phone' => ($e->phone_country_code ?? '') . ' ' . ($e->phone_number ?? ''),
+            ]);
+
+        return response()->json($items);
+    }
 }

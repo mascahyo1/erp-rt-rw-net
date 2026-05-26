@@ -11,6 +11,7 @@ const props = defineProps({
   labelKey: { type: String, default: 'label' },
   valueKey: { type: String, default: 'value' },
   selectedLabel: { type: String, default: '' },
+  onSelect: { type: Function, default: null },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -86,6 +87,7 @@ function toggle() {
 
 function select(option) {
   emit('update:modelValue', option[props.valueKey]);
+  if (props.onSelect) props.onSelect(option);
   open.value = false;
   searchText.value = '';
 }

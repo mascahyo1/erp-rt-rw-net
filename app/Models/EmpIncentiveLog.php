@@ -14,9 +14,12 @@ class EmpIncentiveLog extends Model
     protected $table = 'emp_incentive_logs';
 
     protected $fillable = [
-        'emp_incentive_id', 'cust_internet_invcs_id', 'amount', 'date',
+        'emp_incentive_id', 'cust_internet_invcs_id', 'invoice_number',
+        'amount', 'date',
+        'submitted_by_type', 'submitted_by_id', 'submitted_by_name',
+        'reason', 'attachment',
         'review_status', 'reviewed_by_type', 'reviewed_by_id', 'reviewed_at',
-        'submitted_by_type', 'submitted_by_id',
+        'review_reason', 'review_attachment',
     ];
 
     protected function casts(): array

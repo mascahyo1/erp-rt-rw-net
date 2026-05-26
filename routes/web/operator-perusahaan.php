@@ -345,7 +345,11 @@ Route::middleware('auth:admin-company')->group(function () {
         Route::post('/operator-perusahaan/riwayat-insentif/bulk-restore', [RiwayatInsentifController::class, 'bulkRestore'])->name('operator-perusahaan.riwayat-insentif.bulkRestore');
     });
     Route::middleware('permission:riwayat-insentif.persetujuan')->group(function () {
-        Route::post('/operator-perusahaan/riwayat-insentif/{id}/approve', [RiwayatInsentifController::class, 'approve'])->name('operator-perusahaan.riwayat-insentif.approve');
+        Route::post('/operator-perusahaan/riwayat-insentif/{id}/review', [RiwayatInsentifController::class, 'review'])->name('operator-perusahaan.riwayat-insentif.review');
+        Route::post('/operator-perusahaan/riwayat-insentif/bulk-review', [RiwayatInsentifController::class, 'bulkReview'])->name('operator-perusahaan.riwayat-insentif.bulkReview');
+    });
+    Route::middleware('permission:riwayat-insentif.list')->group(function () {
+        Route::get('/operator-perusahaan/riwayat-insentif/export', [RiwayatInsentifController::class, 'export'])->name('operator-perusahaan.riwayat-insentif.export');
     });
 
     // API search untuk SearchableSelectAjax component
@@ -354,4 +358,5 @@ Route::middleware('auth:admin-company')->group(function () {
     Route::get('/operator-perusahaan/api/search/langganans', [SearchController::class, 'langganans'])->name('operator-perusahaan.api.search.langganans');
     Route::get('/operator-perusahaan/api/search/invoices', [SearchController::class, 'invoices'])->name('operator-perusahaan.api.search.invoices');
     Route::get('/operator-perusahaan/api/search/incentives', [SearchController::class, 'incentives'])->name('operator-perusahaan.api.search.incentives');
+    Route::get('/operator-perusahaan/api/search/employees', [SearchController::class, 'employees'])->name('operator-perusahaan.api.search.employees');
 });
