@@ -42,3 +42,31 @@ karyawan
 role web karyawan
 admin role web karyawan
 konfig perusahaan
+
+
+riwayat insentif
+app\Enums\Permissions.php line 124-130 tambahkan export import dan line 308 df 314
+dokumentasi\operator-perusahaan\halaman-riwayat-insentif.md
+saya mau ada fitur import export
+testing semua mulai dari crud, tampilan dark / light mode, tampilan responsif update test case dan dokumentasinya
+sebaiknya kolom datatable export dan datatable webnya
+kode invoice
+nominal invoice
+status invoice
+tgl jatuh tempo
+nama paket
+kode pelanggan
+nama pelanggan
+email pelanggan
+no telp pelanggan (gabung phone_country_code dan phone number)
+
+filter hanya berjalan ketika diklik tombol filter bukan on change biar gak mubasir query
+filter tambahkan
+dari tgl jatuh tempo
+sampai tgl jatuh tempo
+nama paket(sebaiknya select option ajax dropdown  infinite scroll bisa searching seperti contoh lain mungkin ini http://erp-rt-rw-net.test/operator-perusahaan/tagihan yg bagian filter paket)
+pelanggan(sebaiknya select option ajax dropdown  infinite scroll bisa searching)
+kode invoice(sebaiknya select option ajax dropdown  infinite scroll bisa searching, chaining dia memperhatikan dari tgl jatuh tempo, sampai tgl jatuh tempo, nama paket, nama pelanggan)
+checklist per row tidak bisa diklik
+
+
