@@ -32,9 +32,13 @@ const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const showReviewModal = ref(false);
 const showExportDropdown = ref(false);
+const showImportModal = ref(false);
+const importing = ref(false);
+const importFile = ref(null);
 
 const reviewForm = useForm({ review_status: '', review_reason: '', review_attachment: null });
 const bulkReviewForm = useForm({ review_status: '', review_reason: '', review_attachment: null });
+const importForm = useForm({ file: null });
 
 function buildQuery(o = {}) {
   const p = { ...o };
@@ -141,6 +145,18 @@ function submitBulkReview() {
   });
 }
 
+function downloadTemplate() { window.location.href = '/operator-perusahaan/riwayat-insentif/template'; }
+function openImport() { importForm.reset(); importFile.value = null; showImportModal.value = true; }
+function submitImport() {
+  if (!importFile.value) { toast.error('Pilih file Excel terlebih dahulu.'); return; }
+  importing.value = true;
+  importForm.post('/operator-perusahaan/riwayat-insentif/import', {
+    onSuccess: () => { showImportModal.value = false; importing.value = false; fetchData(); toast.success('Import berhasil.'); },
+    onError: () => { importing.value = false; toast.error('Import gagal.'); }
+  });
+}
+function onImportFileChange(e) { importFile.value = e.target.files[0]; importForm.file = e.target.files[0]; }
+
 function buildFilterParams() {
   const params = new URLSearchParams();
   if (searchInput.value) params.append('search', searchInput.value);
@@ -183,13 +199,15 @@ const selectedPendingCount = computed(() => items.value.filter(i => selectedIds.
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div><h2 class="text-2xl font-bold text-gray-900 dark:text-white">Riwayat Insentif</h2><p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Riwayat perhitungan insentif untuk setiap transaksi.</p></div>
         <div class="flex items-center gap-2">
-          <div class="relative">
-            <button @click="showExportDropdown = !showExportDropdown" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
-              <i class="fas fa-download mr-1.5"></i> Export <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
+          <button v-if="can('riwayat-insentif.import') && terhapusFilter !== 'ya'" @click="openImport" class="inline-flex items-center px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"><i class="fas fa-file-import mr-1.5"></i> Import</button>
+          <button v-if="can('riwayat-insentif.import')" @click="downloadTemplate" class="inline-flex items-center px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors shadow-sm"><i class="fas fa-download mr-1.5"></i> Template</button>
+          <div v-if="can('riwayat-insentif.export')" class="relative">
+            <button @click="showExportDropdown = !showExportDropdown" class="inline-flex items-center px-3 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm">
+              <i class="fas fa-file-export mr-1.5"></i> Export <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
             </button>
-            <div v-if="showExportDropdown" class="absolute right-0 mt-1 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20">
-              <button @click="exportAll" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-t-lg"><i class="fas fa-list mr-2 text-emerald-500"></i>Export Semua</button>
-              <button @click="exportSelected" class="w-full text-left px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors rounded-b-lg"><i class="fas fa-check-square mr-2 text-emerald-500"></i>Export Selected ({{ selectedIds.length }})</button>
+            <div v-if="showExportDropdown" class="absolute right-0 mt-1 w-44 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-30">
+              <button @click="exportAll" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-list mr-2 text-emerald-500"></i>Export Semua</button>
+              <button @click="exportSelected" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-check-square mr-2 text-emerald-500"></i>Export Selected ({{ selectedIds.length }})</button>
             </div>
           </div>
           <button v-if="can('riwayat-insentif.create') && terhapusFilter !== 'ya'" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm"><i class="fas fa-plus mr-1.5"></i> Tambah Riwayat</button>
@@ -339,6 +357,9 @@ const selectedPendingCount = computed(() => items.value.filter(i => selectedIds.
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan Pengajuan</label><textarea v-model="editForm.reason" rows="2" placeholder="Jelaskan alasan pengajuan..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea><p v-if="editForm.errors.reason" class="text-red-500 text-xs mt-1">{{ editForm.errors.reason }}</p></div>
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Pengajuan <span class="text-xs text-gray-400">(kosongkan jika tidak diubah)</span></label><input @change="editForm.attachment = $event.target.files[0]" type="file" accept=".jpg,.jpeg,.png,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-400 hover:file:bg-sky-100 dark:hover:file:bg-sky-900/50" /><p v-if="editForm.errors.attachment" class="text-red-500 text-xs mt-1">{{ editForm.errors.attachment }}</p></div>
       </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showEditModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button type="submit" :disabled="editForm.processing" class="px-6 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Update</button></div></form></div></Transition></Teleport>
+
+    <!-- IMPORT MODAL -->
+    <Teleport to="body"><Transition name="modal"><div v-if="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showImportModal = false; importForm.reset(); importFile = null;"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form @submit.prevent="submitImport" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-file-import text-emerald-500 mr-2"></i>Import Riwayat Insentif</h3><button type="button" @click="showImportModal = false; importForm.reset();" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll"><div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3 text-sm text-amber-700 dark:text-amber-400"><i class="fas fa-info-circle mr-1.5"></i> Pastikan file Excel sesuai dengan template. Kolom: Nama Insentif, No. Invoice, Amount, Date, Submitted By Name, Reason.</div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">File Excel <span class="text-red-500">*</span></label><input @change="onImportFileChange" type="file" accept=".xlsx,.xls" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-400 hover:file:bg-sky-100 dark:hover:file:bg-sky-900/50" /><p v-if="importForm.errors.file" class="text-red-500 text-xs mt-1">{{ importForm.errors.file }}</p></div><div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><i class="fas fa-file-arrow-down"></i><a href="/operator-perusahaan/riwayat-insentif/template" class="text-sky-600 hover:text-sky-700 dark:text-sky-400 hover:underline">Download Template Excel</a></div></div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showImportModal = false; importForm.reset();" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button type="submit" :disabled="importing" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-upload mr-1.5"></i>{{ importing ? 'Mengimport...' : 'Import' }}</button></div></form></div></Transition></Teleport>
 
     <!-- REVIEW MODAL (single + bulk) -->
     <Teleport to="body"><Transition name="modal"><div v-if="showReviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showReviewModal = false; reviewForm.reset(); bulkReviewForm.reset();"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>

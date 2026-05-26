@@ -50,7 +50,7 @@ $fullPerms = Permission::whereIn('name', [
     'langganan.list','langganan.create','langganan.edit','langganan.delete','langganan.restore','langganan.export','langganan.import',
     'tagihan.list','tagihan.create','tagihan.edit','tagihan.delete','tagihan.restore','tagihan.export','tagihan.generate','tagihan.detail',
     'insentif.list','insentif.create','insentif.edit','insentif.delete','insentif.restore','insentif.export','insentif.import',
-    'riwayat-insentif.list','riwayat-insentif.create','riwayat-insentif.edit','riwayat-insentif.detail','riwayat-insentif.delete','riwayat-insentif.restore','riwayat-insentif.persetujuan'
+    'riwayat-insentif.list','riwayat-insentif.create','riwayat-insentif.edit','riwayat-insentif.detail','riwayat-insentif.delete','riwayat-insentif.restore','riwayat-insentif.persetujuan','riwayat-insentif.export','riwayat-insentif.import'
 ])->get();
 foreach ($fullPerms as $p) {
     DB::table('role_permissions')->insert([

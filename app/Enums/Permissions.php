@@ -119,6 +119,8 @@ enum Permissions: string
     case RiwayatInsentifDelete      = 'riwayat-insentif.delete';
     case RiwayatInsentifRestore     = 'riwayat-insentif.restore';
     case RiwayatInsentifPersetujuan = 'riwayat-insentif.persetujuan';
+    case RiwayatInsentifExport      = 'riwayat-insentif.export';
+    case RiwayatInsentifImport      = 'riwayat-insentif.import';
 
     // Riwayat Pembayaran (full CRUD + persetujuan)
     case RiwayatPembayaranList        = 'riwayat-pembayaran.list';
@@ -312,6 +314,8 @@ enum Permissions: string
                 self::RiwayatInsentifDelete->value,
                 self::RiwayatInsentifRestore->value,
                 self::RiwayatInsentifPersetujuan->value,
+                self::RiwayatInsentifExport->value,
+                self::RiwayatInsentifImport->value,
                 self::RiwayatPembayaranList->value,
                 self::RiwayatPembayaranCreate->value,
                 self::RiwayatPembayaranEdit->value,

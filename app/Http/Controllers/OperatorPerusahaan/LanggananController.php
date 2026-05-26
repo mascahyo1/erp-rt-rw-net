@@ -243,14 +243,14 @@ class LanggananController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Import');
 
-        $headers = ['No. Akun', 'Customer ID (UUID)', 'Paket ID (UUID)', 'Router SN', 'Status (active/inactive/suspended/terminated)', 'Usage Upload (KB)', 'Usage Download (KB)', 'Catatan'];
+        $headers = ['No. Akun', 'Kode Customer', 'Kode Paket', 'Router SN', 'Status (active/inactive/suspended/terminated)', 'Usage Upload (KB)', 'Usage Download (KB)', 'Catatan'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
             $sheet->getStyle("{$col}1")->getFont()->setBold(true);
         }
 
-        $example = ['ACC-001', '', '', '', 'active', '0', '0', ''];
+        $example = ['ACC-001', 'CUST-001', 'PAKET-10MBPS', '', 'active', '0', '0', ''];
         foreach ($example as $i => $v) {
             $sheet->setCellValueExplicit($this->excelColumn($i + 1) . '2', (string) $v, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
         }
@@ -286,41 +286,48 @@ class LanggananController extends Controller
         $success = 0;
         $errors = [];
 
-        $customerIds = Customer::where('company_id', $companyId)->pluck('id')->toArray();
-        $packageIds = InternetPackage::where('company_id', $companyId)->pluck('id')->toArray();
-
         $inserts = [];
         foreach ($rows as $idx => $row) {
             if (empty(array_filter($row))) continue;
 
             $accountNumber = trim($row[0] ?? '');
-            $customerId = trim($row[1] ?? '');
-            $packageId = trim($row[2] ?? '');
+            $customerCode = trim($row[1] ?? '');
+            $packageCode = trim($row[2] ?? '');
             $routerSn = trim($row[3] ?? '');
             $status = strtolower(trim($row[4] ?? '')) ?: 'active';
             $usageUpload = is_numeric($row[5] ?? '') ? (float)$row[5] : 0;
             $usageDownload = is_numeric($row[6] ?? '') ? (float)$row[6] : 0;
             $companyNotes = trim($row[7] ?? '');
 
-            if (!$accountNumber || !$customerId || !$packageId) {
-                $errors[] = "Baris " . ($idx + 2) . ": data tidak lengkap";
+            if (!$accountNumber || !$customerCode || !$packageCode) {
+                $errors[] = "Baris " . ($idx + 2) . ": No. Akun, Kode Customer, dan Kode Paket wajib diisi";
                 continue;
             }
 
-            if (!in_array($customerId, $customerIds)) {
-                $errors[] = "Baris " . ($idx + 2) . ": customer ID tidak valid";
+            // Lookup customer by code
+            $customer = Customer::where('company_id', $companyId)
+                ->where('code', $customerCode)
+                ->first();
+            if (!$customer) {
+                $errors[] = "Baris " . ($idx + 2) . ": Kode Customer '" . $customerCode . "' tidak ditemukan";
                 continue;
             }
-            if (!in_array($packageId, $packageIds)) {
-                $errors[] = "Baris " . ($idx + 2) . ": paket ID tidak valid";
+
+            // Lookup package by code
+            $package = InternetPackage::where('company_id', $companyId)
+                ->where('code', $packageCode)
+                ->first();
+            if (!$package) {
+                $errors[] = "Baris " . ($idx + 2) . ": Kode Paket '" . $packageCode . "' tidak ditemukan";
                 continue;
             }
+
             if (!in_array($status, ['active', 'inactive', 'suspended', 'terminated'])) {
                 $status = 'active';
             }
 
             $exists = CustInternet::where('account_number', $accountNumber)
-                ->where('customer_id', $customerId)->exists();
+                ->where('customer_id', $customer->id)->exists();
             if ($exists) {
                 $errors[] = "Baris " . ($idx + 2) . ": no. akun sudah ada";
                 continue;
@@ -329,8 +336,8 @@ class LanggananController extends Controller
             $inserts[] = [
                 'id' => \App\Support\Str::uuidV7(),
                 'company_id' => $companyId,
-                'customer_id' => $customerId,
-                'internet_package_id' => $packageId,
+                'customer_id' => $customer->id,
+                'internet_package_id' => $package->id,
                 'account_number' => $accountNumber,
                 'router_sn' => $routerSn ?: null,
                 'internet_status' => $status,

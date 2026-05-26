@@ -11,6 +11,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RiwayatInsentifController extends Controller
@@ -356,6 +357,101 @@ class RiwayatInsentifController extends Controller
         $writer->save($tempPath);
 
         return response()->download($tempPath, $filename)->deleteFileAfterSend(true);
+    }
+
+    public function downloadTemplate(): BinaryFileResponse
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Riwayat Insentif');
+
+        $headers = ['Nama Insentif', 'No. Invoice', 'Cust Internet Invc ID', 'Amount', 'Date (YYYY-MM-DD)', 'Submitted By Name', 'Reason'];
+        foreach ($headers as $i => $h) {
+            $col = $this->excelColumn($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $sheet->setCellValueExplicit('A2', 'Insentif Penjualan', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('B2', 'INV/2025/001', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('C2', '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('D2', '100000', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('E2', date('Y-m-d'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('F2', 'John Doe', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('G2', 'Insentif bulanan', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+
+        $filename = 'template-riwayat-insentif.xlsx';
+        $tempPath = storage_path("app/temp/{$filename}");
+        if (!is_dir(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+        $writer = new Xlsx($spreadsheet);
+        $writer->save($tempPath);
+
+        return response()->download($tempPath, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])->deleteFileAfterSend(true);
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
+        ]);
+
+        $path = $request->file('file')->getRealPath();
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        if (count($rows) < 2) {
+            return back()->with('error', 'File tidak memiliki data.');
+        }
+
+        $header = array_map('strtolower', array_map('trim', $rows[0]));
+        $companyId = auth()->user()->company_id;
+        $imported = 0;
+        $errors = [];
+
+        foreach (array_slice($rows, 1) as $idx => $row) {
+            if (empty(array_filter($row))) continue;
+
+            $data = array_combine($header, $row);
+            $incentiveName = trim($data['nama insentif'] ?? '');
+            $invoiceNumber = trim($data['no. invoice'] ?? '');
+            $custInternetInvcId = trim($data['cust internet invc id'] ?? '');
+            $amount = trim($data['amount'] ?? '');
+            $date = trim($data['date (yyyy-mm-dd)'] ?? '');
+            $submittedByName = trim($data['submitted by name'] ?? '');
+            $reason = trim($data['reason'] ?? '');
+
+            if (!$incentiveName || !$amount || !$date) {
+                $errors[] = 'Baris ' . ($idx + 2) . ': Nama Insentif, Amount, dan Date wajib diisi.';
+                continue;
+            }
+
+            $incentive = \App\Models\EmpIncentive::where('company_id', $companyId)->where('name', $incentiveName)->first();
+            if (!$incentive) {
+                $errors[] = 'Baris ' . ($idx + 2) . ': Insentif "' . $incentiveName . '" tidak ditemukan.';
+                continue;
+            }
+
+            \App\Models\EmpIncentiveLog::create([
+                'emp_incentive_id' => $incentive->id,
+                'cust_internet_invcs_id' => $custInternetInvcId ?: null,
+                'invoice_number' => $invoiceNumber ?: null,
+                'amount' => (float) $amount,
+                'date' => $date,
+                'submitted_by_name' => $submittedByName ?: null,
+                'reason' => $reason ?: null,
+                'review_status' => 'pending',
+            ]);
+            $imported++;
+        }
+
+        if ($imported > 0) {
+            return back()->with('success', "{$imported} riwayat insentif berhasil diimport." . (count($errors) > 0 ? ' ' . count($errors) . ' baris dilewati.' : ''));
+        }
+        return back()->with('error', 'Gagal mengimport riwayat insentif. ' . implode(' ', $errors));
     }
 
     private function excelColumn(int $index): string

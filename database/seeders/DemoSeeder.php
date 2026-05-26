@@ -606,18 +606,32 @@ class DemoSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Buat 2-3 riwayat insentif
+            // Buat 2-3 riwayat insentif per insentif
             $invoices = \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))->inRandomOrder()->take(rand(2, 3))->get();
+            $adminUser = \App\Models\AdminCompany::where('company_id', $companyId)->first();
+            $statuses = ['pending', 'approved', 'approved', 'rejected', 'pending'];
+            $reasons = ['Insentif bulanan', 'Insentif performa', 'Insentif kehadiran', 'Bonus project', 'Insentif overtime'];
+            $reviewReasons = ['Sesuai ketentuan', 'Approved', 'Luar biasa', null, 'Kurang memenuhi target'];
+
             foreach ($invoices as $invoice) {
-                \App\Models\EmpIncentiveLog::create([
+                $status = $statuses[array_rand($statuses)];
+                $amount = $insentif->type === 'percentage' ? ($invoice->grand_total * $insentif->value / 100) : $insentif->value;
+
+                $log = \App\Models\EmpIncentiveLog::create([
                     'emp_incentive_id' => $insentif->id,
                     'cust_internet_invcs_id' => $invoice->id,
+                    'invoice_number' => $invoice->invoice_number,
                     'submitted_by_type' => \App\Models\AdminCompany::class,
-                    'submitted_by_id' => \App\Models\AdminCompany::where('company_id', $companyId)->first()?->id,
-                    'amount' => $insentif->type === 'percentage' ? ($invoice->amount * $insentif->value / 100) : $insentif->value,
+                    'submitted_by_id' => $adminUser?->id,
+                    'submitted_by_name' => $adminUser?->name,
+                    'amount' => $amount,
                     'date' => now()->subDays(rand(1, 60)),
-                    'review_status' => ['pending', 'approved', 'approved'][rand(0, 2)],
-                    'reviewed_at' => rand(0, 1) ? now() : null,
+                    'reason' => $reasons[array_rand($reasons)],
+                    'review_status' => $status,
+                    'reviewed_at' => $status !== 'pending' ? now()->subDays(rand(0, 5)) : null,
+                    'reviewed_by_type' => $status !== 'pending' ? \App\Models\AdminCompany::class : null,
+                    'reviewed_by_id' => $status !== 'pending' ? $adminUser?->id : null,
+                    'review_reason' => $status === 'rejected' ? 'Kurang memenuhi target quarterly' : ($reviewReasons[array_rand($reviewReasons)]),
                 ]);
             }
         }

@@ -348,8 +348,12 @@ Route::middleware('auth:admin-company')->group(function () {
         Route::post('/operator-perusahaan/riwayat-insentif/{id}/review', [RiwayatInsentifController::class, 'review'])->name('operator-perusahaan.riwayat-insentif.review');
         Route::post('/operator-perusahaan/riwayat-insentif/bulk-review', [RiwayatInsentifController::class, 'bulkReview'])->name('operator-perusahaan.riwayat-insentif.bulkReview');
     });
-    Route::middleware('permission:riwayat-insentif.list')->group(function () {
+    Route::middleware('permission:riwayat-insentif.export')->group(function () {
         Route::get('/operator-perusahaan/riwayat-insentif/export', [RiwayatInsentifController::class, 'export'])->name('operator-perusahaan.riwayat-insentif.export');
+    });
+    Route::middleware('permission:riwayat-insentif.import')->group(function () {
+        Route::post('/operator-perusahaan/riwayat-insentif/import', [RiwayatInsentifController::class, 'import'])->name('operator-perusahaan.riwayat-insentif.import');
+        Route::get('/operator-perusahaan/riwayat-insentif/template', [RiwayatInsentifController::class, 'downloadTemplate'])->name('operator-perusahaan.riwayat-insentif.template');
     });
 
     // API search untuk SearchableSelectAjax component
