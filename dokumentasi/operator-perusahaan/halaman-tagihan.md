@@ -113,6 +113,8 @@ Tagihan dibuat secara manual, via import Excel, atau via generate massal.
 | **Hapus Tagihan** | `tagihan.delete` | ✅ | ✅ |
 | **Pulihkan Tagihan** | `tagihan.restore` | ✅ | ✅ |
 | **Export Excel** | `tagihan.export` | — | ✅ |
+| **Export PDF** | `tagihan.export` | ✅ | — |
+| **Export Word** | `tagihan.export` | ✅ | — |
 | **Download Template** | `tagihan.create` | — | — |
 
 ---
@@ -133,6 +135,8 @@ Tagihan dibuat secara manual, via import Excel, atau via generate massal.
 | POST | `/operator-perusahaan/tagihan/bulk-status` | `tagihan.edit` |
 | GET | `/operator-perusahaan/tagihan/export` | `tagihan.export` |
 | GET | `/operator-perusahaan/tagihan/export?ids=` | `tagihan.export` |
+| GET | `/operator-perusahaan/tagihan/{id}/export-pdf` | `tagihan.export` |
+| GET | `/operator-perusahaan/tagihan/{id}/export-word` | `tagihan.export` |
 | GET | `/operator-perusahaan/tagihan/template` | `tagihan.create` |
 | POST | `/operator-perusahaan/tagihan/import` | `tagihan.create` |
 | POST | `/operator-perusahaan/tagihan/generate` | `tagihan.create` |

@@ -449,4 +449,292 @@ class TagihanController extends Controller
 
         return back()->with('success', "{$count} tagihan berhasil digenerate untuk periode " . $startDate->translatedFormat('F Y') . ".");
     }
+
+    public function exportPdf(string $id): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $company = auth()->user()->company;
+        $invoice = CustInternetInvc::with(['custInternet.customer', 'custInternet.internetPackage', 'createdBy', 'updatedBy'])
+            ->whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))
+            ->findOrFail($id);
+
+        $logoPath = \App\Models\CompanyConfig::getLogo($companyId);
+        $logoUrl = null;
+        if ($logoPath) {
+            try {
+                $logoUrl = \Illuminate\Support\Facades\Storage::disk('minio')->url($logoPath);
+            } catch (\Exception $e) {
+                $logoUrl = null;
+            }
+        }
+
+        $html = $this->buildInvoiceHtml($invoice, $company, $logoUrl);
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'Invoice-' . $invoice->invoice_number . '.pdf';
+        $path = 'invoices/' . date('Y/m') . '/' . $filename;
+
+        \Illuminate\Support\Facades\Storage::disk('minio')->put($path, $dompdf->output(), ['visibility' => 'private']);
+
+        $tempPath = storage_path("app/temp/{$filename}");
+        file_put_contents($tempPath, \Illuminate\Support\Facades\Storage::disk('minio')->get($path));
+
+        return response()->download($tempPath, $filename, ['Content-Type' => 'application/pdf'])->deleteFileAfterSend(true);
+    }
+
+    public function exportWord(string $id): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $company = auth()->user()->company;
+        $invoice = CustInternetInvc::with(['custInternet.customer', 'custInternet.internetPackage', 'createdBy', 'updatedBy'])
+            ->whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))
+            ->findOrFail($id);
+
+        $customer = $invoice->custInternet?->customer;
+        $langganan = $invoice->custInternet;
+        $package = $langganan?->internetPackage;
+
+        $phpWord = new \PhpOffice\PhpWord\PhpWord();
+        $phpWord->setDefaultFontSize(11);
+
+        // Company Header
+        if ($company) {
+            $section = $phpWord->addSection();
+            $companyName = $company->name ?? '-';
+            $companyEmail = $company->email ?? '-';
+            $companyAddress = $company->address ?? '-';
+            $companyPhone = ($company->phone_country_code ?? '') . ' ' . ($company->phone_number ?? '-');
+            $section->addText($companyName, ['bold' => true, 'size' => 16]);
+            $section->addText($companyAddress, ['size' => 9]);
+            $section->addText('Email: ' . $companyEmail . ' | Telp: ' . $companyPhone, ['size' => 9]);
+            $section->addText('', []);
+            $section->addText('INVOICE', ['bold' => true, 'size' => 22, 'align' => 'center']);
+            $section->addText($invoice->invoice_number, ['bold' => true, 'size' => 12, 'align' => 'center']);
+        } else {
+            $section = $phpWord->addSection();
+            $section->addText('INVOICE', ['bold' => true, 'size' => 24, 'align' => 'center']);
+            $section->addText($invoice->invoice_number, ['bold' => true, 'size' => 14, 'align' => 'center']);
+        }
+        $section->addText('');
+
+        $table = $section->addTable(['borderSize' => 1, 'borderColor' => '999999']);
+        $table->addRow();
+        $table->addCell(2500)->addText('No. Invoice', ['bold' => true]);
+        $table->addCell(5000)->addText($invoice->invoice_number ?? '-');
+        $table->addRow();
+        $table->addCell(2500)->addText('No. Langganan', ['bold' => true]);
+        $table->addCell(5000)->addText($langganan->account_number ?? '-');
+        $table->addRow();
+        $table->addCell(2500)->addText('Kode Pelanggan', ['bold' => true]);
+        $table->addCell(5000)->addText($customer->code ?? '-');
+        $table->addRow();
+        $table->addCell(2500)->addText('Nama Pelanggan', ['bold' => true]);
+        $table->addCell(5000)->addText($customer->name ?? '-');
+        $table->addRow();
+        $table->addCell(2500)->addText('No. Telp Pelanggan', ['bold' => true]);
+        $table->addCell(5000)->addText(($customer->phone_country_code ?? '') . ' ' . ($customer->phone_number ?? '-'));
+        $table->addRow();
+        $table->addCell(2500)->addText('Email Pelanggan', ['bold' => true]);
+        $table->addCell(5000)->addText($customer->email ?? '-');
+        $table->addRow();
+        $table->addCell(2500)->addText('Paket Internet', ['bold' => true]);
+        $table->addCell(5000)->addText($package->name ?? '-' . ' (' . ($package->speed ?? '-') . ' Mbps)');
+        $table->addRow();
+        $table->addCell(2500)->addText('Periode Usage', ['bold' => true]);
+        $table->addCell(5000)->addText(($invoice->usage_start_date?->format('d/m/Y') ?? '-') . ' - ' . ($invoice->usage_end_date?->format('d/m/Y') ?? '-'));
+        $table->addRow();
+        $table->addCell(2500)->addText('Total Tagihan', ['bold' => true]);
+        $table->addCell(5000)->addText('Rp ' . number_format($invoice->total_amount ?? 0, 0, ',', '.'));
+        $table->addRow();
+        $table->addCell(2500)->addText('Diskon', ['bold' => true]);
+        $table->addCell(5000)->addText('Rp ' . number_format($invoice->discount_amount ?? 0, 0, ',', '.'));
+        $table->addRow();
+        $table->addCell(2500)->addText('Pajak', ['bold' => true]);
+        $table->addCell(5000)->addText('Rp ' . number_format($invoice->tax_amount ?? 0, 0, ',', '.'));
+        $table->addRow();
+        $table->addCell(2500)->addText('Grand Total', ['bold' => true]);
+        $table->addCell(5000)->addText('Rp ' . number_format($invoice->grand_total ?? 0, 0, ',', '.'), ['bold' => true]);
+        $table->addRow();
+        $table->addCell(2500)->addText('Jatuh Tempo', ['bold' => true]);
+        $table->addCell(5000)->addText($invoice->due_date?->format('d/m/Y') ?? '-');
+        $table->addRow();
+        $table->addCell(2500)->addText('Status Pembayaran', ['bold' => true]);
+        $table->addCell(5000)->addText($invoice->payment_status === 'paid' ? 'LUNAS' : 'BELUM BAYAR');
+        $table->addRow();
+        $table->addCell(2500)->addText('Deskripsi', ['bold' => true]);
+        $table->addCell(5000)->addText($invoice->description ?? '-');
+        $section->addText('');
+
+        $filename = 'Invoice-' . $invoice->invoice_number . '.docx';
+        $path = 'invoices/' . date('Y/m') . '/' . $filename;
+        $tempPath = storage_path("app/temp/{$filename}");
+
+        $writer = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+        $writer->save($tempPath);
+
+        // Store to object storage
+        $content = file_get_contents($tempPath);
+        \Illuminate\Support\Facades\Storage::disk('minio')->put($path, $content, ['visibility' => 'private']);
+
+        return response()->download($tempPath, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])->deleteFileAfterSend(true);
+    }
+
+    private function buildInvoiceHtml($invoice, $company = null, $logoUrl = null): string
+    {
+        $customer = $invoice->custInternet?->customer;
+        $langganan = $invoice->custInternet;
+        $package = $langganan?->internetPackage;
+
+        $statusBadge = match ($invoice->payment_status) {
+            'paid' => '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-size:12px;">LUNAS</span>',
+            'overdue' => '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:12px;">JATUH TEMPO</span>',
+            default => '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:12px;">BELUM BAYAR</span>',
+        };
+
+        $dueDateFormatted = $invoice->due_date ? $invoice->due_date->format('d F Y') : '-';
+        $usageStartFormatted = $invoice->usage_start_date ? $invoice->usage_start_date->format('d/m/Y') : '-';
+        $usageEndFormatted = $invoice->usage_end_date ? $invoice->usage_end_date->format('d/m/Y') : '-';
+        $usagePeriodFormatted = $invoice->usage_start_date ? $invoice->usage_start_date->format('F Y') : '-';
+        $paidAtFormatted = $invoice->paid_at ? $invoice->paid_at->format('d F Y H:i') : null;
+        $updatedAtFormatted = $invoice->updated_at ? $invoice->updated_at->format('d F Y H:i:s') : now()->format('d F Y H:i:s');
+        $customerName = $customer->name ?? '-';
+        $customerEmail = $customer->email ?? '-';
+        $customerPhone = ($customer->phone_country_code ?? '') . ' ' . ($customer->phone_number ?? '-');
+        $customerAddress = $customer->address ?? '-';
+        $customerCode = $customer->code ?? '-';
+        $accountNumber = $langganan->account_number ?? '-';
+        $packageName = $package->name ?? '-';
+        $packageSpeed = $package->speed ?? '-';
+        $totalAmountFormatted = number_format($invoice->total_amount ?? 0, 0, ',', '.');
+        $discountAmountFormatted = number_format($invoice->discount_amount ?? 0, 0, ',', '.');
+        $taxAmountFormatted = number_format($invoice->tax_amount ?? 0, 0, ',', '.');
+        $grandTotalFormatted = number_format($invoice->grand_total ?? 0, 0, ',', '.');
+        $paymentStatusText = $invoice->payment_status === 'paid' ? 'Lunas pada ' . $paidAtFormatted : 'Belum Bayar';
+        $description = $invoice->description ?? 'Tanpa keterangan';
+
+        // Company info
+        $companyName = $company?->name ?? '-';
+        $companyEmail = $company?->email ?? '-';
+        $companyAddress = $company?->address ?? '-';
+        $companyPhone = ($company?->phone_country_code ?? '') . ' ' . ($company?->phone_number ?? '-');
+        $logoImage = $logoUrl ? '<img src="' . $logoUrl . '" alt="Logo" style="max-height:50px;max-width:150px;object-fit:contain;">' : '';
+
+        $footerText = '<p>Dicetak pada ' . $updatedAtFormatted . '</p>';
+
+        $html = <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; margin: 20px; font-size: 11px; color: #333; line-height: 1.3; }
+    .company-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #1e40af; }
+    .company-info { flex: 1; }
+    .company-info h1 { font-size: 16px; color: #1e40af; margin: 0; }
+    .company-info p { margin: 1px 0; font-size: 9px; color: #666; }
+    .company-logo { flex-shrink: 0; margin-left: 15px; text-align: right; }
+    .invoice-title { margin: 10px 0; }
+    .invoice-title h2 { font-size: 14px; color: #333; margin: 0; }
+    .invoice-title .invoice-no { font-size: 10px; color: #666; margin-top: 2px; }
+    .status { text-align: right; margin-bottom: 8px; }
+    .info-grid { display: table; width: 100%; margin-bottom: 10px; }
+    .info-box { display: table-cell; width: 50%; padding: 6px; }
+    .info-box:first-child { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px 0 0 4px; }
+    .info-box:last-child { background: #f9fafb; border: 1px solid #e5e7eb; border-left: none; border-radius: 0 4px 4px 0; }
+    .info-box h3 { font-size: 9px; color: #666; text-transform: uppercase; margin-bottom: 3px; }
+    .info-box p { margin-bottom: 1px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 8px; font-size: 10px; }
+    th, td { border: 1px solid #ddd; padding: 5px 6px; }
+    th { background: #f3f4f6; font-weight: bold; }
+    .text-right { text-align: right; }
+    .total-row { background: #f3f4f6; font-weight: bold; }
+    .footer { margin-top: 12px; text-align: center; font-size: 8px; color: #666; border-top: 1px solid #ddd; padding-top: 6px; }
+</style>
+</head>
+<body>
+<div class="company-header">
+    <div class="company-info">
+        <h1>{$companyName}</h1>
+        <p>{$companyAddress}</p>
+        <p>Email: {$companyEmail} | Telp: {$companyPhone}</p>
+    </div>
+    <div class="company-logo">
+        {$logoImage}
+    </div>
+</div>
+<div class="invoice-title">
+    <h2>INVOICE</h2>
+    <div class="invoice-no">{$invoice->invoice_number} - Tagihan Internet {$dueDateFormatted}</div>
+</div>
+
+<div class="status">{$statusBadge}</div>
+
+<div class="info-grid">
+    <div class="info-box">
+        <h3>Informasi Pelanggan</h3>
+        <p><strong>{$customerName}</strong> ({$customerCode})</p>
+        <p>{$customerEmail}</p>
+        <p>{$customerPhone}</p>
+        <p>{$customerAddress}</p>
+    </div>
+    <div class="info-box">
+        <h3>Informasi Langganan</h3>
+        <p><strong>No. Langganan:</strong> {$accountNumber}</p>
+        <p><strong>Paket:</strong> {$packageName} ({$packageSpeed} Mbps)</p>
+        <p><strong>Periode:</strong> {$usageStartFormatted} - {$usageEndFormatted}</p>
+    </div>
+</div>
+
+<table>
+    <tr>
+        <th style="width:70%">Deskripsi</th>
+        <th class="text-right">Jumlah</th>
+    </tr>
+    <tr>
+        <td>Total Tagihan Periode {$usagePeriodFormatted}</td>
+        <td class="text-right">Rp {$totalAmountFormatted}</td>
+    </tr>
+    <tr>
+        <td>Diskon</td>
+        <td class="text-right">- Rp {$discountAmountFormatted}</td>
+    </tr>
+    <tr>
+        <td>Pajak</td>
+        <td class="text-right">+ Rp {$taxAmountFormatted}</td>
+    </tr>
+    <tr class="total-row">
+        <td>GRAND TOTAL</td>
+        <td class="text-right">Rp {$grandTotalFormatted}</td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <th style="width:50%">Keterangan</th>
+        <th>Informasi Pembayaran</th>
+    </tr>
+    <tr>
+        <td style="vertical-align:top">{$description}</td>
+        <td>
+            <p><strong>Jatuh Tempo:</strong> {$dueDateFormatted}</p>
+            <p><strong>Status:</strong> {$paymentStatusText}</p>
+        </td>
+    </tr>
+</table>
+
+<div class="footer">
+    {$footerText}
+</div>
+
+</body>
+</html>
+HTML;
+
+        return $html;
+    }
 }

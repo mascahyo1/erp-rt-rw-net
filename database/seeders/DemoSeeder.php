@@ -41,11 +41,11 @@ class DemoSeeder extends Seeder
         ]);
 
         $companies = [
-            ['id' => Str::uuid(), 'name' => 'PT Net Sejahtera Abadi', 'email' => 'info@netsejahtera.com', 'phone_country_code' => '+62', 'phone_number' => '82112345678', 'is_active' => true],
-            ['id' => Str::uuid(), 'name' => 'CV Digital Media Nusantara', 'email' => 'admin@digitalmedia.id', 'phone_country_code' => '+62', 'phone_number' => '82187654321', 'is_active' => true],
-            ['id' => Str::uuid(), 'name' => 'UD Net Mandiri Global', 'email' => 'support@netmandiri.com', 'phone_country_code' => '+62', 'phone_number' => '82211223344', 'is_active' => false],
-            ['id' => Str::uuid(), 'name' => 'PT Jaringan Prima', 'email' => 'halo@jaringanprima.com', 'phone_country_code' => '+62', 'phone_number' => '82244332211', 'is_active' => true],
-            ['id' => Str::uuid(), 'name' => 'CV Angkasa Netindo', 'email' => 'info@angkanet.id', 'phone_country_code' => '+62', 'phone_number' => '82255667788', 'is_active' => true],
+            ['id' => Str::uuid(), 'name' => 'PT Net Sejahtera Abadi', 'email' => 'info@netsejahtera.com', 'phone_country_code' => '+62', 'phone_number' => '82112345678', 'address' => 'Jl. Raya Barat No. 100, Jakarta Barat 11610', 'is_active' => true],
+            ['id' => Str::uuid(), 'name' => 'CV Digital Media Nusantara', 'email' => 'admin@digitalmedia.id', 'phone_country_code' => '+62', 'phone_number' => '82187654321', 'address' => 'Jl. Merdeka No. 50, Bandung 40111', 'is_active' => true],
+            ['id' => Str::uuid(), 'name' => 'UD Net Mandiri Global', 'email' => 'support@netmandiri.com', 'phone_country_code' => '+62', 'phone_number' => '82211223344', 'address' => 'Jl. Sudirman No. 25, Surabaya 60271', 'is_active' => false],
+            ['id' => Str::uuid(), 'name' => 'PT Jaringan Prima', 'email' => 'halo@jaringanprima.com', 'phone_country_code' => '+62', 'phone_number' => '82244332211', 'address' => 'Jl. Asia Afrika No. 88, Bandung 40112', 'is_active' => true],
+            ['id' => Str::uuid(), 'name' => 'CV Angkasa Netindo', 'email' => 'info@angkanet.id', 'phone_country_code' => '+62', 'phone_number' => '82255667788', 'address' => 'Jl. Gatot Subroto No. 45, Jakarta Selatan 12990', 'is_active' => true],
         ];
 
         foreach ($companies as $company) {
@@ -580,18 +580,21 @@ class DemoSeeder extends Seeder
 
                 // Generate 2-3 invoice untuk tiap langganan
                 for ($i = 0; $i < rand(2, 3); $i++) {
+                    $usageStart = now()->subMonths($i)->startOfMonth();
+                    $usageEnd = now()->subMonths($i)->endOfMonth();
                     $dueDate = now()->subMonths($i)->addDays(15);
                     $status = $i === 0 ? 'unpaid' : 'paid';
                     \App\Models\CustInternetInvc::create([
                         'id' => Str::uuid(),
                         'cust_internet_id' => $langganan->id,
                         'invoice_number' => 'INV-' . now()->subMonths($i)->format('Ymd') . '-' . strtoupper(Str::random(6)),
+                        'usage_start_date' => $usageStart,
+                        'usage_end_date' => $usageEnd,
                         'amount' => $pkg['price'],
                         'total_amount' => $pkg['price'],
                         'grand_total' => $pkg['price'],
                         'due_date' => $dueDate,
                         'invoice_due_date' => $dueDate,
-                        'payment_status' => $status,
                         'payment_status' => $status,
                         'status' => $status,
                         'status_description' => $status === 'paid' ? 'Lunas' : 'Menunggu pembayaran',

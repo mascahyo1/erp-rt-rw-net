@@ -275,6 +275,8 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:tagihan.export')->group(function () {
         Route::get('/operator-perusahaan/tagihan/export', [TagihanController::class, 'export'])->name('operator-perusahaan.tagihan.export');
+        Route::get('/operator-perusahaan/tagihan/{id}/export-pdf', [TagihanController::class, 'exportPdf'])->name('operator-perusahaan.tagihan.exportPdf');
+        Route::get('/operator-perusahaan/tagihan/{id}/export-word', [TagihanController::class, 'exportWord'])->name('operator-perusahaan.tagihan.exportWord');
     });
 
     // Riwayat Pembayaran
