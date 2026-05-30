@@ -548,7 +548,77 @@ class DemoSeeder extends Seeder
         $this->seedInternetPackages($company4Id);
         $this->seedInternetPackages($company5Id);
 
+        $this->seedPaymentHistory($company1Id);
+        $this->seedPaymentHistory($company2Id);
+        $this->seedPaymentHistory($company4Id);
+        $this->seedPaymentHistory($company5Id);
+
         $this->call(PermissionSeeder::class);
+    }
+
+    private function seedPaymentHistory(string $companyId): void
+    {
+        $adminUser = \App\Models\AdminCompany::where('company_id', $companyId)->first();
+        $providers = ['internal', 'internal', 'internal', 'external'];
+        $methods = ['tunai', 'transfer_manual'];
+        $statuses = ['pending', 'paid', 'paid', 'paid', 'rejected'];
+        $statusDescriptions = ['Menunggu konfirmasi', 'Pembayaran lunas', 'Lunas', 'Sudah dibayar', 'Ditolak'];
+
+        $invoices = \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))
+            ->where('payment_status', 'paid')
+            ->inRandomOrder()
+            ->take(rand(3, 6))
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            $provider = $providers[array_rand($providers)];
+            $method = $methods[array_rand($methods)];
+            $status = $statuses[array_rand($statuses)];
+            $statusIdx = array_search($status, $statuses);
+            $statusDesc = $statusDescriptions[$statusIdx];
+
+            \App\Models\CustInternetPayment::create([
+                'id' => Str::uuid(),
+                'cust_internet_invc_id' => $invoice->id,
+                'amount_paid' => $invoice->grand_total,
+                'payment_date' => $invoice->paid_at ?? now()->subDays(rand(1, 30)),
+                'provider' => $provider,
+                'payment_method' => $method,
+                'code' => 'BYR-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
+                'status' => $status,
+                'status_description' => $statusDesc,
+                'status_reason' => $status === 'paid' ? 'Disetujui oleh admin' : ($status === 'rejected' ? 'Bukti tidak jelas' : null),
+                'proof_file' => null,
+                'created_at' => $invoice->paid_at ?? now()->subDays(rand(1, 30)),
+                'updated_at' => $invoice->paid_at ?? now()->subDays(rand(1, 30)),
+            ]);
+        }
+
+        $unpaidInvoices = \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))
+            ->where('payment_status', 'unpaid')
+            ->inRandomOrder()
+            ->take(rand(2, 4))
+            ->get();
+
+        foreach ($unpaidInvoices as $invoice) {
+            $method = $methods[array_rand($methods)];
+
+            \App\Models\CustInternetPayment::create([
+                'id' => Str::uuid(),
+                'cust_internet_invc_id' => $invoice->id,
+                'amount_paid' => $invoice->grand_total,
+                'payment_date' => now(),
+                'provider' => 'internal',
+                'payment_method' => $method,
+                'code' => 'BYR-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
+                'status' => 'pending',
+                'status_description' => 'Menunggu persetujuan',
+                'status_reason' => null,
+                'proof_file' => null,
+                'created_at' => now()->subDays(rand(1, 15)),
+                'updated_at' => now()->subDays(rand(1, 15)),
+            ]);
+        }
     }
 
     private function seedInternetPackages(string $companyId): void

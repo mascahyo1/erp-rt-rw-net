@@ -122,7 +122,7 @@ enum Permissions: string
     case RiwayatInsentifExport      = 'riwayat-insentif.export';
     case RiwayatInsentifImport      = 'riwayat-insentif.import';
 
-    // Riwayat Pembayaran (full CRUD + persetujuan)
+    // Riwayat Pembayaran (full CRUD + persetujuan + import/export)
     case RiwayatPembayaranList        = 'riwayat-pembayaran.list';
     case RiwayatPembayaranCreate      = 'riwayat-pembayaran.create';
     case RiwayatPembayaranEdit        = 'riwayat-pembayaran.edit';
@@ -130,6 +130,8 @@ enum Permissions: string
     case RiwayatPembayaranDelete      = 'riwayat-pembayaran.delete';
     case RiwayatPembayaranRestore     = 'riwayat-pembayaran.restore';
     case RiwayatPembayaranPersetujuan = 'riwayat-pembayaran.persetujuan';
+    case RiwayatPembayaranExport      = 'riwayat-pembayaran.export';
+    case RiwayatPembayaranImport      = 'riwayat-pembayaran.import';
 
     // Karyawan (full CRUD)
     case KaryawanList   = 'karyawan.list';
@@ -323,6 +325,8 @@ enum Permissions: string
                 self::RiwayatPembayaranDelete->value,
                 self::RiwayatPembayaranRestore->value,
                 self::RiwayatPembayaranPersetujuan->value,
+                self::RiwayatPembayaranExport->value,
+                self::RiwayatPembayaranImport->value,
                 self::KaryawanList->value,
                 self::KaryawanCreate->value,
                 self::KaryawanEdit->value,

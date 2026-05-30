@@ -299,6 +299,15 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:riwayat-pembayaran.persetujuan')->group(function () {
         Route::post('/operator-perusahaan/riwayat-pembayaran/{id}/approve', [PembayaranController::class, 'approve'])->name('operator-perusahaan.pembayaran.approve');
+        Route::post('/operator-perusahaan/riwayat-pembayaran/{id}/reject', [PembayaranController::class, 'reject'])->name('operator-perusahaan.pembayaran.reject');
+        Route::post('/operator-perusahaan/riwayat-pembayaran/bulk-approve', [PembayaranController::class, 'bulkApprove'])->name('operator-perusahaan.pembayaran.bulkApprove');
+    });
+    Route::middleware('permission:riwayat-pembayaran.export')->group(function () {
+        Route::get('/operator-perusahaan/riwayat-pembayaran/export', [PembayaranController::class, 'export'])->name('operator-perusahaan.pembayaran.export');
+        Route::get('/operator-perusahaan/riwayat-pembayaran/template', [PembayaranController::class, 'downloadTemplate'])->name('operator-perusahaan.pembayaran.template');
+    });
+    Route::middleware('permission:riwayat-pembayaran.import')->group(function () {
+        Route::post('/operator-perusahaan/riwayat-pembayaran/import', [PembayaranController::class, 'import'])->name('operator-perusahaan.pembayaran.import');
     });
 
     // Insentif

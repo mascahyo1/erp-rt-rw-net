@@ -108,3 +108,25 @@ edit dan review hanya bisa dilakukan ketika status pending
 kalau disetujui / ditolak keisi otomatis ini
 reviewed_by_type 
 reviewed_by_id 
+
+
+
+
+isu riwayat pembayaran
+http://erp-rt-rw-net.test/operator-perusahaan/riwayat-pembayaran
+buat dulu enumsnya 
+provider internal payment method opsinya nanti tunai, transfer manual keduanya ini nanti wajib isi bukti bayar proof_file
+app\Enums\Permissions.php ini tambahkan permission riwayat pembayaran import excel, export excel, persetujuan. ketika import excel ada download template biar user paham
+crud ada filter
+provider, metode pembayaran, dari tgl dibuat sampai tgl dibuat, filter triggernya bukan on change tetapi tombol filter di card biar hemat query
+tambahkan seeder demonya
+update dokumentasi dan testingnya
+jalankan testing sampai semuanya passed
+testing meliputi crud, import export, bulk action, tampilan responsif, tampilan light dan dark mode
+
+ada aksi review sekaligus juga biar enak
+ada aksi review inputannya status dan status_reason.
+jika statusnya masih pending bisa direview untuk rejected atau jadi paid jika user memiliki permission itu
+jadi modal edit dan review beda. mereka modal berbeda
+
+
