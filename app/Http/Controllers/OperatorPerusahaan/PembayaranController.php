@@ -5,6 +5,7 @@ namespace App\Http\Controllers\OperatorPerusahaan;
 use App\Enums\InternalPaymentMethod;
 use App\Enums\PaymentProvider;
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\CustInternetInvc;
 use App\Models\CustInternetPayment;
 use Illuminate\Http\RedirectResponse;
@@ -507,6 +508,7 @@ class PembayaranController extends Controller
     public function downloadPdf(string $id): BinaryFileResponse
     {
         $companyId = auth()->user()->company_id;
+        $company = Company::find($companyId);
         $payment = CustInternetPayment::with(['custInternetInvc.custInternet.customer', 'custInternetInvc.custInternet.internetPackage'])
             ->whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $companyId))
             ->findOrFail($id);
@@ -515,9 +517,9 @@ class PembayaranController extends Controller
             'code' => $payment->code,
             'invoice_number' => $payment->custInternetInvc?->invoice_number,
             'customer_name' => $payment->custInternetInvc?->custInternet?->customer?->name,
-            'customer_code' => $payment->custInternetInvc?->custInternet?->customer?->customer_code,
-            'email' => $payment->custInternetInvc?->custInternet?->customer?->email,
-            'phone' => ($payment->custInternetInvc?->custInternet?->phone_country_code ?? '') . ' ' . ($payment->custInternetInvc?->custInternet?->phone_number ?? '-'),
+            'customer_code' => $payment->custInternetInvc?->custInternet?->customer?->code,
+            'customer_email' => $payment->custInternetInvc?->custInternet?->customer?->email,
+            'customer_phone' => ($payment->custInternetInvc?->custInternet?->customer?->phone_country_code ?? '') . ' ' . ($payment->custInternetInvc?->custInternet?->customer?->phone_number ?? '-'),
             'kode_paket' => $payment->custInternetInvc?->custInternet?->internetPackage?->code,
             'nama_paket' => $payment->custInternetInvc?->custInternet?->internetPackage?->name,
             'amount_paid' => $payment->amount_paid,
@@ -526,12 +528,17 @@ class PembayaranController extends Controller
             'provider' => $payment->provider,
             'status' => $payment->status,
             'created_at' => $payment->created_at?->format('Y-m-d H:i'),
+            // Company info
+            'company_name' => $company?->name ?? '-',
+            'company_email' => $company?->email ?? '-',
+            'company_phone' => ($company?->phone_country_code ?? '') . ' ' . ($company?->phone_number ?? '-'),
+            'company_address' => $company?->address ?? '-',
         ];
 
         $html = view('pdf.payment-receipt', $data)->render();
         $domPdf = new \Dompdf\Dompdf();
         $domPdf->loadHtml($html);
-        $domPdf->setPaper('A5', 'portrait');
+        $domPdf->setPaper('A6', 'portrait');
         $domPdf->render();
 
         $filename = 'pembayaran-' . ($payment->code ?? $id) . '.pdf';
@@ -547,28 +554,49 @@ class PembayaranController extends Controller
     public function downloadWord(string $id): BinaryFileResponse
     {
         $companyId = auth()->user()->company_id;
+        $company = Company::find($companyId);
         $payment = CustInternetPayment::with(['custInternetInvc.custInternet.customer', 'custInternetInvc.custInternet.internetPackage'])
             ->whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $companyId))
             ->findOrFail($id);
 
+        $customerPhone = ($payment->custInternetInvc?->custInternet?->customer?->phone_country_code ?? '') . ' ' . ($payment->custInternetInvc?->custInternet?->customer?->phone_number ?? '-');
+
         $statusMap = ['paid' => 'Lunas', 'pending' => 'Pending', 'rejected' => 'Ditolak', 'cancelled' => 'Dibatalkan'];
         $providerMap = ['internal' => 'Internal', 'external' => 'Eksternal'];
-        $methodMap = ['tunai' => 'Tianai', 'transfer_manual' => 'Transfer Manual'];
+        $methodMap = ['tunai' => 'Tunai', 'transfer_manual' => 'Transfer Manual'];
+
+        $companyName = $company?->name ?? 'PERUSAHAAN';
+        $companyAddress = !empty($company?->address) ? $company->address : '';
+        $companyEmail = !empty($company?->email) ? "Email: {$company->email}<br>" : '';
+        $companyPhone = !empty($company?->phone_number) ? "Telp: {$company->phone_country_code} {$company->phone_number}" : '';
 
         $content = "<html><body>";
         $content .= "<h1 align='center'>BUKTI PEMBAYARAN</h1>";
-        $content .= "<hr/>";
+        $content .= "<p align='center'><strong>{$companyName}</strong><br>";
+        $content .= !empty($companyAddress) ? $companyAddress . "<br>" : "";
+        $content .= $companyEmail;
+        $content .= !empty($companyPhone) ? $companyPhone : "";
+        $content .= "</p><hr/>";
         $content .= "<table border='0' cellpadding='5'>";
         $content .= "<tr><td><strong>Kode Pembayaran</strong></td><td>: {$payment->code}</td></tr>";
-        $content .= "<tr><td><strong>Kode Tagihan</strong></td><td>: {$payment->custInternetInvc?->invoice_number}</td></tr>";
-        $content .= "<tr><td><strong>Nama Pelanggan</strong></td><td>: {$payment->custInternetInvc?->custInternet?->customer?->name}</td></tr>";
-        $content .= "<tr><td><strong>Kode Pelanggan</strong></td><td>: {$payment->custInternetInvc?->custInternet?->customer?->customer_code}</td></tr>";
-        $content .= "<tr><td><strong>Paket</strong></td><td>: {$payment->custInternetInvc?->custInternet?->internetPackage?->name} ({$payment->custInternetInvc?->custInternet?->internetPackage?->code})</td></tr>";
+        $content .= "<tr><td><strong>No. Invoice</strong></td><td>: {$payment->custInternetInvc?->invoice_number}</td></tr>";
+        $content .= "<tr><td colspan='2'><hr></td></tr>";
+        $content .= "<tr><td><strong>Informasi Pelanggan</strong></td><td></td></tr>";
+        $content .= "<tr><td>Nama</td><td>: {$payment->custInternetInvc?->custInternet?->customer?->name}</td></tr>";
+        $content .= "<tr><td>Kode Pelanggan</td><td>: {$payment->custInternetInvc?->custInternet?->customer?->customer_code}</td></tr>";
+        $content .= "<tr><td>Email</td><td>: {$payment->custInternetInvc?->custInternet?->customer?->email}</td></tr>";
+        $content .= "<tr><td>Telepon</td><td>: {$customerPhone}</td></tr>";
+        $content .= "<tr><td colspan='2'><hr></td></tr>";
+        $content .= "<tr><td><strong>Informasi Paket</strong></td><td></td></tr>";
+        $content .= "<tr><td>Kode Paket</td><td>: {$payment->custInternetInvc?->custInternet?->internetPackage?->code}</td></tr>";
+        $content .= "<tr><td>Nama Paket</td><td>: {$payment->custInternetInvc?->custInternet?->internetPackage?->name}</td></tr>";
+        $content .= "<tr><td colspan='2'><hr></td></tr>";
         $content .= "<tr><td><strong>Provider</strong></td><td>: " . ($providerMap[$payment->provider] ?? $payment->provider) . "</td></tr>";
         $content .= "<tr><td><strong>Metode Pembayaran</strong></td><td>: " . ($methodMap[$payment->payment_method] ?? $payment->payment_method) . "</td></tr>";
         $content .= "<tr><td><strong>Tanggal Bayar</strong></td><td>: {$payment->payment_date?->format('Y-m-d')}</td></tr>";
         $content .= "<tr><td><strong>Status</strong></td><td>: " . ($statusMap[$payment->status] ?? $payment->status) . "</td></tr>";
-        $content .= "<tr><td><strong>Nominal</strong></td><td>: Rp " . number_format($payment->amount_paid, 0, ',', '.') . "</td></tr>";
+        $content .= "<tr><td colspan='2'><hr></td></tr>";
+        $content .= "<tr><td><strong>Total Pembayaran</strong></td><td>: <strong>Rp " . number_format($payment->amount_paid, 0, ',', '.') . "</strong></td></tr>";
         $content .= "</table>";
         $content .= "<hr/>";
         $content .= "<p>Dicetak pada: " . now()->format('Y-m-d H:i:s') . "</p>";
