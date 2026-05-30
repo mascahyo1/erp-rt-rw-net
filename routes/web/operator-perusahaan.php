@@ -298,13 +298,14 @@ Route::middleware('auth:admin-company')->group(function () {
         Route::post('/operator-perusahaan/riwayat-pembayaran/bulk-restore', [PembayaranController::class, 'bulkRestore'])->name('operator-perusahaan.pembayaran.bulkRestore');
     });
     Route::middleware('permission:riwayat-pembayaran.persetujuan')->group(function () {
-        Route::post('/operator-perusahaan/riwayat-pembayaran/{id}/approve', [PembayaranController::class, 'approve'])->name('operator-perusahaan.pembayaran.approve');
-        Route::post('/operator-perusahaan/riwayat-pembayaran/{id}/reject', [PembayaranController::class, 'reject'])->name('operator-perusahaan.pembayaran.reject');
-        Route::post('/operator-perusahaan/riwayat-pembayaran/bulk-approve', [PembayaranController::class, 'bulkApprove'])->name('operator-perusahaan.pembayaran.bulkApprove');
+        Route::post('/operator-perusahaan/riwayat-pembayaran/{id}/review', [PembayaranController::class, 'review'])->name('operator-perusahaan.pembayaran.review');
+        Route::post('/operator-perusahaan/riwayat-pembayaran/bulk-review', [PembayaranController::class, 'bulkReview'])->name('operator-perusahaan.pembayaran.bulkReview');
     });
     Route::middleware('permission:riwayat-pembayaran.export')->group(function () {
         Route::get('/operator-perusahaan/riwayat-pembayaran/export', [PembayaranController::class, 'export'])->name('operator-perusahaan.pembayaran.export');
         Route::get('/operator-perusahaan/riwayat-pembayaran/template', [PembayaranController::class, 'downloadTemplate'])->name('operator-perusahaan.pembayaran.template');
+        Route::get('/operator-perusahaan/riwayat-pembayaran/{id}/pdf', [PembayaranController::class, 'downloadPdf'])->name('operator-perusahaan.pembayaran.pdf');
+        Route::get('/operator-perusahaan/riwayat-pembayaran/{id}/word', [PembayaranController::class, 'downloadWord'])->name('operator-perusahaan.pembayaran.word');
     });
     Route::middleware('permission:riwayat-pembayaran.import')->group(function () {
         Route::post('/operator-perusahaan/riwayat-pembayaran/import', [PembayaranController::class, 'import'])->name('operator-perusahaan.pembayaran.import');

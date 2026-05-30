@@ -1,7 +1,7 @@
 # Environment Rules
 
 ## Frontend dev server
-- `npm run dev` is ALWAYS running. Do NOT run `npm run build` under any circumstances.
+- `npm run dev` is ALWAYS running. you can run `npm run build` to test if it work
 - Frontend changes are served via Vite HMR at `http://[::1]:5173` (or `localhost:5173`).
 - The user refreshes their browser manually to see changes.
 

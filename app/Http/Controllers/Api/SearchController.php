@@ -117,7 +117,7 @@ class SearchController extends Controller
         $search = $request->input('search');
         $perPage = min((int) $request->input('per_page', 25), 100);
 
-        $query = \App\Models\CustInternetInvc::with('custInternet.customer')
+        $query = \App\Models\CustInternetInvc::with(['custInternet.customer', 'custInternet.internetPackage'])
             ->whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))
             ->whereIn('payment_status', ['unpaid', 'pending'])
             ->orderBy('created_at', 'desc');
@@ -133,6 +133,15 @@ class SearchController extends Controller
             ->through(fn($inv) => [
                 'value' => $inv->id,
                 'label' => $inv->invoice_number . ' — ' . ($inv->custInternet?->customer?->name ?? 'N/A') . ' (Rp ' . number_format($inv->grand_total ?? $inv->amount, 0, ',', '.') . ')',
+                'invoice_number' => $inv->invoice_number,
+                'kode_paket' => $inv->custInternet?->internetPackage?->code ?? '-',
+                'nama_paket' => $inv->custInternet?->internetPackage?->name ?? '-',
+                'customer_code' => $inv->custInternet?->customer?->customer_code ?? '-',
+                'customer_name' => $inv->custInternet?->customer?->name ?? '-',
+                'email' => $inv->custInternet?->customer?->email ?? '-',
+                'phone' => ($inv->custInternet?->customer?->phone_country_code ?? '') . ' ' . ($inv->custInternet?->customer?->phone_number ?? '-'),
+                'payment_status' => $inv->payment_status ?? '-',
+                'amount' => $inv->grand_total ?? $inv->amount,
             ]);
 
         return response()->json($items);

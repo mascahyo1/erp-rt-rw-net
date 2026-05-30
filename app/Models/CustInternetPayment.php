@@ -17,7 +17,7 @@ class CustInternetPayment extends Model
     protected $fillable = [
         'id', 'cust_internet_invc_id', 'amount_paid', 'payment_date',
         'payment_method', 'provider', 'code', 'status', 'proof_file',
-        'status_description', 'status_reason', 'data',
+        'status_description', 'status_reason', 'review_attachment', 'data',
     ];
 
     protected function casts(): array

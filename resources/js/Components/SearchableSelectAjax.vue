@@ -11,6 +11,7 @@ const props = defineProps({
   labelKey: { type: String, default: 'label' },
   valueKey: { type: String, default: 'value' },
   selectedLabel: { type: String, default: '' },
+  displayKey: { type: String, default: '' }, // field to show when selected (e.g. 'invoice_number')
   onSelect: { type: Function, default: null },
 });
 
@@ -30,7 +31,10 @@ let abortController = null;
 const selectedLabelComputed = computed(() => {
   if (props.selectedLabel) return props.selectedLabel;
   const found = options.value.find(o => o[props.valueKey] == props.modelValue);
-  return found ? found[props.labelKey] : '';
+  if (!found) return '';
+  // If displayKey is set, show only that field value when selected
+  if (props.displayKey && found[props.displayKey]) return found[props.displayKey];
+  return found[props.labelKey] || '';
 });
 
 const hasMore = computed(() => options.value.length < total.value);
@@ -200,9 +204,18 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
             class="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-sky-50 dark:hover:bg-sky-900/20"
             :class="modelValue == option[valueKey] ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 font-medium' : 'text-gray-700 dark:text-gray-300'"
           >
-            <span class="block">{{ option[labelKey] }}</span>
-            <span v-if="option.email || option.phone" class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              {{ [option.email, option.phone].filter(Boolean).join(' · ') }}
+            <span class="block font-medium">{{ option[labelKey] }}</span>
+            <span v-if="option.invoice_number || option.kode_paket || option.customer_code" class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              <template v-if="option.invoice_number">{{ option.invoice_number }}</template>
+              <template v-if="option.kode_paket"> · {{ option.kode_paket }}</template>
+              <template v-if="option.nama_paket"> · {{ option.nama_paket }}</template>
+              <template v-if="option.customer_code"> · Plg: {{ option.customer_code }}</template>
+              <template v-if="option.customer_name"> · {{ option.customer_name }}</template>
+            </span>
+            <span v-if="option.email || option.phone || option.payment_status" class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+              <template v-if="option.email">{{ option.email }}</template>
+              <template v-if="option.phone"> · {{ option.phone }}</template>
+              <template v-if="option.payment_status"> · <span :class="option.payment_status === 'unpaid' ? 'text-red-500' : 'text-amber-500'">{{ option.payment_status }}</span></template>
             </span>
           </button>
 

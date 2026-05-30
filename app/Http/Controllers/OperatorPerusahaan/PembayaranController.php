@@ -66,6 +66,10 @@ class PembayaranController extends Controller
             $query->where('status', $status);
         }
 
+        if ($invoiceNumber = $request->input('invoice_number')) {
+            $query->where('cust_internet_invc_id', $invoiceNumber);
+        }
+
         $allowedSorts = ['amount_paid', 'payment_method', 'status', 'created_at', 'deleted_at'];
         if ($sortField = $request->input('sort_field')) {
             $sortDir = $request->input('sort_dir', 'asc');
@@ -125,12 +129,13 @@ class PembayaranController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'code' => ['required', 'string', 'max:50', 'unique:cust_internet_payments,code'],
             'cust_internet_invc_id' => ['required', 'string', 'exists:cust_internet_invcs,id'],
             'amount_paid' => ['required', 'numeric'],
             'payment_date' => ['nullable', 'date'],
             'payment_method' => ['required', Rule::in(InternalPaymentMethod::values())],
             'provider' => ['required', Rule::in(PaymentProvider::values())],
-            'proof_file' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'proof_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'status_description' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -139,7 +144,6 @@ class PembayaranController extends Controller
             $data['proof_file'] = $request->file('proof_file')->store('payments', 'public');
         }
         $data['status'] = 'pending';
-        $data['code'] = 'BYR-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4));
 
         CustInternetPayment::create($data);
 
@@ -180,34 +184,64 @@ class PembayaranController extends Controller
         return back()->with('success', 'Pembayaran berhasil dipulihkan.');
     }
 
-    public function approve(string $id): RedirectResponse
+    public function review(Request $request, string $id): RedirectResponse
     {
-        $payment = CustInternetPayment::findOrFail($id);
-        $payment->update([
-            'status' => 'paid',
-            'status_reason' => 'Disetujui oleh admin perusahaan',
+        $validated = $request->validate([
+            'review_status' => ['required', 'string', Rule::in(['approved', 'rejected'])],
+            'review_reason' => ['nullable', 'string', 'max:500'],
+            'review_attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
-        if ($payment->cust_internet_invc_id) {
+        $payment = CustInternetPayment::findOrFail($id);
+
+        $updateData = [
+            'status' => $validated['review_status'] === 'approved' ? 'paid' : 'rejected',
+            'status_reason' => $validated['review_reason'] ?: null,
+        ];
+
+        if ($request->hasFile('review_attachment')) {
+            $updateData['review_attachment'] = $request->file('review_attachment')->store('payment-reviews', 'public');
+        }
+
+        $payment->update($updateData);
+
+        if ($validated['review_status'] === 'approved' && $payment->cust_internet_invc_id) {
             $payment->custInternetInvc()->update(['payment_status' => 'paid', 'paid_at' => now()]);
         }
 
-        return back()->with('success', 'Pembayaran berhasil disetujui.');
+        $label = $validated['review_status'] === 'approved' ? 'disetujui' : 'ditolak';
+        return back()->with('success', "Pembayaran berhasil {$label}.");
     }
 
-    public function reject(Request $request, string $id): RedirectResponse
+    public function bulkReview(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'status_reason' => ['required', 'string', 'max:500'],
+            'ids' => ['required', 'array', 'min:1'],
+            'review_status' => ['required', 'string', Rule::in(['approved', 'rejected'])],
+            'review_reason' => ['nullable', 'string', 'max:500'],
+            'review_attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
-        $payment = CustInternetPayment::findOrFail($id);
-        $payment->update([
-            'status' => 'rejected',
-            'status_reason' => $validated['status_reason'],
+        $reviewAttachmentPath = null;
+        if ($request->hasFile('review_attachment')) {
+            $reviewAttachmentPath = $request->file('review_attachment')->store('payment-reviews', 'public');
+        }
+
+        $count = CustInternetPayment::whereIn('id', $validated['ids'])->update([
+            'status' => $validated['review_status'] === 'approved' ? 'paid' : 'rejected',
+            'status_reason' => $validated['review_reason'] ?: null,
+            'review_attachment' => $reviewAttachmentPath,
         ]);
 
-        return back()->with('success', 'Pembayaran berhasil ditolak.');
+        if ($validated['review_status'] === 'approved') {
+            $payments = CustInternetPayment::whereIn('id', $validated['ids'])->whereNotNull('cust_internet_invc_id')->get();
+            foreach ($payments as $payment) {
+                $payment->custInternetInvc()->update(['payment_status' => 'paid', 'paid_at' => now()]);
+            }
+        }
+
+        $label = $validated['review_status'] === 'approved' ? 'disetujui' : 'ditolak';
+        return back()->with('success', "{$count} pembayaran berhasil {$label}.");
     }
 
     public function bulkDelete(Request $request): RedirectResponse
@@ -468,5 +502,85 @@ class PembayaranController extends Controller
             $index = intdiv($index, 26);
         }
         return $col;
+    }
+
+    public function downloadPdf(string $id): BinaryFileResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $payment = CustInternetPayment::with(['custInternetInvc.custInternet.customer', 'custInternetInvc.custInternet.internetPackage'])
+            ->whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $companyId))
+            ->findOrFail($id);
+
+        $data = [
+            'code' => $payment->code,
+            'invoice_number' => $payment->custInternetInvc?->invoice_number,
+            'customer_name' => $payment->custInternetInvc?->custInternet?->customer?->name,
+            'customer_code' => $payment->custInternetInvc?->custInternet?->customer?->customer_code,
+            'email' => $payment->custInternetInvc?->custInternet?->customer?->email,
+            'phone' => ($payment->custInternetInvc?->custInternet?->phone_country_code ?? '') . ' ' . ($payment->custInternetInvc?->custInternet?->phone_number ?? '-'),
+            'kode_paket' => $payment->custInternetInvc?->custInternet?->internetPackage?->code,
+            'nama_paket' => $payment->custInternetInvc?->custInternet?->internetPackage?->name,
+            'amount_paid' => $payment->amount_paid,
+            'payment_date' => $payment->payment_date?->format('Y-m-d'),
+            'payment_method' => $payment->payment_method,
+            'provider' => $payment->provider,
+            'status' => $payment->status,
+            'created_at' => $payment->created_at?->format('Y-m-d H:i'),
+        ];
+
+        $html = view('pdf.payment-receipt', $data)->render();
+        $domPdf = new \Dompdf\Dompdf();
+        $domPdf->loadHtml($html);
+        $domPdf->setPaper('A5', 'portrait');
+        $domPdf->render();
+
+        $filename = 'pembayaran-' . ($payment->code ?? $id) . '.pdf';
+        $tempPath = storage_path("app/exports/{$filename}");
+        if (!is_dir(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+        file_put_contents($tempPath, $domPdf->output());
+
+        return response()->download($tempPath, $filename, ['Content-Type' => 'application/pdf'])->deleteFileAfterSend(true);
+    }
+
+    public function downloadWord(string $id): BinaryFileResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $payment = CustInternetPayment::with(['custInternetInvc.custInternet.customer', 'custInternetInvc.custInternet.internetPackage'])
+            ->whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $companyId))
+            ->findOrFail($id);
+
+        $statusMap = ['paid' => 'Lunas', 'pending' => 'Pending', 'rejected' => 'Ditolak', 'cancelled' => 'Dibatalkan'];
+        $providerMap = ['internal' => 'Internal', 'external' => 'Eksternal'];
+        $methodMap = ['tunai' => 'Tianai', 'transfer_manual' => 'Transfer Manual'];
+
+        $content = "<html><body>";
+        $content .= "<h1 align='center'>BUKTI PEMBAYARAN</h1>";
+        $content .= "<hr/>";
+        $content .= "<table border='0' cellpadding='5'>";
+        $content .= "<tr><td><strong>Kode Pembayaran</strong></td><td>: {$payment->code}</td></tr>";
+        $content .= "<tr><td><strong>Kode Tagihan</strong></td><td>: {$payment->custInternetInvc?->invoice_number}</td></tr>";
+        $content .= "<tr><td><strong>Nama Pelanggan</strong></td><td>: {$payment->custInternetInvc?->custInternet?->customer?->name}</td></tr>";
+        $content .= "<tr><td><strong>Kode Pelanggan</strong></td><td>: {$payment->custInternetInvc?->custInternet?->customer?->customer_code}</td></tr>";
+        $content .= "<tr><td><strong>Paket</strong></td><td>: {$payment->custInternetInvc?->custInternet?->internetPackage?->name} ({$payment->custInternetInvc?->custInternet?->internetPackage?->code})</td></tr>";
+        $content .= "<tr><td><strong>Provider</strong></td><td>: " . ($providerMap[$payment->provider] ?? $payment->provider) . "</td></tr>";
+        $content .= "<tr><td><strong>Metode Pembayaran</strong></td><td>: " . ($methodMap[$payment->payment_method] ?? $payment->payment_method) . "</td></tr>";
+        $content .= "<tr><td><strong>Tanggal Bayar</strong></td><td>: {$payment->payment_date?->format('Y-m-d')}</td></tr>";
+        $content .= "<tr><td><strong>Status</strong></td><td>: " . ($statusMap[$payment->status] ?? $payment->status) . "</td></tr>";
+        $content .= "<tr><td><strong>Nominal</strong></td><td>: Rp " . number_format($payment->amount_paid, 0, ',', '.') . "</td></tr>";
+        $content .= "</table>";
+        $content .= "<hr/>";
+        $content .= "<p>Dicetak pada: " . now()->format('Y-m-d H:i:s') . "</p>";
+        $content .= "</body></html>";
+
+        $filename = 'pembayaran-' . ($payment->code ?? $id) . '.doc';
+        $tempPath = storage_path("app/exports/{$filename}");
+        if (!is_dir(dirname($tempPath))) {
+            mkdir(dirname($tempPath), 0755, true);
+        }
+        file_put_contents($tempPath, $content);
+
+        return response()->download($tempPath, $filename, ['Content-Type' => 'application/msword'])->deleteFileAfterSend(true);
     }
 }
