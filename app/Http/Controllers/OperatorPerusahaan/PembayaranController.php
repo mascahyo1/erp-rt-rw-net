@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\CustInternetInvc;
 use App\Models\CustInternetPayment;
+use App\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -84,6 +85,10 @@ class PembayaranController extends Controller
         $perPage = min((int) $request->input('per_page', 10), 100);
 
         $items = $query->paginate($perPage)->through(function ($item) {
+            $proofFileUrl = $item->proof_file
+                ? route('file.proxy', ['path' => $item->proof_file, 'disk' => 'minio'])
+                : null;
+
             return [
                 'id' => $item->id,
                 'code' => $item->code,
@@ -104,6 +109,7 @@ class PembayaranController extends Controller
                 'status_reason' => $item->status_reason,
                 'provider' => $item->provider,
                 'proof_file' => $item->proof_file,
+                'proof_file_url' => $proofFileUrl,
                 'dihapus' => $item->trashed(),
                 'deleted_at' => $item->deleted_at?->format('Y-m-d H:i'),
                 'created_at' => $item->created_at->format('Y-m-d H:i'),
@@ -136,13 +142,14 @@ class PembayaranController extends Controller
             'payment_date' => ['nullable', 'date'],
             'payment_method' => ['required', Rule::in(InternalPaymentMethod::values())],
             'provider' => ['required', Rule::in(PaymentProvider::values())],
-            'proof_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'proof_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
             'status_description' => ['nullable', 'string', 'max:500'],
         ]);
 
         $data = $validated;
+        $uploadService = new FileUploadService();
         if ($request->hasFile('proof_file')) {
-            $data['proof_file'] = $request->file('proof_file')->store('payments', 'public');
+            $data['proof_file'] = $uploadService->processDocument($request->file('proof_file'), 'payments');
         }
         $data['status'] = 'pending';
 
@@ -158,13 +165,17 @@ class PembayaranController extends Controller
             'payment_date' => ['nullable', 'date'],
             'payment_method' => ['required', Rule::in(InternalPaymentMethod::values())],
             'provider' => ['required', Rule::in(PaymentProvider::values())],
-            'proof_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'proof_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
             'status_description' => ['nullable', 'string', 'max:500'],
         ]);
 
         $data = $validated;
+        $uploadService = new FileUploadService();
         if ($request->hasFile('proof_file')) {
-            $data['proof_file'] = $request->file('proof_file')->store('payments', 'public');
+            if ($custInternetPayment->proof_file) {
+                $uploadService->deleteFile($custInternetPayment->proof_file);
+            }
+            $data['proof_file'] = $uploadService->processDocument($request->file('proof_file'), 'payments');
         }
 
         $custInternetPayment->update($data);
@@ -190,7 +201,7 @@ class PembayaranController extends Controller
         $validated = $request->validate([
             'review_status' => ['required', 'string', Rule::in(['approved', 'rejected'])],
             'review_reason' => ['nullable', 'string', 'max:500'],
-            'review_attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'review_attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
         ]);
 
         $payment = CustInternetPayment::findOrFail($id);
@@ -200,8 +211,9 @@ class PembayaranController extends Controller
             'status_reason' => $validated['review_reason'] ?: null,
         ];
 
+        $uploadService = new FileUploadService();
         if ($request->hasFile('review_attachment')) {
-            $updateData['review_attachment'] = $request->file('review_attachment')->store('payment-reviews', 'public');
+            $updateData['review_attachment'] = $uploadService->processDocument($request->file('review_attachment'), 'payment-reviews');
         }
 
         $payment->update($updateData);
@@ -220,12 +232,13 @@ class PembayaranController extends Controller
             'ids' => ['required', 'array', 'min:1'],
             'review_status' => ['required', 'string', Rule::in(['approved', 'rejected'])],
             'review_reason' => ['nullable', 'string', 'max:500'],
-            'review_attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'review_attachment' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
         ]);
 
         $reviewAttachmentPath = null;
+        $uploadService = new FileUploadService();
         if ($request->hasFile('review_attachment')) {
-            $reviewAttachmentPath = $request->file('review_attachment')->store('payment-reviews', 'public');
+            $reviewAttachmentPath = $uploadService->processDocument($request->file('review_attachment'), 'payment-reviews');
         }
 
         $count = CustInternetPayment::whereIn('id', $validated['ids'])->update([
