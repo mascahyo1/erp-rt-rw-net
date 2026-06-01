@@ -41,6 +41,7 @@ class KaryawanTest extends TestCase
         $this->actingAs($this->user, 'admin-company');
 
         $response = $this->post('/operator-perusahaan/karyawan', [
+            'kode' => 'KRY100',
             'nama' => 'Karyawan Test',
             'email' => 'karyawan@test.id',
             'kode_negara' => '+62',
@@ -51,7 +52,84 @@ class KaryawanTest extends TestCase
 
         $response->assertRedirect();
         $response->assertSessionHas('success', 'Karyawan berhasil ditambahkan.');
-        $this->assertDatabaseHas('employees', ['name' => 'Karyawan Test', 'email' => 'karyawan@test.id']);
+        $this->assertDatabaseHas('employees', [
+            'code' => 'KRY100',
+            'name' => 'Karyawan Test',
+            'email' => 'karyawan@test.id',
+        ]);
+    }
+
+    public function test_can_create_karyawan_without_kode()
+    {
+        $this->actingAs($this->user, 'admin-company');
+
+        $response = $this->post('/operator-perusahaan/karyawan', [
+            'nama' => 'Tanpa Kode',
+            'email' => 'tanpakode@test.id',
+            'kode_negara' => '+62',
+            'no_telp' => '81234567891',
+            'status' => 'Aktif',
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success', 'Karyawan berhasil ditambahkan.');
+        $this->assertDatabaseHas('employees', [
+            'name' => 'Tanpa Kode',
+            'email' => 'tanpakode@test.id',
+            'code' => null,
+        ]);
+    }
+
+    public function test_create_karyawan_with_duplicate_kode_in_same_company_fails()
+    {
+        $this->actingAs($this->user, 'admin-company');
+        Employee::factory()->create([
+            'company_id' => $this->user->company_id,
+            'code' => 'KRYDUPE',
+            'email' => 'first@test.id',
+        ]);
+
+        $response = $this->post('/operator-perusahaan/karyawan', [
+            'kode' => 'KRYDUPE',
+            'nama' => 'Duplikat',
+            'email' => 'dupe@test.id',
+            'kode_negara' => '+62',
+            'no_telp' => '81234567892',
+            'status' => 'Aktif',
+            'password' => 'password123',
+        ]);
+
+        $response->assertSessionHasErrors('kode');
+    }
+
+    public function test_create_karyawan_with_same_kode_in_different_company_succeeds()
+    {
+        $this->actingAs($this->user, 'admin-company');
+        $otherCompany = \App\Models\Company::factory()->create();
+        Employee::factory()->create([
+            'company_id' => $otherCompany->id,
+            'code' => 'KRYSHARED',
+            'email' => 'other-co@test.id',
+        ]);
+
+        $response = $this->post('/operator-perusahaan/karyawan', [
+            'kode' => 'KRYSHARED',
+            'nama' => 'Same Kode Other Co',
+            'email' => 'mine@test.id',
+            'kode_negara' => '+62',
+            'no_telp' => '81234567893',
+            'status' => 'Aktif',
+            'password' => 'password123',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('employees', [
+            'code' => 'KRYSHARED',
+            'company_id' => $this->user->company_id,
+            'email' => 'mine@test.id',
+        ]);
     }
 
     public function test_create_karyawan_validation_fails_with_empty_fields()
@@ -190,5 +268,178 @@ class KaryawanTest extends TestCase
                 ->component('OperatorPerusahaan/Karyawan')
                 ->has('karyawans.data', 1)
             );
+    }
+
+    public function test_can_export_karyawan_to_excel()
+    {
+        $this->actingAs($this->user, 'admin-company');
+        $cid = $this->user->company_id;
+        Employee::factory()->create(['company_id' => $cid, 'name' => 'Export A', 'email' => 'exportA@test.id']);
+        Employee::factory()->create(['company_id' => $cid, 'name' => 'Export B', 'email' => 'exportB@test.id']);
+
+        $response = $this->get('/operator-perusahaan/karyawan/export');
+
+        $response->assertOk();
+        $this->assertTrue(
+            str_contains((string) $response->headers->get('content-type'), 'spreadsheet')
+            || str_contains((string) $response->headers->get('content-disposition'), 'attachment')
+        );
+    }
+
+    public function test_can_export_karyawan_filtered_by_ids()
+    {
+        $this->actingAs($this->user, 'admin-company');
+        $cid = $this->user->company_id;
+        $a = Employee::factory()->create(['company_id' => $cid, 'name' => 'Selected']);
+        Employee::factory()->create(['company_id' => $cid, 'name' => 'NotSelected']);
+
+        $response = $this->get('/operator-perusahaan/karyawan/export?ids=' . $a->id);
+
+        $response->assertOk();
+    }
+
+    public function test_can_download_karyawan_template()
+    {
+        $this->actingAs($this->user, 'admin-company');
+
+        $response = $this->get('/operator-perusahaan/karyawan/template');
+
+        $response->assertOk();
+        $this->assertStringContainsString(
+            'attachment',
+            (string) $response->headers->get('content-disposition')
+        );
+    }
+
+    public function test_can_import_karyawan_from_excel()
+    {
+        $this->actingAs($this->user, 'admin-company');
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray([
+            ['Kode', 'Nama', 'Email', 'Kode Negara', 'No. Telepon', 'No. NIK', 'No. KK', 'Status (Aktif/Nonaktif)', 'Password'],
+            ['IMP001', 'Imported A', 'impA@test.id', '+62', '8111111111', '1111111111111111', '2222222222222222', 'Aktif', 'password123'],
+            ['IMP002', 'Imported B', 'impB@test.id', '+62', '8222222222', '', '', 'Nonaktif', 'password123'],
+        ]);
+
+        $file = storage_path('app/temp/test_import_karyawan.xlsx');
+        $dir = dirname($file);
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet))->save($file);
+
+        $response = $this->post('/operator-perusahaan/karyawan/import', [
+            'file' => new \Illuminate\Http\UploadedFile($file, 'karyawan.xlsx', null, null, true),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('employees', ['code' => 'IMP001', 'name' => 'Imported A', 'email' => 'impA@test.id']);
+        $this->assertDatabaseHas('employees', ['code' => 'IMP002', 'name' => 'Imported B', 'email' => 'impB@test.id', 'is_active' => false]);
+
+        @unlink($file);
+    }
+
+    public function test_import_karyawan_rejects_duplicate_kode_in_same_company()
+    {
+        $this->actingAs($this->user, 'admin-company');
+        $cid = $this->user->company_id;
+        Employee::factory()->create(['company_id' => $cid, 'code' => 'DUPCODE', 'email' => 'existing@test.id']);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray([
+            ['Kode', 'Nama', 'Email', 'Kode Negara', 'No. Telepon', 'No. NIK', 'No. KK', 'Status (Aktif/Nonaktif)', 'Password'],
+            ['DUPCODE', 'Duplikat Kode', 'new@test.id', '+62', '8333333333', '', '', 'Aktif', 'password123'],
+        ]);
+
+        $file = storage_path('app/temp/test_import_dup_kode_karyawan.xlsx');
+        $dir = dirname($file);
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet))->save($file);
+
+        $response = $this->post('/operator-perusahaan/karyawan/import', [
+            'file' => new \Illuminate\Http\UploadedFile($file, 'karyawan.xlsx', null, null, true),
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('employees', ['email' => 'new@test.id']);
+
+        @unlink($file);
+    }
+
+    public function test_import_karyawan_rejects_duplicate_email_in_same_company()
+    {
+        $this->actingAs($this->user, 'admin-company');
+        $cid = $this->user->company_id;
+        Employee::factory()->create(['company_id' => $cid, 'email' => 'dup@test.id']);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->fromArray([
+            ['Nama', 'Email', 'Kode Negara', 'No. Telepon', 'No. NIK', 'No. KK', 'Status (Aktif/Nonaktif)', 'Password'],
+            ['Dup Row', 'dup@test.id', '+62', '8333333333', '', '', 'Aktif', 'password123'],
+        ]);
+
+        $file = storage_path('app/temp/test_import_dup_karyawan.xlsx');
+        $dir = dirname($file);
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+        (new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet))->save($file);
+
+        $response = $this->post('/operator-perusahaan/karyawan/import', [
+            'file' => new \Illuminate\Http\UploadedFile($file, 'karyawan.xlsx', null, null, true),
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $this->assertStringContainsString('error', (string) session()->get('success'));
+
+        @unlink($file);
+    }
+
+    public function test_import_karyawan_validation_fails_when_no_file()
+    {
+        $this->actingAs($this->user, 'admin-company');
+
+        $response = $this->post('/operator-perusahaan/karyawan/import', []);
+
+        $response->assertSessionHasErrors(['file']);
+    }
+
+    public function test_user_without_export_permission_cannot_export_karyawan()
+    {
+        $limitedUser = AdminCompany::factory()->create(['is_active' => true]);
+        $this->assignDefaultRole($limitedUser, 'admin_perusahaan');
+        // Hapus permission karyawan.export dari role
+        $role = \App\Models\Role::where('scope', 'admin_perusahaan')->first();
+        $perm = \App\Models\Permission::where('name', 'karyawan.export')->first();
+        if ($role && $perm) {
+            \DB::table('role_permissions')
+                ->where('role_id', $role->id)
+                ->where('permission_id', $perm->id)
+                ->delete();
+        }
+
+        $this->actingAs($limitedUser, 'admin-company')
+            ->get('/operator-perusahaan/karyawan/export')
+            ->assertStatus(403);
+    }
+
+    public function test_user_without_import_permission_cannot_import_karyawan()
+    {
+        $limitedUser = AdminCompany::factory()->create(['is_active' => true]);
+        $this->assignDefaultRole($limitedUser, 'admin_perusahaan');
+        $role = \App\Models\Role::where('scope', 'admin_perusahaan')->first();
+        $perm = \App\Models\Permission::where('name', 'karyawan.import')->first();
+        if ($role && $perm) {
+            \DB::table('role_permissions')
+                ->where('role_id', $role->id)
+                ->where('permission_id', $perm->id)
+                ->delete();
+        }
+
+        $this->actingAs($limitedUser, 'admin-company')
+            ->post('/operator-perusahaan/karyawan/import', [])
+            ->assertStatus(403);
     }
 }

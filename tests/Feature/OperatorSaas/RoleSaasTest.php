@@ -33,7 +33,57 @@ class RoleSaasTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->component('OperatorSaas/RoleSaaS')
                 ->has('roles')
+                ->has('availablePermissions')
             );
+    }
+
+    public function test_role_listing_includes_permission_ids_and_permissions()
+    {
+        $role = Role::create(['scope' => 'operator_saas', 'name' => 'Role With Perms', 'is_active' => true, 'display_order' => 1]);
+        $perms = \App\Models\Permission::where('scope', 'operator_saas')->limit(3)->get();
+        $role->permissions()->sync($perms->pluck('id'));
+
+        $response = $this->actingAs($this->user, 'web')->get('/operator-saas/role-saas');
+        $response->assertOk();
+        $roles = $response->original->getData()['page']['props']['roles']->toArray();
+        $row = collect($roles['data'])->firstWhere('id', $role->id);
+        $this->assertNotNull($row);
+        $this->assertArrayHasKey('permission_ids', $row);
+        $this->assertArrayHasKey('permissions', $row);
+        $this->assertCount(3, $row['permission_ids']);
+        $this->assertCount(3, $row['permissions']);
+    }
+
+    public function test_can_create_role_saas_with_permissions()
+    {
+        $this->actingAs($this->user, 'web');
+        $perms = \App\Models\Permission::where('scope', 'operator_saas')->limit(2)->get();
+        $response = $this->post('/operator-saas/role-saas', [
+            'nama_role' => 'Role With Perms Create',
+            'status' => 'Aktif',
+            'permission_ids' => $perms->pluck('id')->toArray(),
+        ]);
+        $response->assertRedirect();
+        $this->assertDatabaseHas('roles', ['name' => 'Role With Perms Create']);
+        $role = Role::where('name', 'Role With Perms Create')->first();
+        $this->assertCount(2, $role->permissions()->pluck('permissions.id'));
+    }
+
+    public function test_can_update_role_saas_replaces_permissions()
+    {
+        $this->actingAs($this->user, 'web');
+        $role = Role::create(['scope' => 'operator_saas', 'name' => 'Before', 'is_active' => true, 'display_order' => 1]);
+        $perms = \App\Models\Permission::where('scope', 'operator_saas')->limit(3)->get();
+        $role->permissions()->sync($perms->pluck('id'));
+
+        $newPerms = \App\Models\Permission::where('scope', 'operator_saas')->limit(1)->get();
+        $response = $this->put("/operator-saas/role-saas/{$role->id}", [
+            'nama_role' => 'After',
+            'status' => 'Aktif',
+            'permission_ids' => $newPerms->pluck('id')->toArray(),
+        ]);
+        $response->assertRedirect();
+        $this->assertCount(1, $role->fresh()->permissions);
     }
 
     public function test_can_create_role_saas()

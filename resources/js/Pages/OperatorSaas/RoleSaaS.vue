@@ -4,12 +4,13 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import OperatorSaasLayout from '@/Layouts/OperatorSaasLayout.vue';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
+import PermissionGroupChecklist from '@/Components/PermissionGroupChecklist.vue';
 
 defineOptions({ layout: OperatorSaasLayout });
 
 const props = defineProps({
   roles: Object,
-  permissions: Array,
+  availablePermissions: Array,
   filters: Object,
 });
 
@@ -232,15 +233,13 @@ const actionLabels = {
   detail: 'Detail', hapus: 'Hapus', import: 'Import', export: 'Export',
 };
 
-const permissionGroups = computed(() => {
-  const groups = {};
-  props.availablePermissions?.forEach(p => {
-    const module = extractModule(p.nama);
-    if (!groups[module]) groups[module] = { module: moduleLabels[module] || module, permissions: [] };
-    groups[module].permissions.push({ id: p.id, key: p.nama, label: actionLabels[extractAction(p.nama)] || extractAction(p.nama), deskripsi: p.deskripsi });
-  });
-  return Object.values(groups);
-});
+function getPermissionLabelByName(name) {
+  const module = extractModule(name);
+  const action = extractAction(name);
+  const moduleLabel = moduleLabels[module] || module;
+  const actionLabel = actionLabels[action] || action;
+  return `${moduleLabel} — ${actionLabel}`;
+}
 
 const selectedRole = ref(null);
 const showCreateModal = ref(false);
@@ -262,43 +261,6 @@ const editForm = useForm({
   status: 'Aktif',
   permission_ids: [],
 });
-
-function isPermChecked(form, permId) {
-  return form.permission_ids.includes(permId);
-}
-
-function togglePerm(form, permId) {
-  const idx = form.permission_ids.indexOf(permId);
-  if (idx === -1) form.permission_ids.push(permId);
-  else form.permission_ids.splice(idx, 1);
-}
-
-function toggleGroupPerms(form, group) {
-  const keys = group.permissions.map(p => p.id);
-  const allChecked = keys.every(k => form.permission_ids.includes(k));
-  if (allChecked) {
-    form.permission_ids = form.permission_ids.filter(k => !keys.includes(k));
-  } else {
-    keys.forEach(k => { if (!form.permission_ids.includes(k)) form.permission_ids.push(k); });
-  }
-}
-
-function isGroupAllChecked(form, group) {
-  return group.permissions.every(p => form.permission_ids.includes(p.id));
-}
-
-function isGroupPartialChecked(form, group) {
-  const c = group.permissions.filter(p => form.permission_ids.includes(p.id)).length;
-  return c > 0 && c < group.permissions.length;
-}
-
-function getPermissionLabelByName(name) {
-  const module = extractModule(name);
-  const action = extractAction(name);
-  const moduleLabel = moduleLabels[module] || module;
-  const actionLabel = actionLabels[action] || action;
-  return `${moduleLabel} — ${actionLabel}`;
-}
 
 function openCreate() {
   createForm.reset();
@@ -525,7 +487,7 @@ function confirmDelete() {
       <Transition name="modal">
         <div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDetailModal = false">
           <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-eye mr-2 text-indigo-500"></i>Detail Role</h3>
               <button @click="showDetailModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
@@ -550,9 +512,16 @@ function confirmDelete() {
               </div>
 
               <div v-if="selectedRole?.permission_names?.length">
-                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Permission</h5>
-                <div class="flex flex-wrap gap-1.5">
-                  <span v-for="name in selectedRole.permission_names" :key="name" class="inline-flex px-2 py-0.5 rounded text-xs bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-800">{{ getPermissionLabelByName(name) }}</span>
+                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Permission ({{ selectedRole.permission_count }})</h5>
+                <div class="border border-gray-200 dark:border-gray-700 rounded-xl divide-y divide-gray-200 dark:divide-gray-700 max-h-64 overflow-y-auto">
+                  <div v-for="(perms, module) in selectedRole.permission_names.reduce((acc, name) => { const m = name.includes('.') ? name.substring(0, name.lastIndexOf('.')) : name; (acc[m] = acc[m] || []).push(name); return acc; }, {})" :key="module" class="px-3 py-2">
+                    <div class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{{ module }}</div>
+                    <div class="flex flex-wrap gap-1">
+                      <span v-for="name in perms" :key="name" class="inline-flex px-2 py-0.5 rounded text-xs bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 border border-violet-200 dark:border-violet-800" :title="name">
+                        {{ getPermissionLabelByName(name).split(' — ')[1] || name }}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -610,7 +579,7 @@ function confirmDelete() {
       <Transition name="modal">
         <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false">
           <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-          <form @submit.prevent="saveCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+          <form @submit.prevent="saveCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-plus text-emerald-500 mr-2"></i>Tambah Role SaaS</h3>
               <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
@@ -633,21 +602,12 @@ function confirmDelete() {
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Permission <span class="text-xs text-gray-400 font-normal ml-1">({{ createForm.permission_ids.length }} dipilih)</span></label>
-                <div class="space-y-3 border border-gray-200 dark:border-gray-700 rounded-xl p-4 max-h-64 overflow-y-auto">
-                  <div v-for="group in permissionGroups" :key="group.module" class="border-b border-gray-100 dark:border-gray-700 last:border-b-0 pb-3 last:pb-0">
-                    <label class="flex items-center gap-2 cursor-pointer select-none py-1">
-                      <input type="checkbox" :checked="isGroupAllChecked(createForm, group)" :indeterminate.prop="isGroupPartialChecked(createForm, group)" @change="toggleGroupPerms(createForm, group)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
-                      <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ group.module }}</span>
-                    </label>
-                    <div class="flex flex-wrap gap-1.5 ml-6 mt-1.5">
-                      <label v-for="p in group.permissions" :key="p.id" class="flex items-center gap-1.5 cursor-pointer select-none">
-                        <input type="checkbox" :checked="isPermChecked(createForm, p.id)" @change="togglePerm(createForm, p.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
-                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ p.label }}</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Permission</label>
+                <PermissionGroupChecklist
+                  :permissions="props.availablePermissions || []"
+                  v-model="createForm.permission_ids"
+                  color="indigo"
+                />
                 <p v-if="createForm.errors.permission_ids" class="text-red-500 text-xs mt-1">{{ createForm.errors.permission_ids }}</p>
               </div>
             </div>
@@ -666,7 +626,7 @@ function confirmDelete() {
       <Transition name="modal">
         <div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showEditModal = false">
           <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-          <form @submit.prevent="saveEdit" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+          <form @submit.prevent="saveEdit" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
             <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-edit text-sky-500 mr-2"></i>Edit Role SaaS</h3>
               <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
@@ -689,21 +649,12 @@ function confirmDelete() {
                 </select>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Permission <span class="text-xs text-gray-400 font-normal ml-1">({{ editForm.permission_ids.length }} dipilih)</span></label>
-                <div class="space-y-3 border border-gray-200 dark:border-gray-700 rounded-xl p-4 max-h-64 overflow-y-auto">
-                  <div v-for="group in permissionGroups" :key="group.module" class="border-b border-gray-100 dark:border-gray-700 last:border-b-0 pb-3 last:pb-0">
-                    <label class="flex items-center gap-2 cursor-pointer select-none py-1">
-                      <input type="checkbox" :checked="isGroupAllChecked(editForm, group)" :indeterminate.prop="isGroupPartialChecked(editForm, group)" @change="toggleGroupPerms(editForm, group)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
-                      <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ group.module }}</span>
-                    </label>
-                    <div class="flex flex-wrap gap-1.5 ml-6 mt-1.5">
-                      <label v-for="p in group.permissions" :key="p.id" class="flex items-center gap-1.5 cursor-pointer select-none">
-                        <input type="checkbox" :checked="isPermChecked(editForm, p.id)" @change="togglePerm(editForm, p.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" />
-                        <span class="text-xs text-gray-600 dark:text-gray-400">{{ p.label }}</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Permission</label>
+                <PermissionGroupChecklist
+                  :permissions="props.availablePermissions || []"
+                  v-model="editForm.permission_ids"
+                  color="indigo"
+                />
                 <p v-if="editForm.errors.permission_ids" class="text-red-500 text-xs mt-1">{{ editForm.errors.permission_ids }}</p>
               </div>
             </div>

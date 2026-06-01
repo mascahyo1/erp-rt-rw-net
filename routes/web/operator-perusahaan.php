@@ -82,6 +82,13 @@ Route::middleware('auth:admin-company')->group(function () {
             Route::patch('/karyawan/{id}/restore', [KaryawanController::class, 'restore'])->name('karyawan.restore');
             Route::post('/karyawan/bulk-restore', [KaryawanController::class, 'bulkRestore'])->name('karyawan.bulkRestore');
         });
+        Route::middleware('permission:karyawan.export')->group(function () {
+            Route::get('/karyawan/export', [KaryawanController::class, 'export'])->name('karyawan.export');
+        });
+        Route::middleware('permission:karyawan.import')->group(function () {
+            Route::get('/karyawan/template', [KaryawanController::class, 'template'])->name('karyawan.template');
+            Route::post('/karyawan/import', [KaryawanController::class, 'import'])->name('karyawan.import');
+        });
 
         // Admin Perusahaan
         Route::middleware('permission:admin-perusahaan.list')->group(function () {
@@ -163,6 +170,13 @@ Route::middleware('auth:admin-company')->group(function () {
             Route::delete('/admin-role-perusahaan/{modelHasRole}', [AdminRolePerusahaanController::class, 'destroy'])->name('admin-role-perusahaan.destroy');
             Route::post('/admin-role-perusahaan/bulk-delete', [AdminRolePerusahaanController::class, 'bulkDelete'])->name('admin-role-perusahaan.bulkDelete');
         });
+        Route::middleware('permission:admin-role-perusahaan-op.export')->group(function () {
+            Route::get('/admin-role-perusahaan/export', [AdminRolePerusahaanController::class, 'export'])->name('admin-role-perusahaan.export');
+        });
+        Route::middleware('permission:admin-role-perusahaan-op.import')->group(function () {
+            Route::get('/admin-role-perusahaan/template', [AdminRolePerusahaanController::class, 'template'])->name('admin-role-perusahaan.template');
+            Route::post('/admin-role-perusahaan/import', [AdminRolePerusahaanController::class, 'import'])->name('admin-role-perusahaan.import');
+        });
 
         // Admin Role Web Karyawan
         Route::middleware('permission:admin-role-web-karyawan.list')->group(function () {
@@ -177,6 +191,13 @@ Route::middleware('auth:admin-company')->group(function () {
         Route::middleware('permission:admin-role-web-karyawan.delete')->group(function () {
             Route::delete('/admin-role-web-karyawan/{modelHasRole}', [AdminRoleWebKaryawanController::class, 'destroy'])->name('admin-role-web-karyawan.destroy');
             Route::post('/admin-role-web-karyawan/bulk-delete', [AdminRoleWebKaryawanController::class, 'bulkDelete'])->name('admin-role-web-karyawan.bulkDelete');
+        });
+        Route::middleware('permission:admin-role-web-karyawan.export')->group(function () {
+            Route::get('/admin-role-web-karyawan/export', [AdminRoleWebKaryawanController::class, 'export'])->name('admin-role-web-karyawan.export');
+        });
+        Route::middleware('permission:admin-role-web-karyawan.import')->group(function () {
+            Route::get('/admin-role-web-karyawan/template', [AdminRoleWebKaryawanController::class, 'template'])->name('admin-role-web-karyawan.template');
+            Route::post('/admin-role-web-karyawan/import', [AdminRoleWebKaryawanController::class, 'import'])->name('admin-role-web-karyawan.import');
         });
 
         // Konfigurasi Perusahaan

@@ -37,7 +37,7 @@ class KaryawanController extends Controller
 
         if ($sortField = $request->input('sort_field')) {
             $sortDir = $request->input('sort_dir', 'asc');
-            $allowedSorts = ['name', 'email', 'is_active', 'created_at', 'deleted_at'];
+            $allowedSorts = ['code', 'name', 'email', 'is_active', 'created_at', 'deleted_at'];
             if (in_array($sortField, $allowedSorts)) {
                 $query->orderBy($sortField, $sortDir);
             }
@@ -60,6 +60,7 @@ class KaryawanController extends Controller
 
             return [
                 'id' => $employee->id,
+                'kode' => $employee->code,
                 'nama' => $employee->name,
                 'email' => $employee->email,
                 'kode_negara' => $employee->phone_country_code,
@@ -97,6 +98,10 @@ class KaryawanController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
+            'kode' => [
+                'nullable', 'string', 'max:50',
+                Rule::unique('employees', 'code')->where('company_id', auth()->user()->company_id),
+            ],
             'nama' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'string', 'email', 'max:255',
@@ -111,6 +116,9 @@ class KaryawanController extends Controller
             'photo_profile' => ['nullable', 'file', 'image', 'max:2048'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['required', 'string', 'min:8'],
+        ], [
+            'kode.unique' => 'Kode karyawan sudah digunakan di perusahaan ini.',
+            'email.unique' => 'Email sudah terdaftar di perusahaan ini.',
         ]);
 
         $photoKtpPath = null;
@@ -135,6 +143,7 @@ class KaryawanController extends Controller
 
         Employee::create([
             'company_id' => auth()->user()->company_id,
+            'code' => $validated['kode'] ?? null,
             'name' => $validated['nama'],
             'email' => $validated['email'],
             'phone_country_code' => $validated['kode_negara'],
@@ -154,6 +163,12 @@ class KaryawanController extends Controller
     public function update(Request $request, Employee $employee): RedirectResponse
     {
         $validated = $request->validate([
+            'kode' => [
+                'nullable', 'string', 'max:50',
+                Rule::unique('employees', 'code')
+                    ->where('company_id', auth()->user()->company_id)
+                    ->ignore($employee->id),
+            ],
             'nama' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'string', 'email', 'max:255',
@@ -170,9 +185,13 @@ class KaryawanController extends Controller
             'photo_profile' => ['nullable', 'file', 'image', 'max:2048'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['nullable', 'string', 'min:8'],
+        ], [
+            'kode.unique' => 'Kode karyawan sudah digunakan di perusahaan ini.',
+            'email.unique' => 'Email sudah terdaftar di perusahaan ini.',
         ]);
 
         $data = [
+            'code' => $validated['kode'] ?? null,
             'name' => $validated['nama'],
             'email' => $validated['email'],
             'phone_country_code' => $validated['kode_negara'],
@@ -270,5 +289,176 @@ class KaryawanController extends Controller
         if (empty($ids)) return back()->with('error', 'Tidak ada karyawan yang dipilih.');
         $count = Employee::onlyTrashed()->whereIn('id', $ids)->restore();
         return back()->with('success', "{$count} karyawan berhasil dipulihkan.");
+    }
+
+    public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $query = Employee::where('company_id', $companyId);
+
+        if ($ids = $request->input('ids')) {
+            $query->whereIn('id', explode(',', $ids));
+        }
+
+        $karyawans = $query->orderBy('name')->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Daftar Karyawan');
+
+        $headers = ['Kode', 'Nama', 'Email', 'Kode Negara', 'No. Telepon', 'No. NIK', 'No. KK', 'Status'];
+        foreach ($headers as $i => $h) {
+            $col = $this->excelColumn($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+        }
+
+        $row = 2;
+        foreach ($karyawans as $k) {
+            $col = 1;
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $k->code ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $k->name, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $k->email, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $k->phone_country_code ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $k->phone_number ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $k->no_nik ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $k->no_kk ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $k->is_active ? 'Aktif' : 'Nonaktif', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $row++;
+        }
+
+        foreach (range(1, count($headers)) as $i) {
+            $sheet->getColumnDimension($this->excelColumn($i))->setAutoSize(true);
+        }
+
+        $file = storage_path('app/temp/karyawan_' . now()->format('YmdHis') . '.xlsx');
+        $dir = dirname($file);
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($file);
+
+        return response()->download($file)->deleteFileAfterSend();
+    }
+
+    public function template(): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template Import');
+
+        $headers = ['Kode', 'Nama', 'Email', 'Kode Negara', 'No. Telepon', 'No. NIK', 'No. KK', 'Status (Aktif/Nonaktif)', 'Password'];
+        foreach ($headers as $i => $h) {
+            $col = $this->excelColumn($i + 1);
+            $sheet->setCellValue("{$col}1", $h);
+            $sheet->getStyle("{$col}1")->getFont()->setBold(true);
+        }
+
+        $example = ['KRY001', 'Nama Karyawan', 'email@perusahaan.id', '+62', '81234567890', '1234567890123456', '1234567890123456', 'Aktif', 'password123'];
+        foreach ($example as $i => $v) {
+            $sheet->setCellValueExplicit($this->excelColumn($i + 1) . '2', (string) $v, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+        }
+
+        foreach (range(1, count($headers)) as $i) {
+            $sheet->getColumnDimension($this->excelColumn($i))->setAutoSize(true);
+        }
+
+        $file = storage_path('app/temp/template_karyawan.xlsx');
+        $dir = dirname($file);
+        if (!is_dir($dir)) mkdir($dir, 0755, true);
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($file);
+
+        return response()->download($file)->deleteFileAfterSend();
+    }
+
+    public function import(Request $request): RedirectResponse
+    {
+        $request->validate(['file' => 'required|file|mimes:xlsx,csv|max:2048']);
+
+        $file = $request->file('file');
+        $fullPath = $file->getRealPath();
+
+        $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($fullPath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($fullPath);
+        $sheet = $spreadsheet->getActiveSheet();
+        $rows = $sheet->toArray();
+
+        array_shift($rows);
+
+        $companyId = auth()->user()->company_id;
+        $success = 0;
+        $errors = [];
+        $inserts = [];
+
+        foreach ($rows as $i => $row) {
+            $line = $i + 2;
+            $kode = trim($row[0] ?? '');
+            $nama = trim($row[1] ?? '');
+            $email = trim($row[2] ?? '');
+            $kodeNegara = trim($row[3] ?? '') ?: '+62';
+            $noTelp = trim($row[4] ?? '');
+            $noNik = trim($row[5] ?? '');
+            $noKk = trim($row[6] ?? '');
+            $status = strtolower(trim($row[7] ?? 'aktif')) === 'nonaktif' ? false : true;
+            $password = trim($row[8] ?? '');
+
+            if (empty($nama) || empty($email)) {
+                $errors[] = "Baris {$line}: Nama dan Email wajib diisi.";
+                continue;
+            }
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $errors[] = "Baris {$line}: Format email tidak valid.";
+                continue;
+            }
+            if (Employee::where('company_id', $companyId)->where('email', $email)->exists()) {
+                $errors[] = "Baris {$line}: Email {$email} sudah terdaftar.";
+                continue;
+            }
+            if ($kode !== '' && Employee::where('company_id', $companyId)->where('code', $kode)->exists()) {
+                $errors[] = "Baris {$line}: Kode karyawan {$kode} sudah digunakan di perusahaan ini.";
+                continue;
+            }
+
+            $inserts[] = [
+                'company_id' => $companyId,
+                'code' => $kode !== '' ? $kode : null,
+                'name' => $nama,
+                'email' => $email,
+                'phone_country_code' => $kodeNegara,
+                'phone_number' => $noTelp,
+                'no_nik' => $noNik ?: null,
+                'no_kk' => $noKk ?: null,
+                'is_active' => $status,
+                'password' => Hash::make($password ?: 'password123'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+            $success++;
+        }
+
+        foreach (array_chunk($inserts, 500) as $chunk) {
+            Employee::insert($chunk);
+        }
+
+        $msg = "{$success} karyawan berhasil diimport.";
+        if ($errors) {
+            $msg .= ' ' . count($errors) . ' baris error: ' . implode('; ', array_slice($errors, 0, 5));
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    private function excelColumn(int $n): string
+    {
+        $col = '';
+        while ($n > 0) {
+            $n--;
+            $col = chr(65 + $n % 26) . $col;
+            $n = intdiv($n, 26);
+        }
+        return $col;
     }
 }

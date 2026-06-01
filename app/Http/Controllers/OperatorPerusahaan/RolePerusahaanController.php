@@ -49,6 +49,8 @@ class RolePerusahaanController extends Controller
             'id' => $r->id,
             'nama_role' => $r->name,
             'permission_count' => $r->permissions->count(),
+            'permission_ids' => $r->permissions->pluck('id')->all(),
+            'permissions' => $r->permissions->map(fn($p) => ['id' => $p->id, 'nama' => $p->name, 'deskripsi' => $p->description])->all(),
             'display_order' => $r->display_order,
             'deskripsi' => $r->description,
             'status' => $r->is_active ? 'Aktif' : 'Nonaktif',

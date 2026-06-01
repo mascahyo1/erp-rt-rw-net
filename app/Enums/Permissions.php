@@ -140,6 +140,8 @@ enum Permissions: string
     case KaryawanDetail = 'karyawan.detail';
     case KaryawanDelete = 'karyawan.delete';
     case KaryawanRestore = 'karyawan.restore';
+    case KaryawanExport = 'karyawan.export';
+    case KaryawanImport = 'karyawan.import';
 
     // View-only sub-modules → now full CRUD
     case RolePerusahaanOpList   = 'role-perusahaan-op.list';
@@ -151,6 +153,8 @@ enum Permissions: string
     case AdminRolePerusahaanOpCreate = 'admin-role-perusahaan-op.create';
     case AdminRolePerusahaanOpEdit   = 'admin-role-perusahaan-op.edit';
     case AdminRolePerusahaanOpDelete = 'admin-role-perusahaan-op.delete';
+    case AdminRolePerusahaanOpExport = 'admin-role-perusahaan-op.export';
+    case AdminRolePerusahaanOpImport = 'admin-role-perusahaan-op.import';
     case RoleWebKaryawanList   = 'role-web-karyawan.list';
     case RoleWebKaryawanCreate = 'role-web-karyawan.create';
     case RoleWebKaryawanEdit   = 'role-web-karyawan.edit';
@@ -160,6 +164,8 @@ enum Permissions: string
     case AdminRoleWebKaryawanCreate = 'admin-role-web-karyawan.create';
     case AdminRoleWebKaryawanEdit   = 'admin-role-web-karyawan.edit';
     case AdminRoleWebKaryawanDelete = 'admin-role-web-karyawan.delete';
+    case AdminRoleWebKaryawanExport = 'admin-role-web-karyawan.export';
+    case AdminRoleWebKaryawanImport = 'admin-role-web-karyawan.import';
     case KonfigurasiPerusahaanList   = 'konfigurasi-perusahaan.list';
     case KonfigurasiPerusahaanCreate = 'konfigurasi-perusahaan.create';
     case KonfigurasiPerusahaanEdit   = 'konfigurasi-perusahaan.edit';
@@ -333,6 +339,8 @@ enum Permissions: string
                 self::KaryawanDetail->value,
                 self::KaryawanDelete->value,
                 self::KaryawanRestore->value,
+                self::KaryawanExport->value,
+                self::KaryawanImport->value,
                 self::RolePerusahaanOpList->value,
                 self::RolePerusahaanOpCreate->value,
                 self::RolePerusahaanOpEdit->value,
@@ -342,6 +350,8 @@ enum Permissions: string
                 self::AdminRolePerusahaanOpCreate->value,
                 self::AdminRolePerusahaanOpEdit->value,
                 self::AdminRolePerusahaanOpDelete->value,
+                self::AdminRolePerusahaanOpExport->value,
+                self::AdminRolePerusahaanOpImport->value,
                 self::RoleWebKaryawanList->value,
                 self::RoleWebKaryawanCreate->value,
                 self::RoleWebKaryawanEdit->value,
@@ -351,6 +361,8 @@ enum Permissions: string
                 self::AdminRoleWebKaryawanCreate->value,
                 self::AdminRoleWebKaryawanEdit->value,
                 self::AdminRoleWebKaryawanDelete->value,
+                self::AdminRoleWebKaryawanExport->value,
+                self::AdminRoleWebKaryawanImport->value,
                 self::KonfigurasiPerusahaanList->value,
                 self::KonfigurasiPerusahaanCreate->value,
                 self::KonfigurasiPerusahaanEdit->value,
