@@ -130,3 +130,12 @@ jika statusnya masih pending bisa direview untuk rejected atau jadi paid jika us
 jadi modal edit dan review beda. mereka modal berbeda
 
 
+belum solved recheck
+crud perusahaan tambah field logo perusahaan di
+http://erp-rt-rw-net.test/operator-saas/perusahaan
+http://erp-rt-rw-net.test/operator-perusahaan/perusahaan-saya
+update dokumentasi dan testcasenya
+jangan lupa kompress imagenya kecuali svg
+turunannya download pdf juga disesuaikan
+http://erp-rt-rw-net.test/operator-perusahaan/langganan-customer
+http://erp-rt-rw-net.test/operator-perusahaan/riwayat-pembayaran
