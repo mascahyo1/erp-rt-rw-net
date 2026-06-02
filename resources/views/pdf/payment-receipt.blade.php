@@ -7,7 +7,10 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: Arial, sans-serif; font-size: 10px; color: #333; background: #fff; }
         .container { padding: 10px; }
-        .header { background: #1a56db; color: white; padding: 8px 10px; margin-bottom: 8px; border-radius: 3px; }
+        .header { display: flex; align-items: center; gap: 8px; background: #1a56db; color: white; padding: 8px 10px; margin-bottom: 8px; border-radius: 3px; }
+        .header-logo { width: 36px; height: 36px; background: #fff; border-radius: 4px; padding: 3px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .header-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .header-text { flex: 1; }
         .header h1 { font-size: 14px; margin-bottom: 3px; }
         .header p { font-size: 9px; opacity: 0.9; }
         .section { margin-bottom: 8px; }
@@ -29,8 +32,13 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>{{ $company_name ?? 'PERUSAHAAN' }}</h1>
-            <p>{{ $company_address ?? '' }} {{ $company_email ? '| ' . $company_email : '' }} {{ $company_phone ? '| ' . $company_phone : '' }}</p>
+            @if(!empty($company_logo_url))
+                <div class="header-logo"><img src="{{ $company_logo_url }}" alt="Logo" /></div>
+            @endif
+            <div class="header-text">
+                <h1>{{ $company_name ?? 'PERUSAHAAN' }}</h1>
+                <p>{{ $company_address ?? '' }} {{ $company_email ? '| ' . $company_email : '' }} {{ $company_phone ? '| ' . $company_phone : '' }}</p>
+            </div>
         </div>
 
         <div class="section">

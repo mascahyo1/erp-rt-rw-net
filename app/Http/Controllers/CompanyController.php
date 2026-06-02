@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Company;
+use App\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -53,6 +55,10 @@ class CompanyController extends Controller
                 'kode_negara' => $c->phone_country_code,
                 'no_telp' => $c->phone_number,
                 'deskripsi' => $c->description,
+                'logo' => $c->logo,
+                'logo_url' => $c->logo_url,
+                'logo_dark' => $c->logo_dark,
+                'logo_dark_url' => $c->logo_dark_url,
                 'status' => $c->is_active ? 'Aktif' : 'Nonaktif',
                 'is_active' => $c->is_active,
                 'dihapus' => $c->trashed(),
@@ -101,7 +107,13 @@ class CompanyController extends Controller
             'alamat' => ['required', 'string'],
             'deskripsi' => ['nullable', 'string'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
+            'logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'logo_dark' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
+
+        $uploader = new FileUploadService();
+        $logoPath = $request->hasFile('logo') ? $uploader->processLogo($request->file('logo'), 'companies/logos') : null;
+        $logoDarkPath = $request->hasFile('logo_dark') ? $uploader->processLogo($request->file('logo_dark'), 'companies/logos') : null;
 
         Company::create([
             'name' => $validated['nama_perusahaan'],
@@ -110,6 +122,8 @@ class CompanyController extends Controller
             'phone_number' => $validated['no_telp'],
             'address' => $validated['alamat'],
             'description' => $validated['deskripsi'] ?? null,
+            'logo' => $logoPath,
+            'logo_dark' => $logoDarkPath,
             'is_active' => $validated['status'] === 'Aktif',
         ]);
 
@@ -132,9 +146,11 @@ class CompanyController extends Controller
             'alamat' => ['required', 'string'],
             'deskripsi' => ['nullable', 'string'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
+            'logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'logo_dark' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
 
-        $company->update([
+        $data = [
             'name' => $validated['nama_perusahaan'],
             'email' => $validated['email'],
             'phone_country_code' => $validated['kode_negara'],
@@ -142,7 +158,21 @@ class CompanyController extends Controller
             'address' => $validated['alamat'],
             'description' => $validated['deskripsi'] ?? null,
             'is_active' => $validated['status'] === 'Aktif',
-        ]);
+        ];
+
+        $uploader = new FileUploadService();
+
+        if ($request->hasFile('logo')) {
+            // Delete old logo
+            if ($company->logo) $uploader->deleteFile($company->logo);
+            $data['logo'] = $uploader->processLogo($request->file('logo'), 'companies/logos');
+        }
+        if ($request->hasFile('logo_dark')) {
+            if ($company->logo_dark) $uploader->deleteFile($company->logo_dark);
+            $data['logo_dark'] = $uploader->processLogo($request->file('logo_dark'), 'companies/logos');
+        }
+
+        $company->update($data);
 
         return back()->with('success', 'Perusahaan berhasil diperbarui.');
     }

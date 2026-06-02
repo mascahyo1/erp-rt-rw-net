@@ -113,7 +113,7 @@ Tagihan dibuat secara manual, via import Excel, atau via generate massal.
 | **Hapus Tagihan** | `tagihan.delete` | ✅ | ✅ |
 | **Pulihkan Tagihan** | `tagihan.restore` | ✅ | ✅ |
 | **Export Excel** | `tagihan.export` | — | ✅ |
-| **Export PDF** | `tagihan.export` | ✅ | — |
+| **Export PDF** | `tagihan.export` | ✅ | — | (termasuk **logo perusahaan** light di header) |
 | **Export Word** | `tagihan.export` | ✅ | — |
 | **Download Template** | `tagihan.create` | — | — |
 
@@ -156,6 +156,11 @@ tagihan.generate → Generate massal
 
 ### Controller
 `App\Http\Controllers\OperatorPerusahaan\TagihanController`
+
+### Downstream — Logo Perusahaan di Invoice PDF
+Invoice PDF (`exportPdf`) otomatis memuat **logo perusahaan light** di header (diambil dari kolom `companies.logo` yang diupload di halaman [Perusahaan](halaman-perusahaan.md) atau [Perusahaan Saya](perusahaan-saya.md)). Sumber logo dibaca via `CompanyConfig::getLogo($companyId)` yang fallback ke `companies.logo`.
+
+> **Catatan:** Karena kertas biasanya putih, PDF hanya menggunakan versi **light** logo. Untuk versi dark, lihat di halaman CRUD Perusahaan.
 
 ### View
 `resources/js/Pages/OperatorPerusahaan/Tagihan.vue`

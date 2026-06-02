@@ -27,13 +27,17 @@ class FileUploadService
     public function processImage(UploadedFile $file, string $folder = 'general'): ?string
     {
         $mime = $file->getMimeType();
+        $ext = strtolower($file->getClientOriginalExtension() ?: '');
 
-        // Check if PDF - don't compress
+        // SVG & PDF are vector/document formats - NEVER compress
+        if ($mime === 'image/svg+xml' || $ext === 'svg') {
+            return $this->storeFile($file, $folder);
+        }
         if ($mime === 'application/pdf') {
             return $this->processPdf($file, $folder);
         }
 
-        // For images: compress to webp if autoCompress is enabled
+        // For raster images: compress to webp if autoCompress is enabled
         if ($this->autoCompress) {
             return $this->compressImageToWebp($file, $folder);
         }
@@ -45,11 +49,22 @@ class FileUploadService
     public function processDocument(UploadedFile $file, string $folder = 'documents'): ?string
     {
         $mime = $file->getMimeType();
+        $ext = strtolower($file->getClientOriginalExtension() ?: '');
 
-        if ($mime === 'application/pdf') {
-            return $this->processPdf($file, $folder);
+        // SVG & PDF - never compress
+        if ($mime === 'image/svg+xml' || $ext === 'svg' || $mime === 'application/pdf') {
+            return $this->storeFile($file, $folder);
         }
 
+        return $this->processImage($file, $folder);
+    }
+
+    /**
+     * Process logo image — supports both raster (compress) and SVG (store as-is).
+     * Returns the storage path or null on failure.
+     */
+    public function processLogo(UploadedFile $file, string $folder = 'companies/logos'): ?string
+    {
         return $this->processImage($file, $folder);
     }
 
@@ -116,7 +131,12 @@ class FileUploadService
 
     public static function getAcceptedImageExtensions(): string
     {
-        return 'jpg,jpeg,png,webp';
+        return 'jpg,jpeg,png,webp,svg';
+    }
+
+    public static function getAcceptedLogoExtensions(): string
+    {
+        return 'jpg,jpeg,png,webp,svg';
     }
 
     public static function getAcceptedDocumentExtensions(): string

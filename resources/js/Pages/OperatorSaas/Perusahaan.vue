@@ -148,27 +148,50 @@ const showDetailModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
 const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
+const logoLightPreview = ref(null);
+const logoDarkPreview = ref(null);
+const currentEditCompany = ref(null);
 
-const createForm = useForm({ nama_perusahaan: '', email: '', kode_negara: '+62', no_telp: '', alamat: '', deskripsi: '', status: 'Aktif' });
-const editForm = useForm({ id: null, nama_perusahaan: '', email: '', kode_negara: '+62', no_telp: '', alamat: '', deskripsi: '', status: 'Aktif' });
+const createForm = useForm({ nama_perusahaan: '', email: '', kode_negara: '+62', no_telp: '', alamat: '', deskripsi: '', status: 'Aktif', logo: null, logo_dark: null });
+const editForm = useForm({ id: null, nama_perusahaan: '', email: '', kode_negara: '+62', no_telp: '', alamat: '', deskripsi: '', status: 'Aktif', logo: null, logo_dark: null });
 
-function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; }
+function openCreate() { createForm.reset(); createForm.clearErrors(); logoLightPreview.value = null; logoDarkPreview.value = null; showCreateModal.value = true; }
 function openDetail(c) { selectedCompany.value = c; showDetailModal.value = true; }
-function openEdit(c) { editForm.reset(); editForm.clearErrors(); editForm.id = c.id; editForm.nama_perusahaan = c.nama_perusahaan; editForm.email = c.email; editForm.kode_negara = c.kode_negara; editForm.no_telp = c.no_telp; editForm.alamat = c.alamat; editForm.deskripsi = c.deskripsi || ''; editForm.status = c.status; showEditModal.value = true; }
+function openEdit(c) {
+  currentEditCompany.value = c;
+  editForm.reset(); editForm.clearErrors();
+  editForm.id = c.id; editForm.nama_perusahaan = c.nama_perusahaan; editForm.email = c.email;
+  editForm.kode_negara = c.kode_negara; editForm.no_telp = c.no_telp; editForm.alamat = c.alamat;
+  editForm.deskripsi = c.deskripsi || ''; editForm.status = c.status;
+  logoLightPreview.value = null; logoDarkPreview.value = null;
+  showEditModal.value = true;
+}
 function openDelete(c) { selectedCompany.value = c; showDeleteModal.value = true; }
+
+function onLogoLightChange(e) {
+  const file = e.target.files[0];
+  if (file) { createForm.logo = file; editForm.logo = file; logoLightPreview.value = URL.createObjectURL(file); }
+}
+function onLogoDarkChange(e) {
+  const file = e.target.files[0];
+  if (file) { createForm.logo_dark = file; editForm.logo_dark = file; logoDarkPreview.value = URL.createObjectURL(file); }
+}
+function clearLogoLight() { createForm.logo = null; editForm.logo = null; logoLightPreview.value = null; }
+function clearLogoDark() { createForm.logo_dark = null; editForm.logo_dark = null; logoDarkPreview.value = null; }
 
 function saveCreate() {
   createForm.post('/operator-saas/perusahaan', {
-    preserveState: true, preserveScroll: true,
-    onSuccess: () => { showCreateModal.value = false; toast.success('Perusahaan berhasil ditambahkan.'); },
+    preserveState: true, preserveScroll: true, forceFormData: true,
+    onSuccess: () => { showCreateModal.value = false; logoLightPreview.value = null; logoDarkPreview.value = null; toast.success('Perusahaan berhasil ditambahkan.'); },
     onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
   });
 }
 
 function saveEdit() {
-  editForm.put(`/operator-saas/perusahaan/${editForm.id}`, {
-    preserveState: true, preserveScroll: true,
-    onSuccess: () => { showEditModal.value = false; toast.success('Perusahaan berhasil diperbarui.'); },
+  editForm.post(`/operator-saas/perusahaan/${editForm.id}`, {
+    _method: 'PUT',
+    preserveState: true, preserveScroll: true, forceFormData: true,
+    onSuccess: () => { showEditModal.value = false; logoLightPreview.value = null; logoDarkPreview.value = null; toast.success('Perusahaan berhasil diperbarui.'); },
     onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
   });
 }
@@ -276,7 +299,7 @@ function restoreCompany(c) {
               <tr v-if="companiesList.length === 0"><td colspan="7" class="px-4 py-16 text-center text-gray-500 dark:text-gray-400"><i class="fas fa-building text-3xl mb-2 block opacity-40"></i>Tidak ada data perusahaan.</td></tr>
               <tr v-for="c in companiesList" :key="c.id" :class="['transition-colors', c.dihapus ? 'bg-red-50/30 dark:bg-red-900/10 opacity-60' : 'hover:bg-gray-50 dark:hover:bg-gray-700/30']">
                 <td class="px-4 py-3"><input v-if="!c.dihapus" :checked="selectedIds.includes(c.id)" type="checkbox" @change="toggleSelect(c.id)" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" /></td>
-                <td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">{{ c.nama_perusahaan.charAt(0) }}</div><span class="font-medium text-gray-900 dark:text-white whitespace-nowrap" :class="{ 'line-through': c.dihapus }">{{ c.nama_perusahaan }}</span></div></td>
+                <td class="px-4 py-3"><div class="flex items-center gap-2.5"><div class="w-8 h-8 rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-sky-500 shrink-0 overflow-hidden"><img v-if="c.logo_url" :src="c.logo_url" alt="logo" class="w-full h-full object-contain p-0.5" /><span v-else class="text-xs font-bold text-white bg-gradient-to-br from-sky-500 to-indigo-600 w-full h-full flex items-center justify-center">{{ c.nama_perusahaan.charAt(0) }}</span></div><span class="font-medium text-gray-900 dark:text-white whitespace-nowrap" :class="{ 'line-through': c.dihapus }">{{ c.nama_perusahaan }}</span></div></td>
                 <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-[200px] truncate" :class="{ 'line-through': c.dihapus }">{{ c.alamat }}</td>
                 <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap" :class="{ 'line-through': c.dihapus }">{{ c.email }}</td>
                 <td class="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap" :class="{ 'line-through': c.dihapus }">{{ formatTelepon(c) }}</td>
@@ -331,11 +354,34 @@ function restoreCompany(c) {
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-5 modal-scroll">
               <div class="flex items-center gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shrink-0">{{ selectedCompany?.nama_perusahaan?.charAt(0) }}</div>
+                <div class="w-16 h-16 rounded-2xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 flex items-center justify-center text-sky-500 shrink-0 overflow-hidden">
+                  <img v-if="selectedCompany?.logo_url" :src="selectedCompany.logo_url" alt="Logo" class="w-full h-full object-contain p-1" />
+                  <span v-else class="text-xl font-bold text-white bg-gradient-to-br from-sky-500 to-indigo-600 w-full h-full flex items-center justify-center rounded-2xl">{{ selectedCompany?.nama_perusahaan?.charAt(0) }}</span>
+                </div>
                 <div>
                   <h4 class="text-xl font-bold text-gray-900 dark:text-white">{{ selectedCompany?.nama_perusahaan }}</h4>
                   <span v-if="selectedCompany?.dihapus" class="inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">Terhapus</span>
                   <span v-else :class="['inline-flex mt-1 px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadge(selectedCompany?.status)]">{{ selectedCompany?.status }}</span>
+                </div>
+              </div>
+
+              <div v-if="selectedCompany?.logo_url || selectedCompany?.logo_dark_url">
+                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Logo</h5>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Mode Terang</label>
+                    <div class="bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex items-center justify-center min-h-[100px]">
+                      <img v-if="selectedCompany?.logo_url" :src="selectedCompany.logo_url" alt="Light" class="max-h-20 max-w-full object-contain" />
+                      <span v-else class="text-xs text-gray-400">—</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block">Mode Gelap</label>
+                    <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 flex items-center justify-center min-h-[100px]">
+                      <img v-if="selectedCompany?.logo_dark_url" :src="selectedCompany.logo_dark_url" alt="Dark" class="max-h-20 max-w-full object-contain" />
+                      <span v-else class="text-xs text-gray-500">—</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -433,6 +479,39 @@ function restoreCompany(c) {
                   <option value="Nonaktif">Nonaktif</option>
                 </select>
               </div>
+              <!-- Logo Section -->
+              <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Logo Perusahaan</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Logo (Mode Terang)</label>
+                    <div class="bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex items-center justify-center min-h-[100px] mb-2">
+                      <img v-if="logoLightPreview" :src="logoLightPreview" alt="Preview Light" class="max-h-16 max-w-full object-contain" />
+                      <span v-else class="text-xs text-gray-400">Pilih file untuk preview</span>
+                    </div>
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" @change="onLogoLightChange" class="w-full text-xs text-gray-700 dark:text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 cursor-pointer" />
+                    <div class="flex items-center justify-between mt-1">
+                      <p class="text-[10px] text-gray-500 dark:text-gray-400">JPG/PNG/WebP/SVG, maks 2MB</p>
+                      <button v-if="logoLightPreview" type="button" @click="clearLogoLight" class="text-[10px] text-red-500 hover:text-red-700">Hapus</button>
+                    </div>
+                    <p v-if="createForm.errors.logo" class="text-red-500 text-xs mt-1">{{ createForm.errors.logo }}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Logo (Mode Gelap)</label>
+                    <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 flex items-center justify-center min-h-[100px] mb-2">
+                      <img v-if="logoDarkPreview" :src="logoDarkPreview" alt="Preview Dark" class="max-h-16 max-w-full object-contain" />
+                      <span v-else class="text-xs text-gray-500">Pilih file untuk preview</span>
+                    </div>
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" @change="onLogoDarkChange" class="w-full text-xs text-gray-700 dark:text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 cursor-pointer" />
+                    <div class="flex items-center justify-between mt-1">
+                      <p class="text-[10px] text-gray-500 dark:text-gray-400">Versi untuk dark mode</p>
+                      <button v-if="logoDarkPreview" type="button" @click="clearLogoDark" class="text-[10px] text-red-500 hover:text-red-700">Hapus</button>
+                    </div>
+                    <p v-if="createForm.errors.logo_dark" class="text-red-500 text-xs mt-1">{{ createForm.errors.logo_dark }}</p>
+                  </div>
+                </div>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Gambar raster (JPG/PNG/WebP) otomatis dikompres ke WebP. File SVG disimpan apa adanya.</p>
+              </div>
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
               <button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
@@ -490,6 +569,39 @@ function restoreCompany(c) {
                   <option value="Aktif">Aktif</option>
                   <option value="Nonaktif">Nonaktif</option>
                 </select>
+              </div>
+              <!-- Logo Section -->
+              <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Logo Perusahaan</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Logo (Mode Terang)</label>
+                    <div class="bg-gray-50 border border-gray-200 dark:border-gray-700 rounded-lg p-3 flex items-center justify-center min-h-[100px] mb-2">
+                      <img v-if="logoLightPreview || currentEditCompany?.logo_url" :src="logoLightPreview || currentEditCompany.logo_url" alt="Light" class="max-h-16 max-w-full object-contain" />
+                      <span v-else class="text-xs text-gray-400">Pilih file untuk ganti</span>
+                    </div>
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" @change="onLogoLightChange" class="w-full text-xs text-gray-700 dark:text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 cursor-pointer" />
+                    <div class="flex items-center justify-between mt-1">
+                      <p class="text-[10px] text-gray-500 dark:text-gray-400">JPG/PNG/WebP/SVG, maks 2MB</p>
+                      <button v-if="logoLightPreview || currentEditCompany?.logo_url" type="button" @click="clearLogoLight" class="text-[10px] text-red-500 hover:text-red-700">Hapus</button>
+                    </div>
+                    <p v-if="editForm.errors.logo" class="text-red-500 text-xs mt-1">{{ editForm.errors.logo }}</p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Logo (Mode Gelap)</label>
+                    <div class="bg-gray-900 border border-gray-700 rounded-lg p-3 flex items-center justify-center min-h-[100px] mb-2">
+                      <img v-if="logoDarkPreview || currentEditCompany?.logo_dark_url" :src="logoDarkPreview || currentEditCompany.logo_dark_url" alt="Dark" class="max-h-16 max-w-full object-contain" />
+                      <span v-else class="text-xs text-gray-500">Pilih file untuk ganti</span>
+                    </div>
+                    <input type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" @change="onLogoDarkChange" class="w-full text-xs text-gray-700 dark:text-gray-300 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-indigo-50 file:text-indigo-700 dark:file:bg-indigo-900/30 dark:file:text-indigo-300 hover:file:bg-indigo-100 dark:hover:file:bg-indigo-900/50 cursor-pointer" />
+                    <div class="flex items-center justify-between mt-1">
+                      <p class="text-[10px] text-gray-500 dark:text-gray-400">Versi untuk dark mode</p>
+                      <button v-if="logoDarkPreview || currentEditCompany?.logo_dark_url" type="button" @click="clearLogoDark" class="text-[10px] text-red-500 hover:text-red-700">Hapus</button>
+                    </div>
+                    <p v-if="editForm.errors.logo_dark" class="text-red-500 text-xs mt-1">{{ editForm.errors.logo_dark }}</p>
+                  </div>
+                </div>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Upload file baru untuk mengganti. Gambar raster otomatis dikompres ke WebP, SVG disimpan apa adanya.</p>
               </div>
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">

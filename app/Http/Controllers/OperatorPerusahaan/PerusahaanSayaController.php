@@ -4,6 +4,7 @@ namespace App\Http\Controllers\OperatorPerusahaan;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
+use App\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -16,8 +17,14 @@ class PerusahaanSayaController extends Controller
     {
         $company = auth()->user()->company;
 
+        $data = $company ? $company->toArray() : null;
+        if ($data) {
+            $data['logo_url'] = $company->logo_url;
+            $data['logo_dark_url'] = $company->logo_dark_url;
+        }
+
         return Inertia::render('OperatorPerusahaan/PerusahaanSaya', [
-            'company' => $company?->toArray(),
+            'company' => $data,
         ]);
     }
 
@@ -33,9 +40,23 @@ class PerusahaanSayaController extends Controller
             'phone_number' => ['required', 'string', 'max:20'],
             'address' => ['nullable', 'string', 'max:500'],
             'description' => ['nullable', 'string', 'max:1000'],
+            'logo' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'logo_dark' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
         ]);
 
-        $company->update($validated);
+        $data = $validated;
+        $uploader = new FileUploadService();
+
+        if ($request->hasFile('logo')) {
+            if ($company->logo) $uploader->deleteFile($company->logo);
+            $data['logo'] = $uploader->processLogo($request->file('logo'), 'companies/logos');
+        }
+        if ($request->hasFile('logo_dark')) {
+            if ($company->logo_dark) $uploader->deleteFile($company->logo_dark);
+            $data['logo_dark'] = $uploader->processLogo($request->file('logo_dark'), 'companies/logos');
+        }
+
+        $company->update($data);
 
         return back()->with('success', 'Data perusahaan berhasil diperbarui.');
     }

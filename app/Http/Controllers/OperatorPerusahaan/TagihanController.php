@@ -461,11 +461,8 @@ class TagihanController extends Controller
         $logoPath = \App\Models\CompanyConfig::getLogo($companyId);
         $logoUrl = null;
         if ($logoPath) {
-            try {
-                $logoUrl = \Illuminate\Support\Facades\Storage::disk('minio')->url($logoPath);
-            } catch (\Exception $e) {
-                $logoUrl = null;
-            }
+            // Use the file.proxy route (handles auth + private disk) so DomPDF can fetch
+            $logoUrl = route('file.proxy', ['path' => $logoPath, 'disk' => 'minio'], false);
         }
 
         $html = $this->buildInvoiceHtml($invoice, $company, $logoUrl);

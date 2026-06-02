@@ -193,4 +193,126 @@ class PerusahaanTest extends TestCase
                 ->has('companies.data', 1)
             );
     }
+
+    public function test_listing_includes_logo_and_logo_dark_urls()
+    {
+        $this->actingAs($this->admin, 'web');
+        $company = Company::factory()->create([
+            'name' => 'Logo Test',
+            'logo' => 'companies/logos/light.webp',
+            'logo_dark' => 'companies/logos/dark.webp',
+        ]);
+
+        $response = $this->actingAs($this->admin, 'web')->get('/operator-saas/perusahaan');
+        $response->assertOk();
+        $companies = $response->original->getData()['page']['props']['companies']->toArray();
+        $row = collect($companies['data'])->firstWhere('id', $company->id);
+        $this->assertNotNull($row);
+        $this->assertSame('companies/logos/light.webp', $row['logo']);
+        $this->assertSame('companies/logos/dark.webp', $row['logo_dark']);
+        $this->assertNotEmpty($row['logo_url']);
+        $this->assertNotEmpty($row['logo_dark_url']);
+        $this->assertStringContainsString('file.proxy', $row['logo_url']);
+        $this->assertStringContainsString('file.proxy', $row['logo_dark_url']);
+    }
+
+    public function test_create_perusahaan_with_logo_and_logo_dark()
+    {
+        $this->actingAs($this->admin, 'web');
+
+        $logoFile = \Illuminate\Http\UploadedFile::fake()->image('logo-light.png', 200, 200);
+        $logoDarkFile = \Illuminate\Http\UploadedFile::fake()->image('logo-dark.png', 200, 200);
+
+        $response = $this->post('/operator-saas/perusahaan', [
+            'nama_perusahaan' => 'PT With Logo',
+            'email' => 'logo@test.id',
+            'kode_negara' => '+62',
+            'no_telp' => '81234567890',
+            'alamat' => 'Jl. Logo No. 1',
+            'status' => 'Aktif',
+            'logo' => $logoFile,
+            'logo_dark' => $logoDarkFile,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+        $row = Company::where('email', 'logo@test.id')->first();
+        $this->assertNotNull($row);
+        $this->assertNotNull($row->logo);
+        $this->assertNotNull($row->logo_dark);
+        $this->assertStringContainsString('companies/logos', $row->logo);
+        $this->assertStringContainsString('companies/logos', $row->logo_dark);
+    }
+
+    public function test_create_perusahaan_with_svg_logo_is_not_compressed()
+    {
+        $this->actingAs($this->admin, 'web');
+
+        // Fake SVG file
+        $svgContent = '<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><circle cx="50" cy="50" r="40" fill="blue"/></svg>';
+        $svgFile = \Illuminate\Http\UploadedFile::fake()->createWithContent('logo.svg', $svgContent);
+
+        $response = $this->post('/operator-saas/perusahaan', [
+            'nama_perusahaan' => 'PT SVG Logo',
+            'email' => 'svg@test.id',
+            'kode_negara' => '+62',
+            'no_telp' => '81234567890',
+            'alamat' => 'Jl. SVG No. 1',
+            'status' => 'Aktif',
+            'logo' => $svgFile,
+        ]);
+
+        $response->assertRedirect();
+        $row = Company::where('email', 'svg@test.id')->first();
+        $this->assertNotNull($row);
+        $this->assertNotNull($row->logo);
+        // SVG should keep .svg extension (not be converted to .webp)
+        $this->assertStringEndsWith('.svg', $row->logo);
+    }
+
+    public function test_create_perusahaan_validates_logo_file_type()
+    {
+        $this->actingAs($this->admin, 'web');
+
+        // PDF should NOT be accepted for logo
+        $pdfFile = \Illuminate\Http\UploadedFile::fake()->create('logo.pdf', 100);
+
+        $response = $this->post('/operator-saas/perusahaan', [
+            'nama_perusahaan' => 'PT Bad Logo',
+            'email' => 'bad@test.id',
+            'kode_negara' => '+62',
+            'no_telp' => '81234567890',
+            'alamat' => 'Jl. Bad',
+            'status' => 'Aktif',
+            'logo' => $pdfFile,
+        ]);
+
+        $response->assertSessionHasErrors(['logo']);
+    }
+
+    public function test_update_perusahaan_replaces_logo()
+    {
+        $this->actingAs($this->admin, 'web');
+        $company = Company::factory()->create([
+            'logo' => 'companies/logos/old-light.webp',
+            'logo_dark' => 'companies/logos/old-dark.webp',
+        ]);
+
+        $newLogo = \Illuminate\Http\UploadedFile::fake()->image('new.png', 200, 200);
+
+        $response = $this->post("/operator-saas/perusahaan/{$company->id}", [
+            '_method' => 'PUT',
+            'nama_perusahaan' => $company->name,
+            'email' => $company->email,
+            'kode_negara' => '+62',
+            'no_telp' => '81234567890',
+            'alamat' => 'Updated',
+            'status' => 'Aktif',
+            'logo' => $newLogo,
+        ]);
+
+        $response->assertRedirect();
+        $company->refresh();
+        $this->assertNotSame('companies/logos/old-light.webp', $company->logo);
+    }
 }

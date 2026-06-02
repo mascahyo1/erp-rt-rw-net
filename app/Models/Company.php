@@ -23,6 +23,8 @@ class Company extends Model
         'is_active',
         'address',
         'description',
+        'logo',
+        'logo_dark',
     ];
 
     protected function casts(): array
@@ -34,5 +36,21 @@ class Company extends Model
             'deleted_at' => 'datetime',
             'restored_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Get logo URL (light variant) for proxy via file.proxy route.
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        return $this->logo ? route('file.proxy', ['path' => $this->logo, 'disk' => 'minio'], false) : null;
+    }
+
+    /**
+     * Get dark-mode logo URL for proxy via file.proxy route.
+     */
+    public function getLogoDarkUrlAttribute(): ?string
+    {
+        return $this->logo_dark ? route('file.proxy', ['path' => $this->logo_dark, 'disk' => 'minio'], false) : null;
     }
 }

@@ -21,6 +21,9 @@ Mencatat setiap pembayaran yang dilakukan pelanggan beserta jumlah, metode, dan 
 | **Hapus Riwayat** | `riwayat-pembayaran.delete` | Menghapus riwayat (dapat dipulihkan lagi) |
 | **Pulihkan Riwayat** | `riwayat-pembayaran.restore` | Mengembalikan riwayat yang sudah dihapus |
 | **Verifikasi Pembayaran** | `riwayat-pembayaran.persetujuan` | Menyetujui atau menolak pembayaran pelanggan |
+| **Download PDF** | `riwayat-pembayaran.export` | Download bukti pembayaran PDF (termasuk **logo perusahaan** light di header) |
+| **Download Word** | `riwayat-pembayaran.export` | Download bukti pembayaran sebagai file `.docx` |
+| **Export Excel** | `riwayat-pembayaran.export` | Export data riwayat ke Excel |
 
 ## Teknis
 ### Route
@@ -32,9 +35,16 @@ Mencatat setiap pembayaran yang dilakukan pelanggan beserta jumlah, metode, dan 
 | DELETE | `/operator-perusahaan/riwayat-pembayaran/{id}` | — | `auth:admin-company` | `riwayat-pembayaran.delete` |
 | PATCH | `/operator-perusahaan/riwayat-pembayaran/{id}/restore` | — | `auth:admin-company` | `riwayat-pembayaran.restore` |
 | POST | `/operator-perusahaan/riwayat-pembayaran/{id}/approve` | — | `auth:admin-company` | `riwayat-pembayaran.persetujuan` |
+| GET | `/operator-perusahaan/riwayat-pembayaran/export` | — | `auth:admin-company` | `riwayat-pembayaran.export` |
+| GET | `/operator-perusahaan/riwayat-pembayaran/{id}/pdf` | — | `auth:admin-company` | `riwayat-pembayaran.export` |
 
 ### Controller
-Closure (inline route)
+`App\Http\Controllers\OperatorPerusahaan\PembayaranController` (route masih inline)
+
+### Downstream — Logo Perusahaan di Bukti Pembayaran PDF
+Bukti pembayaran PDF (`downloadPdf`) otomatis memuat **logo perusahaan light** di header (diambil dari kolom `companies.logo` via accessor `logo_url`). Logo dark **tidak** dipakai di PDF karena kertas biasanya putih.
+
+Sumber logo: perusahaan yang sedang login (diambil via `auth()->user()->company_id`).
 
 ### View
 `resources/js/Pages/OperatorPerusahaan/RiwayatPembayaran.vue`
