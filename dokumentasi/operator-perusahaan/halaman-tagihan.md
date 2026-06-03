@@ -157,10 +157,16 @@ tagihan.generate → Generate massal
 ### Controller
 `App\Http\Controllers\OperatorPerusahaan\TagihanController`
 
-### Downstream — Logo Perusahaan di Invoice PDF
-Invoice PDF (`exportPdf`) otomatis memuat **logo perusahaan light** di header (diambil dari kolom `companies.logo` yang diupload di halaman [Perusahaan](halaman-perusahaan.md) atau [Perusahaan Saya](perusahaan-saya.md)). Sumber logo dibaca via `CompanyConfig::getLogo($companyId)` yang fallback ke `companies.logo`.
+### Downstream — Logo Perusahaan di Invoice PDF & Word
+Invoice PDF (`exportPdf`) dan Word (`exportWord`) otomatis memuat **logo perusahaan light** di header (diambil dari kolom `companies.logo` yang diupload di halaman [Perusahaan](halaman-perusahaan.md) atau [Perusahaan Saya](perusahaan-saya.md)). Sumber logo dibaca via `CompanyConfig::getLogo($companyId)` yang:
+1. Pertama cek `companies.logo` (kolom terbaru)
+2. Fallback ke `company_configs.value WHERE key = 'logo'` (legacy)
 
-> **Catatan:** Karena kertas biasanya putih, PDF hanya menggunakan versi **light** logo. Untuk versi dark, lihat di halaman CRUD Perusahaan.
+Logo diambil via `Storage::disk('minio')->url($path)` lalu di-proxy lewat `file.proxy` route (agar DomPDF / PhpWord bisa fetch dengan auth).
+
+**Kompresi logo:** JPG/PNG/WebP yang diupload otomatis dikompres ke WebP oleh `FileUploadService::processLogo()`. SVG disimpan apa adanya. Lihat: [Perusahaan Saya — Field Logo](perusahaan-saya.md#field-logo-di-halaman-ini).
+
+> **Catatan:** Karena kertas biasanya putih, PDF/Word hanya menggunakan versi **light** logo. Untuk versi dark, lihat di halaman CRUD Perusahaan.
 
 ### View
 `resources/js/Pages/OperatorPerusahaan/Tagihan.vue`

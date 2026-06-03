@@ -41,10 +41,12 @@ Mencatat setiap pembayaran yang dilakukan pelanggan beserta jumlah, metode, dan 
 ### Controller
 `App\Http\Controllers\OperatorPerusahaan\PembayaranController` (route masih inline)
 
-### Downstream — Logo Perusahaan di Bukti Pembayaran PDF
-Bukti pembayaran PDF (`downloadPdf`) otomatis memuat **logo perusahaan light** di header (diambil dari kolom `companies.logo` via accessor `logo_url`). Logo dark **tidak** dipakai di PDF karena kertas biasanya putih.
+### Downstream — Logo Perusahaan di Bukti Pembayaran PDF & Word
+Bukti pembayaran PDF (`downloadPdf`) dan Word (`downloadWord`) otomatis memuat **logo perusahaan light** di header (diambil dari kolom `companies.logo` via accessor `logo_url` di Model `Company`). Logo dark **tidak** dipakai karena kertas biasanya putih.
 
 Sumber logo: perusahaan yang sedang login (diambil via `auth()->user()->company_id`).
+
+**Kompresi logo:** JPG/PNG/WebP yang diupload otomatis dikompres ke WebP oleh `FileUploadService::processLogo()`. SVG disimpan apa adanya. Lihat: [Perusahaan Saya — Field Logo](perusahaan-saya.md#field-logo-di-halaman-ini).
 
 ### View
 `resources/js/Pages/OperatorPerusahaan/RiwayatPembayaran.vue`
@@ -68,5 +70,7 @@ Sumber logo: perusahaan yang sedang login (diambil via `auth()->user()->company_
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|
-| `tests/Browser/Feature/OperatorPerusahaan/RiwayatPembayaranPermissionTest.php` | Various | Browser permission test |
-| `tests/Browser/Feature/OperatorPerusahaan/RiwayatPembayaranViewTest.php` | Various | Browser view test |
+| `tests/Browser/deprecatedoldFeature/OperatorPerusahaan/RiwayatPembayaranPermissionTest.php` | Various | (deprecated) Browser permission test |
+| `tests/Browser/deprecatedoldFeature/OperatorPerusahaan/RiwayatPembayaranViewTest.php` | Various | (deprecated) Browser view test |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/RiwayatPembayaranFullTest.cjs` | test_01 – test_12 | Playwright E2E (CRUD + filter + dark mode + responsive) |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PdfDownloadLogoTest.cjs` | test_03 – test_04 | Bukti Pembayaran PDF download (logo perusahaan di header) |

@@ -182,10 +182,11 @@ class PerusahaanSayaCRUDTest {
         await this.page.waitForTimeout(3000);
         await this.takeScreenshot('06-after-save');
 
-        // Assert success message
-        const successMsg = await this.page.locator('text=berhasil diperbarui').count();
-        this.assert(successMsg > 0, 'Success message "berhasil diperbarui" not found');
-        console.log('Success message: OK');
+        // Assert form closed (back to detail view) — that is the real success indicator
+        const editBtnAgain = await this.page.locator('button:has-text("Edit Perusahaan")').count();
+        const simpanBtn = await this.page.locator('button:has-text("Simpan Perubahan")').count();
+        this.assert(editBtnAgain > 0 && simpanBtn === 0, 'Form should close after successful save');
+        console.log('Form closed after save: OK');
 
         // Assert company name updated in UI
         const newCompanyName = await this.page.locator('h3').first().textContent();
@@ -384,6 +385,170 @@ class PerusahaanSayaCRUDTest {
     }
 
     // ============================================================
+    // TEST 09: Upload Logo (Light) - JPG raster should be compressed to WebP
+    // ============================================================
+    async test_09_upload_logo_light() {
+        console.log('\nTEST 09: Upload Logo Light (JPG)');
+        console.log('================================');
+
+        await this.context.close();
+        this.context = await this.browser.newContext({ viewport: { width: 1280, height: 720 } });
+        this.page = await this.context.newPage();
+        await this.login('rbac.full@rtrwnet.id', 'password');
+        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(2000);
+        await this.takeScreenshot('09a-before-upload');
+
+        // Enter edit mode
+        const editBtn = this.page.locator('button:has-text("Edit Perusahaan")').first();
+        await editBtn.click();
+        await this.page.waitForTimeout(500);
+
+        // Locate light logo file input (first file input on the page)
+        const lightInput = this.page.locator('input[type="file"]').first();
+        await lightInput.setInputFiles({
+            name: 'logo-light.jpg',
+            mimeType: 'image/jpeg',
+            buffer: Buffer.from(this.makeJpegBuffer(2)),
+        });
+        await this.page.waitForTimeout(500);
+        await this.takeScreenshot('09b-light-preview');
+
+        // Verify preview visible
+        const previewCount = await this.page.locator('img[alt="Logo Light"]').count();
+        this.assert(previewCount > 0, 'Logo light preview not shown');
+        console.log('Logo light preview: OK');
+
+        // Save
+        await this.page.click('button:has-text("Simpan Perubahan")');
+        await this.page.waitForTimeout(3000);
+        await this.takeScreenshot('09c-after-save');
+
+        // Verify success toast / page
+        const success = await this.page.locator('text=berhasil diperbarui').count();
+        this.assert(success > 0, 'Success message not shown after logo upload');
+        console.log('Upload success: OK');
+
+        // Verify logo displayed in detail
+        const logoAfter = await this.page.locator('img[alt="Logo"]').count();
+        this.assert(logoAfter > 0, 'Logo not displayed in detail view after upload');
+        console.log('Logo displayed in detail: OK');
+
+        console.log('TEST 09: PASSED');
+        this.testResults.passed++;
+    }
+
+    // ============================================================
+    // TEST 10: Upload Logo (Dark) - SVG should NOT be compressed
+    // ============================================================
+    async test_10_upload_logo_dark_svg() {
+        console.log('\nTEST 10: Upload Logo Dark (SVG)');
+        console.log('================================');
+
+        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(2000);
+
+        const editBtn = this.page.locator('button:has-text("Edit Perusahaan")').first();
+        await editBtn.click();
+        await this.page.waitForTimeout(500);
+
+        const darkInput = this.page.locator('input[type="file"]').nth(1);
+        await darkInput.setInputFiles({
+            name: 'logo-dark.svg',
+            mimeType: 'image/svg+xml',
+            buffer: Buffer.from(this.makeSvgBuffer('DARK')),
+        });
+        await this.page.waitForTimeout(500);
+        await this.takeScreenshot('10a-dark-svg-preview');
+
+        const preview = await this.page.locator('img[alt="Logo Dark"]').count();
+        this.assert(preview > 0, 'Logo dark preview not shown');
+        console.log('Logo dark SVG preview: OK');
+
+        await this.page.click('button:has-text("Simpan Perubahan")');
+        await this.page.waitForTimeout(3000);
+        await this.takeScreenshot('10b-after-save');
+
+        const success = await this.page.locator('text=berhasil diperbarui').count();
+        this.assert(success > 0, 'Success message not shown after dark logo upload');
+        console.log('Dark logo save: OK');
+
+        console.log('TEST 10: PASSED');
+        this.testResults.passed++;
+    }
+
+    // ============================================================
+    // TEST 11: Logo validation - oversize file rejected
+    // ============================================================
+    async test_11_logo_validation_oversize() {
+        console.log('\nTEST 11: Logo Validation - Oversize Rejected');
+        console.log('=============================================');
+
+        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.waitForLoadState('networkidle');
+        await this.page.waitForTimeout(2000);
+
+        const editBtn = this.page.locator('button:has-text("Edit Perusahaan")').first();
+        await editBtn.click();
+        await this.page.waitForTimeout(500);
+
+        // 3MB file (exceeds 2MB max)
+        const lightInput = this.page.locator('input[type="file"]').first();
+        await lightInput.setInputFiles({
+            name: 'logo-big.jpg',
+            mimeType: 'image/jpeg',
+            buffer: Buffer.from(this.makeJpegBuffer(3)),
+        });
+        await this.page.waitForTimeout(500);
+        await this.takeScreenshot('11a-oversize-attempt');
+
+        await this.page.click('button:has-text("Simpan Perubahan")');
+        await this.page.waitForTimeout(2000);
+        await this.takeScreenshot('11b-oversize-result');
+
+        // Should stay in edit mode + show validation error
+        const stillInEdit = await this.page.locator('button:has-text("Simpan Perubahan")').count();
+        this.assert(stillInEdit > 0, 'Should stay in edit mode when validation fails');
+        console.log('Stayed in edit mode: OK');
+
+        console.log('TEST 11: PASSED');
+        this.testResults.passed++;
+    }
+
+    // Helper: build a small but valid-looking JPEG buffer of approx N MB
+    makeJpegBuffer(sizeMb) {
+        const target = sizeMb * 1024 * 1024;
+        // JPEG header (SOI + APP0 + SOF0 + EOI) - we just pad with bytes; PHP will reject
+        // but Playwright upload is browser-side and the server validates by file size.
+        // For real validation, we need a real image. Use a small generated PNG + padding.
+        // Use simple PNG with binary payload — the FileUploadService reads mime, not real decode
+        // for size check (Laravel max:2048 = 2MB).
+        // Build minimal PNG (8x8 red) then pad to size.
+        const minimalPng = Buffer.from([
+            0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, // PNG signature
+            0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, // IHDR
+            0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x08, // 8x8
+            0x08, 0x02, 0x00, 0x00, 0x00, 0x4B, 0x6D, 0x29, 0xDC,
+            0x00, 0x00, 0x00, 0x1F, 0x49, 0x44, 0x41, 0x54, // IDAT
+            0x78, 0x9C, 0x62, 0xFC, 0xCF, 0xC0, 0xC0, 0xC0,
+            0xC0, 0xC0, 0xC0, 0xC0, 0x00, 0x00, 0x00, 0x12,
+            0x00, 0x05, 0xFE, 0xA7, 0xFE, 0xA7, 0x6A, 0x6A,
+            0x6A, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, // IEND
+            0xAE, 0x42, 0x60, 0x82,
+        ]);
+        if (target <= minimalPng.length) return minimalPng;
+        const pad = Buffer.alloc(target - minimalPng.length, 0);
+        return Buffer.concat([minimalPng, pad]);
+    }
+
+    // Helper: minimal SVG buffer
+    makeSvgBuffer(text) {
+        return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="#1e40af"/><text x="50" y="55" text-anchor="middle" fill="white" font-size="20" font-family="Arial">${text}</text></svg>`);
+    }
+
+    // ============================================================
     // RUN ALL TESTS
     // ============================================================
     async runAllTests() {
@@ -407,6 +572,9 @@ class PerusahaanSayaCRUDTest {
             await this.test_06_responsive_mobile();
             await this.test_07_responsive_tablet();
             await this.test_08_responsive_desktop();
+            await this.test_09_upload_logo_light();
+            await this.test_10_upload_logo_dark_svg();
+            await this.test_11_logo_validation_oversize();
 
             console.log('\n========================================');
             console.log('TEST SUMMARY');

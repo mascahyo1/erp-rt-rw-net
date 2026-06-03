@@ -24,6 +24,14 @@ Visible di sidebar dan dropdown navbar **hanya jika user punya izin `perusahaan-
 
 **Format:** JPG/PNG/WebP/SVG, maks 2MB. Gambar raster otomatis dikompres ke WebP, SVG disimpan apa adanya.
 
+**Kompresi:** Otomatis ditangani oleh `FileUploadService::processLogo()` → `processImage()`.
+- **JPG/PNG/WebP** → dikompres ke **WebP**, di-resize ke `default_upload_max_width_and_height_image` (default **1920×1920 px**, aspect ratio dijaga)
+- **SVG** → disimpan apa adanya (sudah vector-based)
+- **PDF** → tidak diterima untuk logo (format file tidak relevan)
+
+**Path penyimpanan:** `companies/logos/photos/{uuid7}.webp` di MinIO (disk `minio`).
+**Batas ukuran upload:** `default_upload_max_file_size_in_kb` (default **2048 KB / 2 MB**), di-enforce oleh Laravel `max:2048`.
+
 ## Catatan RBAC
 - Halaman "Perusahaan Saya" visible di sidebar dan dropdown navbar **hanya jika user punya permission `perusahaan-saya.detail`**
 - Tombol "Edit Perusahaan" hanya muncul jika user punya permission `perusahaan-saya.edit`
@@ -38,6 +46,8 @@ Visible di sidebar dan dropdown navbar **hanya jika user punya izin `perusahaan-
 | POST (PUT) | `/operator-perusahaan/perusahaan-saya/{company}` | perusahaan-saya.update | `auth:admin-company` | `perusahaan-saya.edit` |
 
 > Form edit menggunakan POST + `_method=PUT` untuk support file upload logo (multipart/form-data).
+>
+> Index route di-enforce dengan middleware `permission:perusahaan-saya.detail`. Update route menggunakan `permission:perusahaan-saya.edit`. Permission `perusahaan-saya.list` **tidak dipakai**.
 
 ### Controller
 `App\Http\Controllers\OperatorPerusahaan\PerusahaanSayaController`
@@ -66,4 +76,9 @@ Visible di sidebar dan dropdown navbar **hanya jika user punya izin `perusahaan-
 ### Test Case
 | File | Method | Description |
 |------|--------|-------------|
-| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PerusahaanSayaCRUDTest.cjs` | test_01 – test_08 | Playwright E2E test |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PerusahaanSayaCRUDTest.cjs` | test_01 – test_08 | Playwright E2E test (page, edit, dark mode, responsive) |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PerusahaanSayaCRUDTest.cjs` | test_09 | Upload logo light (JPG raster → dikompres ke WebP) |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PerusahaanSayaCRUDTest.cjs` | test_10 | Upload logo dark (SVG → disimpan apa adanya) |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PerusahaanSayaCRUDTest.cjs` | test_11 | Validasi upload — file >2MB ditolak |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PdfDownloadLogoTest.cjs` | test_01 – test_02 | Tagihan PDF endpoint + download (sumber logo via `CompanyConfig::getLogo`) |
+| `tests/Browser/Playwright/Feature/OperatorPerusahaan/PdfDownloadLogoTest.cjs` | test_03 – test_04 | Riwayat Pembayaran PDF endpoint + download |

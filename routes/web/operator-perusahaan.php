@@ -111,10 +111,12 @@ Route::middleware('auth:admin-company')->group(function () {
         });
 
         // Perusahaan Saya
-        Route::middleware('auth:admin-company')->group(function () {
+        Route::middleware('permission:perusahaan-saya.detail')->group(function () {
             Route::get('/perusahaan-saya', [PerusahaanSayaController::class, 'index'])->name('perusahaan-saya.index');
-            Route::put('/perusahaan-saya/{company}', [PerusahaanSayaController::class, 'update'])->name('perusahaan-saya.update')->middleware('permission:perusahaan-saya.edit');
         });
+        Route::put('/perusahaan-saya/{company}', [PerusahaanSayaController::class, 'update'])
+            ->middleware('permission:perusahaan-saya.edit')
+            ->name('perusahaan-saya.update');
 
         // Role Perusahaan
         Route::middleware('permission:role-perusahaan-op.list')->group(function () {

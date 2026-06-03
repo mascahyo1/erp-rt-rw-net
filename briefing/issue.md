@@ -137,5 +137,12 @@ http://erp-rt-rw-net.test/operator-perusahaan/perusahaan-saya
 update dokumentasi dan testcasenya
 jangan lupa kompress imagenya kecuali svg
 turunannya download pdf juga disesuaikan
-http://erp-rt-rw-net.test/operator-perusahaan/langganan-customer
+http://erp-rt-rw-net.test/operator-perusahaan/tagihan
 http://erp-rt-rw-net.test/operator-perusahaan/riwayat-pembayaran
+
+dokumentasi
+dokumentasi\operator-perusahaan\halaman-tagihan.md
+dokumentasi\operator-perusahaan\perusahaan-saya.md
+dokumentasi\operator-perusahaan\halaman-riwayat-pembayaran.md
+
+testing sampai semuanya passed
