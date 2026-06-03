@@ -188,8 +188,7 @@ function saveCreate() {
 }
 
 function saveEdit() {
-  editForm.post(`/operator-saas/perusahaan/${editForm.id}`, {
-    _method: 'PUT',
+  editForm.put(`/operator-saas/perusahaan/${editForm.id}`, {
     preserveState: true, preserveScroll: true, forceFormData: true,
     onSuccess: () => { showEditModal.value = false; logoLightPreview.value = null; logoDarkPreview.value = null; toast.success('Perusahaan berhasil diperbarui.'); },
     onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },

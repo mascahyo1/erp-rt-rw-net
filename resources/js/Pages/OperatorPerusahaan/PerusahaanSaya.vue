@@ -74,11 +74,12 @@ function clearLogoDark() {
 }
 
 function submitEdit() {
-  form.post('/operator-perusahaan/perusahaan-saya/' + props.company.id, {
-    _method: 'PUT',
+  form.put('/operator-perusahaan/perusahaan-saya/' + props.company.id, {
     forceFormData: true,
     onSuccess: () => {
       editMode.value = false;
+      logoLightPreview.value = null;
+      logoDarkPreview.value = null;
       toast.success('Data perusahaan berhasil diperbarui.');
     },
     onError: () => toast.error('Validasi gagal. Periksa kembali isian form.'),
