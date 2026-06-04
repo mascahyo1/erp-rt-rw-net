@@ -168,6 +168,15 @@ Logo diambil via `Storage::disk('minio')->url($path)` lalu di-proxy lewat `file.
 
 > **Catatan:** Karena kertas biasanya putih, PDF/Word hanya menggunakan versi **light** logo. Untuk versi dark, lihat di halaman CRUD Perusahaan.
 
+### Known Pre-existing Issues (belum fix, bukan dari fitur logo)
+
+| # | Issue | Dampak di halaman ini |
+|---|-------|----------------------|
+| 1 | PHP tidak parse `multipart/form-data` body untuk PUT/PATCH/DELETE | Form edit tagihan dengan upload file (jika ada) akan gagal validasi |
+| 2 | Inertia Laravel v2 tidak set `X-Inertia: true` di response redirect | Setelah edit/hapus tagihan, form tidak auto-close, toast tidak auto-fire |
+
+Lihat detail + rekomendasi fix di [Perusahaan Saya — Known Pre-existing Issues](perusahaan-saya.md#known-pre-existing-issues-belum-fix-bukan-dari-fitur-logo).
+
 ### View
 `resources/js/Pages/OperatorPerusahaan/Tagihan.vue`
 

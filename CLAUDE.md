@@ -26,6 +26,16 @@ Kalau bingung dengan bug, jangan ragu — log setiap langkah dari awal sampai ak
 - Animasi untuk feedback interaksi (hover, klik)
 - Transisi antar halaman (Inertia page transitions)
 
+## Arsitektur Hybrid: Inertia + AJAX
+
+**WAJIB baca** [dokumentasi/CONVENTIONS.md](dokumentasi/CONVENTIONS.md) sebelum menulis form baru atau mereview kode form.
+
+Singkatnya:
+- **Navigasi** (sidebar, breadcrumb, redirect) → pakai **Inertia**
+- **CRUD form** (create/edit/delete di modal atau inline) → pakai **Pure AJAX** + JSON response
+- **Dilarang**: `form.put()` + `forceFormData: true` untuk form dengan file upload (PHP bug, Inertia quirk)
+- **Dilarang**: `form._method = 'PUT'` (tidak otomatis masuk body)
+
 ## Instruksi Standar (selalu aktif)
 
 ### 1. Bug & Logic

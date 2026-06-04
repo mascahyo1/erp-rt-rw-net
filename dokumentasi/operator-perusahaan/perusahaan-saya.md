@@ -43,11 +43,43 @@ Visible di sidebar dan dropdown navbar **hanya jika user punya izin `perusahaan-
 | Method | URI | Name | Middleware | Permission |
 |--------|-----|------|-----------|------------|
 | GET | `/operator-perusahaan/perusahaan-saya` | perusahaan-saya.index | `auth:admin-company` | `perusahaan-saya.detail` |
-| POST (PUT) | `/operator-perusahaan/perusahaan-saya/{company}` | perusahaan-saya.update | `auth:admin-company` | `perusahaan-saya.edit` |
+| PUT | `/operator-perusahaan/perusahaan-saya/{company}` | perusahaan-saya.update | `auth:admin-company` | `perusahaan-saya.edit` |
 
-> Form edit menggunakan POST + `_method=PUT` untuk support file upload logo (multipart/form-data).
+> ⚠️ **Catatan penting — Inertia form submission untuk endpoint ini:**
+> Form edit di Vue pakai `form.put(url, { forceFormData: true })` untuk kirim logo. Inertia v2 + PHP punya **pre-existing bug** dimana multipart/form-data body **tidak ter-parse** oleh PHP untuk method PUT/PATCH/DELETE (PHP hanya auto-parse untuk POST). Akibatnya `$request->all()` di controller kosong.
+>
+> **Pattern yang benar (Laravel-native, tanpa workaround):**
+> ```js
+> form.post(url, {
+>   forceFormData: true,
+>   transform: (data) => ({ ...data, _method: 'PUT' }),  // _method override → route matching jadi PUT
+> });
+> ```
+> Ini mengirim POST (PHP bisa parse body ✅) + `_method=PUT` di body → Laravel Symfony Request deteksi → route cocok dengan PUT → controller `update()` jalan. `$request->method()` return "PUT" karena override.
 >
 > Index route di-enforce dengan middleware `permission:perusahaan-saya.detail`. Update route menggunakan `permission:perusahaan-saya.edit`. Permission `perusahaan-saya.list` **tidak dipakai**.
+
+### Known Pre-existing Issues (belum fix, bukan dari fitur logo)
+
+| # | Issue | Dampak | Affected |
+|---|-------|--------|----------|
+| 1 | PHP tidak parse `multipart/form-data` body untuk method PUT/PATCH/DELETE | `$request->all()` kosong saat form pakai `form.put()` + `forceFormData: true` → validasi gagal "field is required" untuk semua field | Semua form edit dengan upload file (bukan hanya logo) |
+| 2 | Inertia Laravel v2 middleware tidak set header `X-Inertia: true` di response redirect | `onSuccess` callback tidak dipanggil setelah save → form tidak auto-close, toast tidak auto-fire | Semua form yang `back()->with()` setelah PUT/PATCH/DELETE |
+| 3 | `form._method = 'PUT'` di Inertia Vue3 **tidak** otomatis masuk body (bukan Inertia convention) | Set property `_method` saja tidak cukup; perlu `transform: (data) => ({ ...data, _method: 'PUT' })` | Semua form yang coba pakai Laravel `_method` override via Inertia form helper |
+
+**Fix yang direkomendasikan (belum dilakukan, butuh diskusi):**
+1. Untuk #1 & #3: pilih antara (a) ubah semua form jadi `form.post()` + `transform: data => ({...data, _method: 'PUT'})`, (b) tambahkan middleware parsing multipart untuk PUT/PATCH/DELETE, (c) ubah route jadi POST-only + method override
+2. Untuk #2: pilih antara (a) patch Inertia Laravel v2 di `vendor/` (tidak ideal), (b) bikin wrapper middleware di project untuk handle X-Inertia header, (c) downgrade ke Inertia v1.x, (d) rewrite form submit jadi pure AJAX (lihat catatan arsitektur di bawah)
+3. Test Playwright `PerusahaanSayaCRUDTest.test_09/10/11` (logo upload) saat ini akan fail karena bug #1
+
+### Catatan Arsitektur (untuk diskusi)
+
+Bug-bug di atas adalah gejala dari **incompatibility pattern**, bukan dari fitur logo. Pattern yang dipakai (`form.put()` + file upload di Inertia v2) adalah anti-pattern karena:
+- HTML form tradisional cuma support GET/POST — makanya Laravel pakai `_method` override
+- Inertia v2 mewarisi keterbatasan itu + punya quirk tambahan soal response header
+- Untuk CRUD edit (yang **tidak** pindah halaman setelah save), pure AJAX + JSON response lebih sesuai daripada Inertia form submission
+
+Lihat juga dokumentasi test [PerusahaanSayaCRUDTest](../testing) untuk detail test apa saja yang saat ini pass/fail.
 
 ### Controller
 `App\Http\Controllers\OperatorPerusahaan\PerusahaanSayaController`

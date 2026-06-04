@@ -48,6 +48,15 @@ Sumber logo: perusahaan yang sedang login (diambil via `auth()->user()->company_
 
 **Kompresi logo:** JPG/PNG/WebP yang diupload otomatis dikompres ke WebP oleh `FileUploadService::processLogo()`. SVG disimpan apa adanya. Lihat: [Perusahaan Saya — Field Logo](perusahaan-saya.md#field-logo-di-halaman-ini).
 
+### Known Pre-existing Issues (belum fix, bukan dari fitur logo)
+
+| # | Issue | Dampak di halaman ini |
+|---|-------|----------------------|
+| 1 | PHP tidak parse `multipart/form-data` body untuk PUT/PATCH/DELETE | Form edit riwayat pembayaran dengan upload bukti (jika ada) akan gagal validasi |
+| 2 | Inertia Laravel v2 tidak set `X-Inertia: true` di response redirect | Setelah create/approve/verifikasi, form tidak auto-close, toast tidak auto-fire |
+
+Lihat detail + rekomendasi fix di [Perusahaan Saya — Known Pre-existing Issues](perusahaan-saya.md#known-pre-existing-issues-belum-fix-bukan-dari-fitur-logo).
+
 ### View
 `resources/js/Pages/OperatorPerusahaan/RiwayatPembayaran.vue`
 
