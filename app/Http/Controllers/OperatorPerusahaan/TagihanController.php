@@ -627,17 +627,18 @@ class TagihanController extends Controller
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; margin: 20px; font-size: 11px; color: #333; line-height: 1.3; }
-    .company-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid #1e40af; }
-    .company-info { flex: 1; }
+    /* DomPDF tidak support flex — pakai table-based layout */
+    .company-header { width: 100%; border-bottom: 2px solid #1e40af; margin-bottom: 8px; padding-bottom: 8px; }
+    .company-header td { vertical-align: middle;border:0px solid white; }
     .company-info h1 { font-size: 16px; color: #1e40af; margin: 0; }
     .company-info p { margin: 1px 0; font-size: 9px; color: #666; }
-    .company-logo { flex-shrink: 0; margin-left: 15px; text-align: right; }
-    .company-logo img { max-height: 60px; max-width: 160px; object-fit: contain; }
-    .invoice-title { margin: 8px 0 4px 0; text-align: center; }
+    .company-logo { text-align: right; width: 180px; }
+    .company-logo img { max-height: 60px; max-width: 160px; }
+    .invoice-title { text-align: center; margin: 8px 0 4px 0; }
     .invoice-title h2 { font-size: 16px; color: #1e40af; margin: 0; font-weight: bold; letter-spacing: 1.5px; }
-    .invoice-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .invoice-meta-row .invoice-no { font-size: 10px; color: #666; }
-    .invoice-meta-row .status { text-align: right; }
+    .invoice-meta-row { width: 100%; margin-bottom: 8px;border:0px solid white; }
+    .invoice-meta-row td { vertical-align: middle; font-size: 10px; color: #666;border:0px solid white; }
+    .invoice-meta-row .status-cell { text-align: right; }
     .info-grid { display: table; width: 100%; margin-bottom: 10px; }
     .info-box { display: table-cell; width: 50%; padding: 6px; }
     .info-box:first-child { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px 0 0 4px; }
@@ -653,23 +654,26 @@ class TagihanController extends Controller
 </style>
 </head>
 <body>
-<div class="company-header">
-    <div class="company-info">
-        <h1>{$companyName}</h1>
-        <p>{$companyAddress}</p>
-        <p>Email: {$companyEmail} | Telp: {$companyPhone}</p>
-    </div>
-    <div class="company-logo">
-        {$logoImage}
-    </div>
-</div>
+<!-- Pakai HTML <table> (DomPDF ga support flex) -->
+<table class="company-header" cellspacing="0" cellpadding="0">
+    <tr>
+        <td class="company-info">
+            <h1>{$companyName}</h1>
+            <p>{$companyAddress}</p>
+            <p>Email: {$companyEmail} | Telp: {$companyPhone}</p>
+        </td>
+        <td class="company-logo">{$logoImage}</td>
+    </tr>
+</table>
 <div class="invoice-title">
     <h2>INVOICE</h2>
 </div>
-<div class="invoice-meta-row">
-    <div class="invoice-no">{$invoice->invoice_number} - Tagihan Internet {$dueDateFormatted}</div>
-    <div class="status">{$statusBadge}</div>
-</div>
+<table class="invoice-meta-row" cellspacing="0" cellpadding="0">
+    <tr>
+        <td>{$invoice->invoice_number} - Tagihan Internet {$dueDateFormatted}</td>
+        <td class="status-cell">{$statusBadge}</td>
+    </tr>
+</table>
 
 <div class="info-grid">
     <div class="info-box">
