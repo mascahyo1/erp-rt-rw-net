@@ -627,15 +627,17 @@ class TagihanController extends Controller
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, sans-serif; margin: 20px; font-size: 11px; color: #333; line-height: 1.3; }
-    .company-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #1e40af; }
+    .company-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid #1e40af; }
     .company-info { flex: 1; }
     .company-info h1 { font-size: 16px; color: #1e40af; margin: 0; }
     .company-info p { margin: 1px 0; font-size: 9px; color: #666; }
     .company-logo { flex-shrink: 0; margin-left: 15px; text-align: right; }
-    .invoice-title { margin: 10px 0; }
-    .invoice-title h2 { font-size: 14px; color: #333; margin: 0; }
-    .invoice-title .invoice-no { font-size: 10px; color: #666; margin-top: 2px; }
-    .status { text-align: right; margin-bottom: 8px; }
+    .company-logo img { max-height: 60px; max-width: 160px; object-fit: contain; }
+    .invoice-title { margin: 8px 0 4px 0; text-align: center; }
+    .invoice-title h2 { font-size: 16px; color: #1e40af; margin: 0; font-weight: bold; letter-spacing: 1.5px; }
+    .invoice-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .invoice-meta-row .invoice-no { font-size: 10px; color: #666; }
+    .invoice-meta-row .status { text-align: right; }
     .info-grid { display: table; width: 100%; margin-bottom: 10px; }
     .info-box { display: table-cell; width: 50%; padding: 6px; }
     .info-box:first-child { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 4px 0 0 4px; }
@@ -663,10 +665,11 @@ class TagihanController extends Controller
 </div>
 <div class="invoice-title">
     <h2>INVOICE</h2>
-    <div class="invoice-no">{$invoice->invoice_number} - Tagihan Internet {$dueDateFormatted}</div>
 </div>
-
-<div class="status">{$statusBadge}</div>
+<div class="invoice-meta-row">
+    <div class="invoice-no">{$invoice->invoice_number} - Tagihan Internet {$dueDateFormatted}</div>
+    <div class="status">{$statusBadge}</div>
+</div>
 
 <div class="info-grid">
     <div class="info-box">
