@@ -32,16 +32,22 @@ class CompanyConfig extends Model
         return $config?->value ?? $default;
     }
 
+    /**
+     * @deprecated Logo is now a direct column on the `companies` table.
+     *             Use $company->logo and Company::getLogoDataUriAttribute() instead.
+     *             Kept here only for legacy fallback compatibility.
+     */
     public static function getLogo(?string $companyId = null): ?string
     {
-        // Prefer the new companies.logo field (light variant) if set.
         if ($companyId) {
             $company = Company::find($companyId);
             if ($company && $company->logo) {
                 return $company->logo;
             }
         }
-        // Fallback to legacy company_configs table for backward compatibility
+        // Legacy fallback
         return static::getValue('logo', null, $companyId);
     }
 }
+
+

@@ -541,12 +541,14 @@ class PembayaranController extends Controller
             'provider' => $payment->provider,
             'status' => $payment->status,
             'created_at' => $payment->created_at?->format('Y-m-d H:i'),
-            // Company info (light logo only — printed on white paper)
+            // Company info (light logo only — printed on white paper).
+            // Logo: base64 data URI (langsung dari kolom companies.logo)
+            // agar DomPDF tidak perlu HTTP request ke file.proxy (yang butuh auth).
             'company_name' => $company?->name ?? '-',
             'company_email' => $company?->email ?? '-',
             'company_phone' => ($company?->phone_country_code ?? '') . ' ' . ($company?->phone_number ?? '-'),
             'company_address' => $company?->address ?? '-',
-            'company_logo_url' => $company?->logo_url,
+            'company_logo_url' => $company?->getLogoDataUri('logo', 'minio') ?? $company?->logo_url,
         ];
 
         $html = view('pdf.payment-receipt', $data)->render();

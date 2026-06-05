@@ -458,12 +458,9 @@ class TagihanController extends Controller
             ->whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))
             ->findOrFail($id);
 
-        $logoPath = \App\Models\CompanyConfig::getLogo($companyId);
-        $logoUrl = null;
-        if ($logoPath) {
-            // Use the file.proxy route (handles auth + private disk) so DomPDF can fetch
-            $logoUrl = route('file.proxy', ['path' => $logoPath, 'disk' => 'minio'], false);
-        }
+        // Logo: ambil dari kolom companies.logo (light variant) sebagai base64 data URI
+        // agar DomPDF tidak perlu HTTP request ke file.proxy (yang butuh auth).
+        $logoUrl = $company?->getLogoDataUri('logo', 'minio');
 
         $html = $this->buildInvoiceHtml($invoice, $company, $logoUrl);
 
