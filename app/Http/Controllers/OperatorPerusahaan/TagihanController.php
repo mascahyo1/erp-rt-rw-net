@@ -91,6 +91,9 @@ class TagihanController extends Controller
                 'grand_total' => $item->grand_total,
                 'due_date' => $item->due_date?->format('Y-m-d'),
                 'payment_status' => $item->payment_status,
+                'payment_status_label' => $item->payment_status_label,  // computed: paid/partial/unpaid
+                'total_paid' => (float) $item->total_paid,             // sum of approved payments
+                'remaining' => (float) $item->remaining,               // grand_total - total_paid (min 0)
                 'paid_at' => $item->paid_at?->format('Y-m-d H:i'),
                 'description' => $item->description,
                 'dihapus' => $item->trashed(),
@@ -577,6 +580,37 @@ class TagihanController extends Controller
         return response()->download($tempPath, $filename, ['Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'])->deleteFileAfterSend(true);
     }
 
+    /**
+     * AJAX: ambil approved payments (status='paid') untuk 1 invoice.
+     * Dipakai oleh Tagihan.vue detail modal untuk tampilkan Riwayat Pembayaran.
+     */
+    public function paymentsAjax(CustInternetInvc $custInternetInvc): JsonResponse
+    {
+        $payments = $custInternetInvc->approvedPayments()
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'code' => $p->code,
+                'amount_paid' => (float) $p->amount_paid,
+                'payment_date' => $p->payment_date?->format('Y-m-d'),
+                'payment_method' => $p->payment_method,
+                'provider' => $p->provider,
+                'status' => $p->status,
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'invoice_id' => $custInternetInvc->id,
+                'grand_total' => (float) $custInternetInvc->grand_total,
+                'total_paid' => (float) $custInternetInvc->total_paid,
+                'remaining' => (float) $custInternetInvc->remaining,
+                'payment_status_label' => $custInternetInvc->payment_status_label,
+                'payments' => $payments,
+            ],
+        ], 200);
+    }
+
     private function buildInvoiceHtml($invoice, $company = null, $logoUrl = null): string
     {
         $customer = $invoice->custInternet?->customer;
@@ -608,6 +642,37 @@ class TagihanController extends Controller
         $grandTotalFormatted = number_format($invoice->grand_total ?? 0, 0, ',', '.');
         $paymentStatusText = $invoice->payment_status === 'paid' ? 'Lunas pada ' . $paidAtFormatted : 'Belum Bayar';
         $description = $invoice->description ?? '-';
+
+        // Riwayat Pembayaran — hanya payment approved (status='paid'), diurutkan terlama → terbaru
+        $approvedPayments = $invoice->approvedPayments()->get();
+        $totalPaid = (float) $invoice->total_paid;
+        $remaining = (float) $invoice->remaining;
+        $grandTotalFloat = (float) $invoice->grand_total;
+        $totalPaidFormatted = number_format($totalPaid, 0, ',', '.');
+        $remainingFormatted = number_format($remaining, 0, ',', '.');
+        $paymentStatusComputed = $invoice->payment_status_label; // 'paid' | 'partial' | 'unpaid'
+        $paymentStatusLabelText = match ($paymentStatusComputed) {
+            'paid' => '<span style="color:#166534;font-weight:bold;">LUNAS</span>',
+            'partial' => '<span style="color:#b45309;font-weight:bold;">SEBAGIAN</span>',
+            'unpaid' => '<span style="color:#991b1b;font-weight:bold;">BELUM BAYAR</span>',
+        };
+
+        // Build riwayat pembayaran rows (jika ada)
+        $paymentHistoryRows = '';
+        foreach ($approvedPayments as $idx => $pay) {
+            $payAmountFormatted = number_format((float) $pay->amount_paid, 0, ',', '.');
+            $payDateFormatted = $pay->payment_date ? $pay->payment_date->format('d/m/Y') : '-';
+            $payCode = htmlspecialchars($pay->code ?? '-', ENT_QUOTES);
+            $paymentHistoryRows .= '<tr>'
+                . '<td style="text-align:center;">' . ($idx + 1) . '</td>'
+                . '<td>' . $payCode . '</td>'
+                . '<td style="text-align:center;">' . $payDateFormatted . '</td>'
+                . '<td class="text-right">Rp ' . $payAmountFormatted . '</td>'
+                . '</tr>';
+        }
+        if ($paymentHistoryRows === '') {
+            $paymentHistoryRows = '<tr><td colspan="4" style="text-align:center;color:#666;font-style:italic;padding:10px;">Belum ada pembayaran.</td></tr>';
+        }
 
         // Company info
         $companyName = $company?->name ?? '-';
@@ -710,6 +775,30 @@ class TagihanController extends Controller
     <tr class="total-row">
         <td>GRAND TOTAL</td>
         <td class="text-right">Rp {$grandTotalFormatted}</td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <th colspan="4" style="background:#1e40af;color:#fff;text-align:left;padding:6px;">RIWAYAT PEMBAYARAN</th>
+    </tr>
+    <tr>
+        <th style="width:5%">No.</th>
+        <th style="width:35%">Kode Pembayaran</th>
+        <th style="width:25%">Tgl Bayar</th>
+        <th class="text-right" style="width:35%">Nominal</th>
+    </tr>
+    {$paymentHistoryRows}
+    <tr class="total-row" style="background:#fef3c7;">
+        <td colspan="3" style="text-align:right;">Total Pembayaran (status: paid):</td>
+        <td class="text-right">Rp {$totalPaidFormatted}</td>
+    </tr>
+    <tr class="total-row" style="background:#fee2e2;">
+        <td colspan="3" style="text-align:right;">Sisa yang belum dibayar:</td>
+        <td class="text-right">Rp {$remainingFormatted}</td>
+    </tr>
+    <tr>
+        <td colspan="4" style="text-align:center;padding:6px;font-weight:bold;">Status Pembayaran: {$paymentStatusLabelText}</td>
     </tr>
 </table>
 

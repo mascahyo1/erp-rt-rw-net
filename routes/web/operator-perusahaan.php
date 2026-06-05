@@ -123,6 +123,12 @@ Route::middleware('auth:admin-company')->group(function () {
                 ->name('api.perusahaan-saya.update');
         });
 
+        // Tagihan — AJAX endpoint untuk fetch payment history (approved only)
+        Route::prefix('api')->middleware('permission:tagihan.list')->group(function () {
+            Route::get('/tagihan/{custInternetInvc}/payments', [TagihanController::class, 'paymentsAjax'])
+                ->name('api.tagihan.payments');
+        });
+
         // Role Perusahaan
         Route::middleware('permission:role-perusahaan-op.list')->group(function () {
             Route::get('/role-perusahaan', [RolePerusahaanController::class, 'index'])->name('role-perusahaan.index');
