@@ -592,7 +592,6 @@ class TagihanController extends Controller
         $dueDateFormatted = $invoice->due_date ? $invoice->due_date->format('d F Y') : '-';
         $usageStartFormatted = $invoice->usage_start_date ? $invoice->usage_start_date->format('d/m/Y') : '-';
         $usageEndFormatted = $invoice->usage_end_date ? $invoice->usage_end_date->format('d/m/Y') : '-';
-        $usagePeriodFormatted = $invoice->usage_start_date ? $invoice->usage_start_date->format('F Y') : '-';
         $paidAtFormatted = $invoice->paid_at ? $invoice->paid_at->format('d F Y H:i') : null;
         $updatedAtFormatted = $invoice->updated_at ? $invoice->updated_at->format('d F Y H:i:s') : now()->format('d F Y H:i:s');
         $customerName = $customer->name ?? '-';
@@ -608,7 +607,7 @@ class TagihanController extends Controller
         $taxAmountFormatted = number_format($invoice->tax_amount ?? 0, 0, ',', '.');
         $grandTotalFormatted = number_format($invoice->grand_total ?? 0, 0, ',', '.');
         $paymentStatusText = $invoice->payment_status === 'paid' ? 'Lunas pada ' . $paidAtFormatted : 'Belum Bayar';
-        $description = $invoice->description ?? 'Tanpa keterangan';
+        $description = $invoice->description ?? '-';
 
         // Company info
         $companyName = $company?->name ?? '-';
@@ -697,7 +696,7 @@ class TagihanController extends Controller
         <th class="text-right">Jumlah</th>
     </tr>
     <tr>
-        <td>Total Tagihan Periode {$usagePeriodFormatted}</td>
+        <td>Total Tagihan</td>
         <td class="text-right">Rp {$totalAmountFormatted}</td>
     </tr>
     <tr>
