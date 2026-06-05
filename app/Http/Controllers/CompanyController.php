@@ -99,6 +99,47 @@ class CompanyController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        // Deprecated — Inertia form submit tidak dipakai lagi. Form pakai AJAX.
+        // Lihat CompanyController::storeAjax() untuk implementasi baru.
+        abort(410, 'Use POST /api/operator-saas/perusahaan instead.');
+    }
+
+    public function update(Request $request, Company $company): RedirectResponse
+    {
+        abort(410, 'Use POST /api/operator-saas/perusahaan/{company} instead.');
+    }
+
+    public function destroy(Company $company): RedirectResponse
+    {
+        abort(410, 'Use POST /api/operator-saas/perusahaan/{company}/delete instead.');
+    }
+
+    public function restore(string $id): RedirectResponse
+    {
+        abort(410, 'Use POST /api/operator-saas/perusahaan/{id}/restore instead.');
+    }
+
+    public function bulkDelete(Request $request): RedirectResponse
+    {
+        abort(410, 'Use POST /api/operator-saas/perusahaan/bulk-delete instead.');
+    }
+
+    public function bulkToggleStatus(Request $request): RedirectResponse
+    {
+        abort(410, 'Use POST /api/operator-saas/perusahaan/bulk-status instead.');
+    }
+
+    // ============================================================
+    // AJAX endpoints (POST + JSON) — untuk form submit di Vue
+    // Lihat dokumentasi/CONVENTIONS.md section 2 untuk pattern.
+    // ============================================================
+
+    /**
+     * POST /api/operator-saas/perusahaan
+     * Tambah perusahaan baru via AJAX (multipart/form-data).
+     */
+    public function storeAjax(Request $request): JsonResponse
+    {
         $validated = $request->validate([
             'nama_perusahaan' => ['required', 'string', 'max:255'],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:companies'],
@@ -115,7 +156,7 @@ class CompanyController extends Controller
         $logoPath = $request->hasFile('logo') ? $uploader->processLogo($request->file('logo'), 'companies/logos') : null;
         $logoDarkPath = $request->hasFile('logo_dark') ? $uploader->processLogo($request->file('logo_dark'), 'companies/logos') : null;
 
-        Company::create([
+        $company = Company::create([
             'name' => $validated['nama_perusahaan'],
             'email' => $validated['email'],
             'phone_country_code' => $validated['kode_negara'],
@@ -127,10 +168,19 @@ class CompanyController extends Controller
             'is_active' => $validated['status'] === 'Aktif',
         ]);
 
-        return back()->with('success', 'Perusahaan berhasil ditambahkan.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Perusahaan berhasil ditambahkan.',
+            'data' => $this->transformCompany($company),
+        ], 200);
     }
 
-    public function update(Request $request, Company $company): RedirectResponse
+    /**
+     * POST /api/operator-saas/perusahaan/{company}
+     * Update perusahaan via AJAX (multipart/form-data).
+     * Method POST (bukan PUT) supaya PHP parse multipart body dengan benar.
+     */
+    public function updateAjax(Request $request, Company $company): JsonResponse
     {
         $validated = $request->validate([
             'nama_perusahaan' => ['required', 'string', 'max:255'],
@@ -163,7 +213,6 @@ class CompanyController extends Controller
         $uploader = new FileUploadService();
 
         if ($request->hasFile('logo')) {
-            // Delete old logo
             if ($company->logo) $uploader->deleteFile($company->logo);
             $data['logo'] = $uploader->processLogo($request->file('logo'), 'companies/logos');
         }
@@ -173,45 +222,84 @@ class CompanyController extends Controller
         }
 
         $company->update($data);
+        $company->refresh();
 
-        return back()->with('success', 'Perusahaan berhasil diperbarui.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Perusahaan berhasil diperbarui.',
+            'data' => $this->transformCompany($company),
+        ], 200);
     }
 
-    public function destroy(Company $company): RedirectResponse
+    /**
+     * POST /api/operator-saas/perusahaan/{company}/delete
+     * Soft-delete perusahaan via AJAX.
+     */
+    public function destroyAjax(Company $company): JsonResponse
     {
+        $name = $company->name;
         $company->delete();
 
-        return back()->with('success', 'Perusahaan berhasil dihapus.');
+        return response()->json([
+            'success' => true,
+            'message' => "Perusahaan \"{$name}\" berhasil dihapus.",
+        ], 200);
     }
 
-    public function restore(string $id): RedirectResponse
+    /**
+     * POST /api/operator-saas/perusahaan/{id}/restore
+     * Restore soft-deleted perusahaan via AJAX.
+     */
+    public function restoreAjax(string $id): JsonResponse
     {
         $company = Company::withTrashed()->findOrFail($id);
+        $name = $company->name;
         $company->restore();
 
-        return back()->with('success', 'Perusahaan berhasil dipulihkan.');
+        return response()->json([
+            'success' => true,
+            'message' => "Perusahaan \"{$name}\" berhasil dipulihkan.",
+        ], 200);
     }
 
-    public function bulkDelete(Request $request): RedirectResponse
+    /**
+     * POST /api/operator-saas/perusahaan/bulk-delete
+     * Bulk delete via AJAX.
+     */
+    public function bulkDeleteAjax(Request $request): JsonResponse
     {
         $ids = $request->input('ids', []);
 
         if (empty($ids)) {
-            return back()->with('error', 'Tidak ada perusahaan yang dipilih.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada perusahaan yang dipilih.',
+            ], 422);
         }
 
         $count = Company::whereIn('id', $ids)->delete();
 
-        return back()->with('success', "{$count} perusahaan berhasil dihapus.");
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} perusahaan berhasil dihapus.",
+            'count' => $count,
+        ], 200);
     }
 
-    public function bulkToggleStatus(Request $request): RedirectResponse
+    /**
+     * POST /api/operator-saas/perusahaan/bulk-status
+     * Bulk toggle status via AJAX.
+     */
+    public function bulkToggleStatusAjax(Request $request): JsonResponse
     {
         $ids = $request->input('ids', []);
         $status = $request->input('status');
 
         if (empty($ids) || !in_array($status, ['Aktif', 'Nonaktif'])) {
-            return back()->with('error', 'Data tidak valid.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak valid.',
+            ], 422);
         }
 
         $count = Company::whereIn('id', $ids)->update([
@@ -220,6 +308,34 @@ class CompanyController extends Controller
 
         $label = $status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan';
 
-        return back()->with('success', "{$count} perusahaan berhasil {$label}.");
+        return response()->json([
+            'success' => true,
+            'message' => "{$count} perusahaan berhasil {$label}.",
+            'count' => $count,
+        ], 200);
+    }
+
+    /**
+     * Helper: serialize Company to consistent shape for AJAX responses.
+     */
+    private function transformCompany(Company $c): array
+    {
+        return [
+            'id' => $c->id,
+            'nama_perusahaan' => $c->name,
+            'alamat' => $c->address,
+            'email' => $c->email,
+            'kode_negara' => $c->phone_country_code,
+            'no_telp' => $c->phone_number,
+            'deskripsi' => $c->description,
+            'logo' => $c->logo,
+            'logo_url' => $c->logo_url,
+            'logo_dark' => $c->logo_dark,
+            'logo_dark_url' => $c->logo_dark_url,
+            'status' => $c->is_active ? 'Aktif' : 'Nonaktif',
+            'is_active' => $c->is_active,
+            'created_at' => $c->created_at?->format('Y-m-d H:i'),
+            'updated_at' => $c->updated_at?->format('Y-m-d H:i'),
+        ];
     }
 }

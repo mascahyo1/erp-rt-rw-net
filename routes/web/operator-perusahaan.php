@@ -114,9 +114,14 @@ Route::middleware('auth:admin-company')->group(function () {
         Route::middleware('permission:perusahaan-saya.detail')->group(function () {
             Route::get('/perusahaan-saya', [PerusahaanSayaController::class, 'index'])->name('perusahaan-saya.index');
         });
-        Route::put('/perusahaan-saya/{company}', [PerusahaanSayaController::class, 'update'])
-            ->middleware('permission:perusahaan-saya.edit')
-            ->name('perusahaan-saya.update');
+
+        // Perusahaan Saya — AJAX endpoint (POST + JSON, untuk form submit)
+        // Lihat dokumentasi/CONVENTIONS.md section 2.
+        // (Inertia PUT route sudah dihapus — form sekarang pakai AJAX)
+        Route::prefix('api')->middleware('permission:perusahaan-saya.edit')->group(function () {
+            Route::post('/perusahaan-saya/{company}', [PerusahaanSayaController::class, 'updateAjax'])
+                ->name('api.perusahaan-saya.update');
+        });
 
         // Role Perusahaan
         Route::middleware('permission:role-perusahaan-op.list')->group(function () {

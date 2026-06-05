@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { ref, reactive, computed } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
 import OperatorSaasLayout from '@/Layouts/OperatorSaasLayout.vue';
 import { useToast } from '@/Composables/useToast';
+import { useAjaxForm } from '@/Composables/useAjaxForm';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: OperatorSaasLayout });
@@ -122,20 +123,32 @@ function toggleSelect(id) { const idx = selectedIds.value.indexOf(id); if (idx =
 function bulkDelete() {
   if (selectedIds.value.length === 0) return;
   const count = selectedIds.value.length;
-  router.post('/operator-saas/perusahaan/bulk-delete', { ids: [...selectedIds.value] }, {
-    preserveState: true, preserveScroll: true,
-    onSuccess: () => { selectedIds.value = []; selectAll.value = false; toast.success(`${count} perusahaan berhasil dihapus.`); },
-    onError: () => { toast.error('Gagal menghapus perusahaan.'); },
+  const ids = [...selectedIds.value];
+  submit('/api/operator-saas/perusahaan/bulk-delete', { ids }, {
+    onSuccess: (json) => {
+      selectedIds.value = [];
+      selectAll.value = false;
+      toast.success(json.message || `${count} perusahaan berhasil dihapus.`);
+      // Refresh list
+      fetchData({ page: 1 });
+    },
+    onError: (json) => { toast.error(json.message || 'Gagal menghapus perusahaan.'); },
   });
 }
 
 function bulkSetStatus(status) {
   if (selectedIds.value.length === 0) return;
   const count = selectedIds.value.length;
-  router.post('/operator-saas/perusahaan/bulk-status', { ids: [...selectedIds.value], status }, {
-    preserveState: true, preserveScroll: true,
-    onSuccess: () => { selectedIds.value = []; selectAll.value = false; toast.success(`${count} perusahaan berhasil ${status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan'}.`); },
-    onError: () => { toast.error('Gagal mengubah status perusahaan.'); },
+  const ids = [...selectedIds.value];
+  submit('/api/operator-saas/perusahaan/bulk-status', { ids, status }, {
+    onSuccess: (json) => {
+      selectedIds.value = [];
+      selectAll.value = false;
+      toast.success(json.message || `${count} perusahaan berhasil ${status === 'Aktif' ? 'diaktifkan' : 'dinonaktifkan'}.`);
+      // Refresh list
+      fetchData();
+    },
+    onError: (json) => { toast.error(json.message || 'Gagal mengubah status perusahaan.'); },
   });
 }
 
@@ -152,18 +165,54 @@ const logoLightPreview = ref(null);
 const logoDarkPreview = ref(null);
 const currentEditCompany = ref(null);
 
-const createForm = useForm({ nama_perusahaan: '', email: '', kode_negara: '+62', no_telp: '', alamat: '', deskripsi: '', status: 'Aktif', logo: null, logo_dark: null });
-const editForm = useForm({ id: null, nama_perusahaan: '', email: '', kode_negara: '+62', no_telp: '', alamat: '', deskripsi: '', status: 'Aktif', logo: null, logo_dark: null });
+// Form data — reactive (bukan useForm) karena submit pakai AJAX.
+const createForm = reactive({
+  nama_perusahaan: '', email: '', kode_negara: '+62', no_telp: '', alamat: '', deskripsi: '',
+  status: 'Aktif', logo: null, logo_dark: null,
+});
+const editForm = reactive({
+  id: null, nama_perusahaan: '', email: '', kode_negara: '+62', no_telp: '', alamat: '', deskripsi: '',
+  status: 'Aktif', logo: null, logo_dark: null,
+});
 
-function openCreate() { createForm.reset(); createForm.clearErrors(); logoLightPreview.value = null; logoDarkPreview.value = null; showCreateModal.value = true; }
+// Shared AJAX form composable (satu instance, dipanggil oleh banyak action).
+const { submit, processing, errors } = useAjaxForm();
+
+function resetCreateForm() {
+  createForm.nama_perusahaan = '';
+  createForm.email = '';
+  createForm.kode_negara = '+62';
+  createForm.no_telp = '';
+  createForm.alamat = '';
+  createForm.deskripsi = '';
+  createForm.status = 'Aktif';
+  createForm.logo = null;
+  createForm.logo_dark = null;
+}
+
+function openCreate() {
+  resetCreateForm();
+  clearErrors();
+  logoLightPreview.value = null;
+  logoDarkPreview.value = null;
+  showCreateModal.value = true;
+}
 function openDetail(c) { selectedCompany.value = c; showDetailModal.value = true; }
 function openEdit(c) {
   currentEditCompany.value = c;
-  editForm.reset(); editForm.clearErrors();
-  editForm.id = c.id; editForm.nama_perusahaan = c.nama_perusahaan; editForm.email = c.email;
-  editForm.kode_negara = c.kode_negara; editForm.no_telp = c.no_telp; editForm.alamat = c.alamat;
-  editForm.deskripsi = c.deskripsi || ''; editForm.status = c.status;
-  logoLightPreview.value = null; logoDarkPreview.value = null;
+  editForm.id = c.id;
+  editForm.nama_perusahaan = c.nama_perusahaan;
+  editForm.email = c.email;
+  editForm.kode_negara = c.kode_negara;
+  editForm.no_telp = c.no_telp;
+  editForm.alamat = c.alamat;
+  editForm.deskripsi = c.deskripsi || '';
+  editForm.status = c.status;
+  editForm.logo = null;
+  editForm.logo_dark = null;
+  clearErrors();
+  logoLightPreview.value = null;
+  logoDarkPreview.value = null;
   showEditModal.value = true;
 }
 function openDelete(c) { selectedCompany.value = c; showDeleteModal.value = true; }
@@ -179,36 +228,75 @@ function onLogoDarkChange(e) {
 function clearLogoLight() { createForm.logo = null; editForm.logo = null; logoLightPreview.value = null; }
 function clearLogoDark() { createForm.logo_dark = null; editForm.logo_dark = null; logoDarkPreview.value = null; }
 
-function saveCreate() {
-  createForm.post('/operator-saas/perusahaan', {
-    preserveState: true, preserveScroll: true, forceFormData: true,
-    onSuccess: () => { showCreateModal.value = false; logoLightPreview.value = null; logoDarkPreview.value = null; toast.success('Perusahaan berhasil ditambahkan.'); },
-    onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
+async function saveCreate() {
+  await submit('/api/operator-saas/perusahaan', {
+    nama_perusahaan: createForm.nama_perusahaan,
+    email: createForm.email,
+    kode_negara: createForm.kode_negara,
+    no_telp: createForm.no_telp,
+    alamat: createForm.alamat,
+    deskripsi: createForm.deskripsi,
+    status: createForm.status,
+    logo: createForm.logo,
+    logo_dark: createForm.logo_dark,
+  }, {
+    onSuccess: (json) => {
+      showCreateModal.value = false;
+      logoLightPreview.value = null;
+      logoDarkPreview.value = null;
+      toast.success(json.message || 'Perusahaan berhasil ditambahkan.');
+      fetchData({ page: 1 });
+    },
+    onError: (json) => { toast.error(json.message || 'Validasi gagal. Periksa kembali isian form.'); },
   });
 }
 
-function saveEdit() {
-  editForm.put(`/operator-saas/perusahaan/${editForm.id}`, {
-    preserveState: true, preserveScroll: true, forceFormData: true,
-    onSuccess: () => { showEditModal.value = false; logoLightPreview.value = null; logoDarkPreview.value = null; toast.success('Perusahaan berhasil diperbarui.'); },
-    onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
+async function saveEdit() {
+  await submit(`/api/operator-saas/perusahaan/${editForm.id}`, {
+    nama_perusahaan: editForm.nama_perusahaan,
+    email: editForm.email,
+    kode_negara: editForm.kode_negara,
+    no_telp: editForm.no_telp,
+    alamat: editForm.alamat,
+    deskripsi: editForm.deskripsi,
+    status: editForm.status,
+    logo: editForm.logo,
+    logo_dark: editForm.logo_dark,
+  }, {
+    onSuccess: (json) => {
+      showEditModal.value = false;
+      logoLightPreview.value = null;
+      logoDarkPreview.value = null;
+      toast.success(json.message || 'Perusahaan berhasil diperbarui.');
+      // Update row in list dengan data baru
+      const idx = companiesList.value.findIndex(c => c.id === editForm.id);
+      if (idx !== -1) companiesList.value[idx] = { ...companiesList.value[idx], ...json.data };
+    },
+    onError: (json) => { toast.error(json.message || 'Validasi gagal. Periksa kembali isian form.'); },
   });
 }
 
-function confirmDelete() {
+async function confirmDelete() {
+  const id = selectedCompany.value?.id;
   const name = selectedCompany.value?.nama_perusahaan;
-  router.delete(`/operator-saas/perusahaan/${selectedCompany.value?.id}`, {
-    preserveState: true, preserveScroll: true,
-    onSuccess: () => { showDeleteModal.value = false; toast.success(`Perusahaan "${name}" berhasil dihapus.`); if (companiesList.value.length === 0 && currentPage.value > 1) goToPage(currentPage.value - 1); },
-    onError: () => { toast.error('Gagal menghapus perusahaan.'); },
+  await submit(`/api/operator-saas/perusahaan/${id}/delete`, {}, {
+    onSuccess: (json) => {
+      showDeleteModal.value = false;
+      toast.success(json.message || `Perusahaan "${name}" berhasil dihapus.`);
+      if (companiesList.value.length === 0 && currentPage.value > 1) goToPage(currentPage.value - 1);
+      else fetchData();
+    },
+    onError: (json) => { toast.error(json.message || 'Gagal menghapus perusahaan.'); },
   });
 }
 
-function restoreCompany(c) {
-  router.post(`/operator-saas/perusahaan/${c.id}/restore`, {}, {
-    preserveState: true, preserveScroll: true,
-    onSuccess: () => { toast.success(`Perusahaan "${c.nama_perusahaan}" berhasil dipulihkan.`); },
-    onError: () => { toast.error('Gagal memulihkan perusahaan.'); },
+async function restoreCompany(c) {
+  await submit(`/api/operator-saas/perusahaan/${c.id}/restore`, {}, {
+    onSuccess: (json) => {
+      toast.success(json.message || `Perusahaan "${c.nama_perusahaan}" berhasil dipulihkan.`);
+      fetchData();
+    },
+    onError: (json) => { toast.error(json.message || 'Gagal memulihkan perusahaan.'); },
   });
 }
 </script>
@@ -443,13 +531,13 @@ function restoreCompany(c) {
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Perusahaan <span class="text-red-500">*</span></label>
-                <input v-model="createForm.nama_perusahaan" type="text" placeholder="PT Net Sejahtera" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.nama_perusahaan ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
-                <p v-if="createForm.errors.nama_perusahaan" class="text-red-500 text-xs mt-1">{{ createForm.errors.nama_perusahaan }}</p>
+                <input v-model="createForm.nama_perusahaan" type="text" placeholder="PT Net Sejahtera" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.nama_perusahaan ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
+                <p v-if="errors.nama_perusahaan" class="text-red-500 text-xs mt-1">{{ errors.nama_perusahaan[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
-                <input v-model="createForm.email" type="email" placeholder="info@perusahaan.id" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.email ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
-                <p v-if="createForm.errors.email" class="text-red-500 text-xs mt-1">{{ createForm.errors.email }}</p>
+                <input v-model="createForm.email" type="email" placeholder="info@perusahaan.id" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.email ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
+                <p v-if="errors.email" class="text-red-500 text-xs mt-1">{{ errors.email[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon <span class="text-red-500">*</span></label>
@@ -457,19 +545,19 @@ function restoreCompany(c) {
                   <select v-model="createForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
                     <option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option>
                   </select>
-                  <input v-model="createForm.no_telp" type="text" placeholder="81234567890" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
+                  <input v-model="createForm.no_telp" type="text" placeholder="81234567890" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
                 </div>
-                <p v-if="createForm.errors.no_telp" class="text-red-500 text-xs mt-1">{{ createForm.errors.no_telp }}</p>
+                <p v-if="errors.no_telp" class="text-red-500 text-xs mt-1">{{ errors.no_telp[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat <span class="text-red-500">*</span></label>
-                <textarea v-model="createForm.alamat" rows="2" placeholder="Jl. Merdeka No. 10, Jakarta" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.alamat ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"></textarea>
-                <p v-if="createForm.errors.alamat" class="text-red-500 text-xs mt-1">{{ createForm.errors.alamat }}</p>
+                <textarea v-model="createForm.alamat" rows="2" placeholder="Jl. Merdeka No. 10, Jakarta" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.alamat ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"></textarea>
+                <p v-if="errors.alamat" class="text-red-500 text-xs mt-1">{{ errors.alamat[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label>
-                <textarea v-model="createForm.deskripsi" rows="2" placeholder="Deskripsi singkat perusahaan..." :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.deskripsi ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"></textarea>
-                <p v-if="createForm.errors.deskripsi" class="text-red-500 text-xs mt-1">{{ createForm.errors.deskripsi }}</p>
+                <textarea v-model="createForm.deskripsi" rows="2" placeholder="Deskripsi singkat perusahaan..." :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.deskripsi ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"></textarea>
+                <p v-if="errors.deskripsi" class="text-red-500 text-xs mt-1">{{ errors.deskripsi[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
@@ -493,7 +581,7 @@ function restoreCompany(c) {
                       <p class="text-[10px] text-gray-500 dark:text-gray-400">JPG/PNG/WebP/SVG, maks 2MB</p>
                       <button v-if="logoLightPreview" type="button" @click="clearLogoLight" class="text-[10px] text-red-500 hover:text-red-700">Hapus</button>
                     </div>
-                    <p v-if="createForm.errors.logo" class="text-red-500 text-xs mt-1">{{ createForm.errors.logo }}</p>
+                    <p v-if="errors.logo" class="text-red-500 text-xs mt-1">{{ errors.logo[0] }}</p>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Logo (Mode Gelap)</label>
@@ -506,7 +594,7 @@ function restoreCompany(c) {
                       <p class="text-[10px] text-gray-500 dark:text-gray-400">Versi untuk dark mode</p>
                       <button v-if="logoDarkPreview" type="button" @click="clearLogoDark" class="text-[10px] text-red-500 hover:text-red-700">Hapus</button>
                     </div>
-                    <p v-if="createForm.errors.logo_dark" class="text-red-500 text-xs mt-1">{{ createForm.errors.logo_dark }}</p>
+                    <p v-if="errors.logo_dark" class="text-red-500 text-xs mt-1">{{ errors.logo_dark[0] }}</p>
                   </div>
                 </div>
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Gambar raster (JPG/PNG/WebP) otomatis dikompres ke WebP. File SVG disimpan apa adanya.</p>
@@ -514,7 +602,7 @@ function restoreCompany(c) {
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
               <button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
-              <button type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>Simpan</button>
+              <button type="submit" :disabled="processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>Simpan</button>
             </div>
           </form>
         </div>
@@ -534,13 +622,13 @@ function restoreCompany(c) {
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Perusahaan <span class="text-red-500">*</span></label>
-                <input v-model="editForm.nama_perusahaan" type="text" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.nama_perusahaan ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
-                <p v-if="editForm.errors.nama_perusahaan" class="text-red-500 text-xs mt-1">{{ editForm.errors.nama_perusahaan }}</p>
+                <input v-model="editForm.nama_perusahaan" type="text" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.nama_perusahaan ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
+                <p v-if="errors.nama_perusahaan" class="text-red-500 text-xs mt-1">{{ errors.nama_perusahaan[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
-                <input v-model="editForm.email" type="email" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.email ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
-                <p v-if="editForm.errors.email" class="text-red-500 text-xs mt-1">{{ editForm.errors.email }}</p>
+                <input v-model="editForm.email" type="email" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.email ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
+                <p v-if="errors.email" class="text-red-500 text-xs mt-1">{{ errors.email[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon <span class="text-red-500">*</span></label>
@@ -548,19 +636,19 @@ function restoreCompany(c) {
                   <select v-model="editForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
                     <option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option>
                   </select>
-                  <input v-model="editForm.no_telp" type="text" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
+                  <input v-model="editForm.no_telp" type="text" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
                 </div>
-                <p v-if="editForm.errors.no_telp" class="text-red-500 text-xs mt-1">{{ editForm.errors.no_telp }}</p>
+                <p v-if="errors.no_telp" class="text-red-500 text-xs mt-1">{{ errors.no_telp[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat <span class="text-red-500">*</span></label>
-                <textarea v-model="editForm.alamat" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.alamat ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"></textarea>
-                <p v-if="editForm.errors.alamat" class="text-red-500 text-xs mt-1">{{ editForm.errors.alamat }}</p>
+                <textarea v-model="editForm.alamat" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.alamat ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"></textarea>
+                <p v-if="errors.alamat" class="text-red-500 text-xs mt-1">{{ errors.alamat[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label>
-                <textarea v-model="editForm.deskripsi" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.deskripsi ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"></textarea>
-                <p v-if="editForm.errors.deskripsi" class="text-red-500 text-xs mt-1">{{ editForm.errors.deskripsi }}</p>
+                <textarea v-model="editForm.deskripsi" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.deskripsi ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"></textarea>
+                <p v-if="errors.deskripsi" class="text-red-500 text-xs mt-1">{{ errors.deskripsi[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
@@ -584,7 +672,7 @@ function restoreCompany(c) {
                       <p class="text-[10px] text-gray-500 dark:text-gray-400">JPG/PNG/WebP/SVG, maks 2MB</p>
                       <button v-if="logoLightPreview || currentEditCompany?.logo_url" type="button" @click="clearLogoLight" class="text-[10px] text-red-500 hover:text-red-700">Hapus</button>
                     </div>
-                    <p v-if="editForm.errors.logo" class="text-red-500 text-xs mt-1">{{ editForm.errors.logo }}</p>
+                    <p v-if="errors.logo" class="text-red-500 text-xs mt-1">{{ errors.logo[0] }}</p>
                   </div>
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Logo (Mode Gelap)</label>
@@ -597,7 +685,7 @@ function restoreCompany(c) {
                       <p class="text-[10px] text-gray-500 dark:text-gray-400">Versi untuk dark mode</p>
                       <button v-if="logoDarkPreview || currentEditCompany?.logo_dark_url" type="button" @click="clearLogoDark" class="text-[10px] text-red-500 hover:text-red-700">Hapus</button>
                     </div>
-                    <p v-if="editForm.errors.logo_dark" class="text-red-500 text-xs mt-1">{{ editForm.errors.logo_dark }}</p>
+                    <p v-if="errors.logo_dark" class="text-red-500 text-xs mt-1">{{ errors.logo_dark[0] }}</p>
                   </div>
                 </div>
                 <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-2"><i class="fas fa-info-circle mr-1"></i>Upload file baru untuk mengganti. Gambar raster otomatis dikompres ke WebP, SVG disimpan apa adanya.</p>
@@ -605,7 +693,7 @@ function restoreCompany(c) {
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
               <button type="button" @click="showEditModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
-              <button type="submit" :disabled="editForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Update</button>
+              <button type="submit" :disabled="processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Update</button>
             </div>
           </form>
         </div>

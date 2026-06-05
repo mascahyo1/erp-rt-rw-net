@@ -14,6 +14,9 @@
         @routes
         @vite(['resources/js/app.js', "resources/js/Pages/{$page['component']}.vue"])
         @inertiaHead
+
+        <!-- CSRF token untuk AJAX form submit (lihat CONVENTIONS.md section 2) -->
+        <meta name="csrf-token" content="{{ csrf_token() }}">
     </head>
     <body class="font-sans antialiased">
         @inertia

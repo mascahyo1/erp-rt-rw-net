@@ -86,25 +86,34 @@ Route::middleware(['auth:admin-saas', 'ensure.user.active:admin-saas'])->group(f
         Route::get('/operator-saas/perusahaan', [CompanyController::class, 'index'])
             ->name('operator-saas.perusahaan.index');
     });
-    Route::middleware('permission:perusahaan.create')->group(function () {
-        Route::post('/operator-saas/perusahaan', [CompanyController::class, 'store'])
-            ->name('operator-saas.perusahaan.store');
-    });
-    Route::middleware('permission:perusahaan.edit')->group(function () {
-        Route::put('/operator-saas/perusahaan/{company}', [CompanyController::class, 'update'])
-            ->name('operator-saas.perusahaan.update');
-        Route::post('/operator-saas/perusahaan/bulk-status', [CompanyController::class, 'bulkToggleStatus'])
-            ->name('operator-saas.perusahaan.bulk-status');
-    });
-    Route::middleware('permission:perusahaan.delete')->group(function () {
-        Route::delete('/operator-saas/perusahaan/{company}', [CompanyController::class, 'destroy'])
-            ->name('operator-saas.perusahaan.destroy');
-        Route::post('/operator-saas/perusahaan/bulk-delete', [CompanyController::class, 'bulkDelete'])
-            ->name('operator-saas.perusahaan.bulk-delete');
-    });
-    Route::middleware('permission:perusahaan.restore')->group(function () {
-        Route::post('/operator-saas/perusahaan/{id}/restore', [CompanyController::class, 'restore'])
-            ->name('operator-saas.perusahaan.restore');
+    // (Inertia POST/PUT/DELETE routes untuk Perusahaan dihapus — form sekarang pakai AJAX endpoint di bawah)
+
+    // Perusahaan — AJAX endpoints (POST + JSON, untuk form submit di modal)
+    // Lihat dokumentasi/CONVENTIONS.md section 2.
+    Route::prefix('api')->group(function () {
+        Route::post('/operator-saas/perusahaan', [CompanyController::class, 'storeAjax'])
+            ->middleware('permission:perusahaan.create')
+            ->name('api.operator-saas.perusahaan.store');
+
+        Route::post('/operator-saas/perusahaan/{company}', [CompanyController::class, 'updateAjax'])
+            ->middleware('permission:perusahaan.edit')
+            ->name('api.operator-saas.perusahaan.update');
+
+        Route::post('/operator-saas/perusahaan/{company}/delete', [CompanyController::class, 'destroyAjax'])
+            ->middleware('permission:perusahaan.delete')
+            ->name('api.operator-saas.perusahaan.destroy');
+
+        Route::post('/operator-saas/perusahaan/{id}/restore', [CompanyController::class, 'restoreAjax'])
+            ->middleware('permission:perusahaan.restore')
+            ->name('api.operator-saas.perusahaan.restore');
+
+        Route::post('/operator-saas/perusahaan/bulk-delete', [CompanyController::class, 'bulkDeleteAjax'])
+            ->middleware('permission:perusahaan.delete')
+            ->name('api.operator-saas.perusahaan.bulk-delete');
+
+        Route::post('/operator-saas/perusahaan/bulk-status', [CompanyController::class, 'bulkToggleStatusAjax'])
+            ->middleware('permission:perusahaan.edit')
+            ->name('api.operator-saas.perusahaan.bulk-status');
     });
 
     // Role Perusahaan

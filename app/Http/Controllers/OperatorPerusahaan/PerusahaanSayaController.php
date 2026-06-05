@@ -5,7 +5,7 @@ namespace App\Http\Controllers\OperatorPerusahaan;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Services\FileUploadService;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -28,7 +28,14 @@ class PerusahaanSayaController extends Controller
         ]);
     }
 
-    public function update(Request $request, Company $company): RedirectResponse
+    /**
+     * AJAX update — returns JSON. Used by Vue form via fetch().
+     *
+     * Pattern: POST /operator-perusahaan/api/perusahaan-saya/{company}
+     * - POST (bukan PUT) supaya PHP parse multipart body dengan benar
+     * - Returns { success, message, data } atau 422 { message, errors }
+     */
+    public function updateAjax(Request $request, Company $company): JsonResponse
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -57,7 +64,15 @@ class PerusahaanSayaController extends Controller
         }
 
         $company->update($data);
+        $company->refresh();
 
-        return back()->with('success', 'Data perusahaan berhasil diperbarui.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Data perusahaan berhasil diperbarui.',
+            'data' => array_merge($company->toArray(), [
+                'logo_url' => $company->logo_url,
+                'logo_dark_url' => $company->logo_dark_url,
+            ]),
+        ], 200);
     }
 }

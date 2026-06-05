@@ -1,8 +1,9 @@
 <script setup>
-import { ref } from 'vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref, reactive } from 'vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
 import { useToast } from '@/Composables/useToast';
+import { useAjaxForm } from '@/Composables/useAjaxForm';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: OperatorPerusahaanLayout });
@@ -17,7 +18,8 @@ const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '
 const logoLightPreview = ref(null);
 const logoDarkPreview = ref(null);
 
-const form = useForm({
+// Form data — pakai reactive object (bukan useForm) karena submit pakai AJAX.
+const form = reactive({
   name: props.company?.name || '',
   email: props.company?.email || '',
   phone_country_code: props.company?.phone_country_code || '+62',
@@ -28,18 +30,21 @@ const form = useForm({
   logo_dark: null,
 });
 
+const { submit, processing, errors } = useAjaxForm();
+
+function resetForm() {
+  form.name = props.company?.name || '';
+  form.email = props.company?.email || '';
+  form.phone_country_code = props.company?.phone_country_code || '+62';
+  form.phone_number = props.company?.phone_number || '';
+  form.address = props.company?.address || '';
+  form.description = props.company?.description || '';
+  form.logo = null;
+  form.logo_dark = null;
+}
+
 function enterEdit() {
-  form.defaults({
-    name: props.company?.name || '',
-    email: props.company?.email || '',
-    phone_country_code: props.company?.phone_country_code || '+62',
-    phone_number: props.company?.phone_number || '',
-    address: props.company?.address || '',
-    description: props.company?.description || '',
-    logo: null,
-    logo_dark: null,
-  });
-  form.reset();
+  resetForm();
   logoLightPreview.value = null;
   logoDarkPreview.value = null;
   editMode.value = true;
@@ -73,17 +78,42 @@ function clearLogoDark() {
   logoDarkPreview.value = null;
 }
 
-function submitEdit() {
-  form.put('/operator-perusahaan/perusahaan-saya/' + props.company.id, {
-    forceFormData: true,
-    onSuccess: () => {
-      editMode.value = false;
-      logoLightPreview.value = null;
-      logoDarkPreview.value = null;
-      toast.success('Data perusahaan berhasil diperbarui.');
+async function submitEdit() {
+  // Backend expects these exact field names (controller's validate rules):
+  // name, email, phone_country_code, phone_number, address, description, logo, logo_dark
+  const result = await submit(
+    `/operator-perusahaan/api/perusahaan-saya/${props.company.id}`,
+    {
+      name: form.name,
+      email: form.email,
+      phone_country_code: form.phone_country_code,
+      phone_number: form.phone_number,
+      address: form.address,
+      description: form.description,
+      logo: form.logo,
+      logo_dark: form.logo_dark,
     },
-    onError: () => toast.error('Validasi gagal. Periksa kembali isian form.'),
-  });
+    {
+      onSuccess: (json) => {
+        // Update local company prop with fresh data from server
+        Object.assign(props.company, json.data);
+        editMode.value = false;
+        logoLightPreview.value = null;
+        logoDarkPreview.value = null;
+        toast.success(json.message || 'Data perusahaan berhasil diperbarui.');
+      },
+      onError: (json) => {
+        toast.error(json.message || 'Validasi gagal. Periksa kembali isian form.');
+      },
+    }
+  );
+
+  // result.ok tells us if it succeeded
+  if (result.ok) {
+    // already handled in onSuccess
+  } else {
+    // already handled in onError
+  }
 }
 
 function statusBadge(s) {
@@ -152,12 +182,12 @@ function statusBadge(s) {
       <div v-if="editMode" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 sm:p-8">
         <form class="space-y-4" @submit.prevent="submitEdit" enctype="multipart/form-data">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Perusahaan <span class="text-red-500">*</span></label><input v-model="form.name" type="text" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', form.errors.name ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']" /><p v-if="form.errors.name" class="text-red-500 text-xs mt-1">{{ form.errors.name }}</p></div>
-            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email <span class="text-red-500">*</span></label><input v-model="form.email" type="email" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', form.errors.email ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']" /><p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p></div>
-            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon</label><div class="flex gap-2"><select v-model="form.phone_country_code" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-colors"><option v-for="k in kodeNegaraList" :key="k" :value="k">{{ k }}</option></select><input v-model="form.phone_number" type="text" placeholder="81234567890" class="flex-1 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-colors" /></div><p v-if="form.errors.phone_number" class="text-red-500 text-xs mt-1">{{ form.errors.phone_number }}</p></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Perusahaan <span class="text-red-500">*</span></label><input v-model="form.name" type="text" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.name ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']" /><p v-if="errors.name" class="text-red-500 text-xs mt-1">{{ errors.name[0] }}</p></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email <span class="text-red-500">*</span></label><input v-model="form.email" type="email" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.email ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']" /><p v-if="errors.email" class="text-red-500 text-xs mt-1">{{ errors.email[0] }}</p></div>
+            <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon</label><div class="flex gap-2"><select v-model="form.phone_country_code" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-colors"><option v-for="k in kodeNegaraList" :key="k" :value="k">{{ k }}</option></select><input v-model="form.phone_number" type="text" placeholder="81234567890" class="flex-1 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-colors" /></div><p v-if="errors.phone_number" class="text-red-500 text-xs mt-1">{{ errors.phone_number[0] }}</p></div>
           </div>
-          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat</label><textarea v-model="form.address" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none', form.errors.address ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']"></textarea><p v-if="form.errors.address" class="text-red-500 text-xs mt-1">{{ form.errors.address }}</p></div>
-          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label><textarea v-model="form.description" rows="3" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none', form.errors.description ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']"></textarea><p v-if="form.errors.description" class="text-red-500 text-xs mt-1">{{ form.errors.description }}</p></div>
+          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat</label><textarea v-model="form.address" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none', errors.address ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']"></textarea><p v-if="errors.address" class="text-red-500 text-xs mt-1">{{ errors.address[0] }}</p></div>
+          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label><textarea v-model="form.description" rows="3" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none', errors.description ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']"></textarea><p v-if="errors.description" class="text-red-500 text-xs mt-1">{{ errors.description[0] }}</p></div>
 
           <!-- Logo (Light) -->
           <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -174,7 +204,7 @@ function statusBadge(s) {
                   <p class="text-[10px] text-gray-500 dark:text-gray-400">JPG/PNG/WebP/SVG, maks 2MB. <span class="text-emerald-600 dark:text-emerald-400">Otomatis dikompres</span> ke WebP kecuali SVG.</p>
                   <button v-if="logoLightPreview || props.company?.logo_url" type="button" @click="clearLogoLight" class="text-[10px] text-red-500 hover:text-red-700 dark:hover:text-red-400">Hapus</button>
                 </div>
-                <p v-if="form.errors.logo" class="text-red-500 text-xs mt-1">{{ form.errors.logo }}</p>
+                <p v-if="errors.logo" class="text-red-500 text-xs mt-1">{{ errors.logo[0] }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Logo (Mode Gelap)</label>
@@ -187,14 +217,14 @@ function statusBadge(s) {
                   <p class="text-[10px] text-gray-500 dark:text-gray-400">Versi untuk dark mode. JPG/PNG/WebP/SVG, maks 2MB.</p>
                   <button v-if="logoDarkPreview || props.company?.logo_dark_url" type="button" @click="clearLogoDark" class="text-[10px] text-red-500 hover:text-red-700 dark:hover:text-red-400">Hapus</button>
                 </div>
-                <p v-if="form.errors.logo_dark" class="text-red-500 text-xs mt-1">{{ form.errors.logo_dark }}</p>
+                <p v-if="errors.logo_dark" class="text-red-500 text-xs mt-1">{{ errors.logo_dark[0] }}</p>
               </div>
             </div>
           </div>
 
           <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
             <button type="button" @click="cancelEdit" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
-            <button type="submit" :disabled="form.processing" class="px-6 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i> Simpan Perubahan</button>
+            <button type="submit" :disabled="processing" class="px-6 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i> Simpan Perubahan</button>
           </div>
         </form>
       </div>
