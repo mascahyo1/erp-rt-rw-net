@@ -5,6 +5,7 @@ namespace App\Http\Controllers\OperatorPerusahaan;
 use App\Http\Controllers\Controller;
 use App\Models\CustInternetInvc;
 use App\Models\CustInternet;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -584,7 +585,7 @@ class TagihanController extends Controller
      * AJAX: ambil approved payments (status='paid') untuk 1 invoice.
      * Dipakai oleh Tagihan.vue detail modal untuk tampilkan Riwayat Pembayaran.
      */
-    public function paymentsAjax(CustInternetInvc $custInternetInvc): JsonResponse
+    public function paymentsAjax(CustInternetInvc $custInternetInvc): \Illuminate\Http\JsonResponse
     {
         $payments = $custInternetInvc->approvedPayments()
             ->get()
@@ -617,12 +618,6 @@ class TagihanController extends Controller
         $langganan = $invoice->custInternet;
         $package = $langganan?->internetPackage;
 
-        $statusBadge = match ($invoice->payment_status) {
-            'paid' => '<span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:4px;font-size:12px;">LUNAS</span>',
-            'overdue' => '<span style="background:#fee2e2;color:#991b1b;padding:2px 8px;border-radius:4px;font-size:12px;">JATUH TEMPO</span>',
-            default => '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:4px;font-size:12px;">BELUM BAYAR</span>',
-        };
-
         $dueDateFormatted = $invoice->due_date ? $invoice->due_date->format('d F Y') : '-';
         $usageStartFormatted = $invoice->usage_start_date ? $invoice->usage_start_date->format('d/m/Y') : '-';
         $usageEndFormatted = $invoice->usage_end_date ? $invoice->usage_end_date->format('d/m/Y') : '-';
@@ -640,7 +635,11 @@ class TagihanController extends Controller
         $discountAmountFormatted = number_format($invoice->discount_amount ?? 0, 0, ',', '.');
         $taxAmountFormatted = number_format($invoice->tax_amount ?? 0, 0, ',', '.');
         $grandTotalFormatted = number_format($invoice->grand_total ?? 0, 0, ',', '.');
-        $paymentStatusText = $invoice->payment_status === 'paid' ? 'Lunas pada ' . $paidAtFormatted : 'Belum Bayar';
+        $paymentStatusText = match ($invoice->payment_status_label) {
+            'paid' => 'Lunas pada ' . $paidAtFormatted,
+            'partial' => 'Sudah dibayar sebagian (Total: Rp ' . number_format((float) $invoice->total_paid, 0, ',', '.') . ' dari Rp ' . $grandTotalFormatted . ')',
+            'unpaid' => 'Belum Bayar',
+        };
         $description = $invoice->description ?? '-';
 
         // Riwayat Pembayaran — hanya payment approved (status='paid'), diurutkan terlama → terbaru
@@ -659,19 +658,25 @@ class TagihanController extends Controller
 
         // Build riwayat pembayaran rows (jika ada)
         $paymentHistoryRows = '';
+        $providerMap = ['internal' => 'Internal', 'external' => 'Eksternal'];
+        $methodMap = ['tunai' => 'Tunai', 'transfer_manual' => 'Transfer Manual'];
         foreach ($approvedPayments as $idx => $pay) {
             $payAmountFormatted = number_format((float) $pay->amount_paid, 0, ',', '.');
             $payDateFormatted = $pay->payment_date ? $pay->payment_date->format('d/m/Y') : '-';
             $payCode = htmlspecialchars($pay->code ?? '-', ENT_QUOTES);
+            $payProvider = htmlspecialchars($providerMap[$pay->provider] ?? ($pay->provider ?? '-'), ENT_QUOTES);
+            $payMethod = htmlspecialchars($methodMap[$pay->payment_method] ?? ($pay->payment_method ?? '-'), ENT_QUOTES);
             $paymentHistoryRows .= '<tr>'
                 . '<td style="text-align:center;">' . ($idx + 1) . '</td>'
                 . '<td>' . $payCode . '</td>'
                 . '<td style="text-align:center;">' . $payDateFormatted . '</td>'
+                . '<td style="text-align:center;">' . $payProvider . '</td>'
+                . '<td style="text-align:center;">' . $payMethod . '</td>'
                 . '<td class="text-right">Rp ' . $payAmountFormatted . '</td>'
                 . '</tr>';
         }
         if ($paymentHistoryRows === '') {
-            $paymentHistoryRows = '<tr><td colspan="4" style="text-align:center;color:#666;font-style:italic;padding:10px;">Belum ada pembayaran.</td></tr>';
+            $paymentHistoryRows = '<tr><td colspan="6" style="text-align:center;color:#666;font-style:italic;padding:10px;">Belum ada pembayaran.</td></tr>';
         }
 
         // Company info
@@ -735,7 +740,6 @@ class TagihanController extends Controller
 <table class="invoice-meta-row" cellspacing="0" cellpadding="0">
     <tr>
         <td>{$invoice->invoice_number} - Tagihan Internet {$dueDateFormatted}</td>
-        <td class="status-cell">{$statusBadge}</td>
     </tr>
 </table>
 
@@ -780,25 +784,24 @@ class TagihanController extends Controller
 
 <table>
     <tr>
-        <th colspan="4" style="background:#1e40af;color:#fff;text-align:left;padding:6px;">RIWAYAT PEMBAYARAN</th>
+        <th colspan="6" style="background:#1e40af;color:#fff;text-align:left;padding:6px;">RIWAYAT PEMBAYARAN</th>
     </tr>
     <tr>
-        <th style="width:5%">No.</th>
-        <th style="width:35%">Kode Pembayaran</th>
-        <th style="width:25%">Tgl Bayar</th>
-        <th class="text-right" style="width:35%">Nominal</th>
+        <th style="width:4%">No.</th>
+        <th style="width:25%">Kode Pembayaran</th>
+        <th style="width:15%">Tgl Bayar</th>
+        <th style="width:14%">Provider</th>
+        <th style="width:14%">Metode</th>
+        <th class="text-right" style="width:28%">Nominal</th>
     </tr>
     {$paymentHistoryRows}
     <tr class="total-row" style="background:#fef3c7;">
-        <td colspan="3" style="text-align:right;">Total Pembayaran (status: paid):</td>
+        <td colspan="5" style="text-align:right;">Total Pembayaran (status: paid):</td>
         <td class="text-right">Rp {$totalPaidFormatted}</td>
     </tr>
     <tr class="total-row" style="background:#fee2e2;">
-        <td colspan="3" style="text-align:right;">Sisa yang belum dibayar:</td>
+        <td colspan="5" style="text-align:right;">Sisa yang belum dibayar:</td>
         <td class="text-right">Rp {$remainingFormatted}</td>
-    </tr>
-    <tr>
-        <td colspan="4" style="text-align:center;padding:6px;font-weight:bold;">Status Pembayaran: {$paymentStatusLabelText}</td>
     </tr>
 </table>
 

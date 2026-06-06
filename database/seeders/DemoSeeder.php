@@ -597,27 +597,57 @@ class DemoSeeder extends Seeder
         $unpaidInvoices = \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))
             ->where('payment_status', 'unpaid')
             ->inRandomOrder()
-            ->take(rand(2, 4))
+            ->take(rand(4, 8))
             ->get();
 
+        // 30% unpaid invoice -> skenario "Sebagian" (cicilan/partial paid)
+        // 70% -> skenario "Belum Bayar" (cuma payment pending)
+        $partialThreshold = (int) ceil($unpaidInvoices->count() * 0.3);
+        $idx = 0;
         foreach ($unpaidInvoices as $invoice) {
             $method = $methods[array_rand($methods)];
+            $isPartial = $idx < $partialThreshold;
+            $idx++;
 
-            \App\Models\CustInternetPayment::create([
-                'id' => Str::uuid(),
-                'cust_internet_invc_id' => $invoice->id,
-                'amount_paid' => $invoice->grand_total,
-                'payment_date' => now(),
-                'provider' => 'internal',
-                'payment_method' => $method,
-                'code' => 'BYR-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
-                'status' => 'pending',
-                'status_description' => 'Menunggu persetujuan',
-                'status_reason' => null,
-                'proof_file' => null,
-                'created_at' => now()->subDays(rand(1, 15)),
-                'updated_at' => now()->subDays(rand(1, 15)),
-            ]);
+            if ($isPartial) {
+                // Partial: payment 40-80% dari grand_total, status=paid
+                $partialRatio = rand(40, 80) / 100;
+                $partialAmount = round((float) $invoice->grand_total * $partialRatio);
+                $partialDate = now()->subDays(rand(1, 20));
+
+                \App\Models\CustInternetPayment::create([
+                    'id' => Str::uuid(),
+                    'cust_internet_invc_id' => $invoice->id,
+                    'amount_paid' => $partialAmount,
+                    'payment_date' => $partialDate,
+                    'provider' => 'internal',
+                    'payment_method' => $method,
+                    'code' => 'BYR-' . $partialDate->format('Ymd') . '-' . strtoupper(Str::random(4)),
+                    'status' => 'paid',
+                    'status_description' => 'Pembayaran cicilan diterima',
+                    'status_reason' => 'Disetujui oleh admin',
+                    'proof_file' => null,
+                    'created_at' => $partialDate,
+                    'updated_at' => $partialDate,
+                ]);
+            } else {
+                // Belum bayar: payment pending (tidak dihitung di total_paid)
+                \App\Models\CustInternetPayment::create([
+                    'id' => Str::uuid(),
+                    'cust_internet_invc_id' => $invoice->id,
+                    'amount_paid' => $invoice->grand_total,
+                    'payment_date' => now(),
+                    'provider' => 'internal',
+                    'payment_method' => $method,
+                    'code' => 'BYR-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
+                    'status' => 'pending',
+                    'status_description' => 'Menunggu persetujuan',
+                    'status_reason' => null,
+                    'proof_file' => null,
+                    'created_at' => now()->subDays(rand(1, 15)),
+                    'updated_at' => now()->subDays(rand(1, 15)),
+                ]);
+            }
         }
     }
 
