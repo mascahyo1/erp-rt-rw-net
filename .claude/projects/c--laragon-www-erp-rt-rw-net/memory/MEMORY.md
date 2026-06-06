@@ -1,3 +1,4 @@
 - [Testing dengan headed browser](testing-with-headed-browser.md) — selalu `headless: false` untuk debug visual, jangan silent
 - [Tidak bisa lihat gambar](cant-see-images.md) — selalu minta deskripsi teks untuk masalah visual, jangan iterate tanpa kepastian
 - [DomPDF tidak support flex](dompdf-no-flex.md) — pakai table-based layout untuk semua PDF/Word generation
+- [Workflow teliti](teliti-workflow.md) — confirm → todo list (user verify) → 1 file: screenshot + verify + recheck → lanjut
