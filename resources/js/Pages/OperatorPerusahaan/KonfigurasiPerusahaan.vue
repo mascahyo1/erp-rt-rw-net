@@ -19,7 +19,12 @@ const sortField = ref(props.filters?.sort_field || '');
 const sortDir = ref(props.filters?.sort_dir || 'asc');
 const perPage = ref(props.filters?.per_page ? Number(props.filters.per_page) : 10);
 const perPageOptions = [5, 10, 25, 50, 100];
-const selectedIds = ref([]); const selectAll = ref(false);
+const selectedIds = ref([]);
+// Select-all checkbox: computed so it's always in sync with selectedIds
+const selectAll = computed({
+    get: () => items.value.length > 0 && selectedIds.value.length === items.value.length,
+    set: (val) => { selectedIds.value = val ? items.value.map(c => c.id) : []; }
+});
 const selectedItem = ref(null);
 const showCreateModal = ref(false); const showDetailModal = ref(false);
 const showEditModal = ref(false); const showDeleteModal = ref(false);
@@ -57,8 +62,6 @@ function sort(f) {
   fetchData({ sort_field: sortField.value || undefined, sort_dir: sortDir.value || undefined });
 }
 function sortIcon(f) { if (sortField.value !== f) return 'fa-sort'; return sortDir.value === 'asc' ? 'fa-sort-up' : 'fa-sort-down'; }
-function toggleSelectAll() { selectedIds.value = selectAll.value ? items.value.map(c => c.id) : []; }
-function toggleSelect(id) { const i = selectedIds.value.indexOf(id); i === -1 ? selectedIds.value.push(id) : selectedIds.value.splice(i, 1); }
 function goToPage(p) { fetchData({ page: p }); }
 function changePerPage(n) { perPage.value = n; fetchData({ per_page: n, page: 1 }); }
 function typeBadgeClass(t) {
@@ -95,8 +98,8 @@ function submitEdit() { editForm.put('/operator-perusahaan/konfigurasi-perusahaa
 function openDetail(item) { selectedItem.value = item; detailValueVisible.value = item.type === 'kredensial'; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
 function confirmDelete() { router.delete('/operator-perusahaan/konfigurasi-perusahaan/' + selectedItem.value.id, { onSuccess: () => { showDeleteModal.value = false; fetchData(); toast.success('Konfigurasi berhasil dihapus.'); } }); }
-function bulkDelete() { router.post('/operator-perusahaan/konfigurasi-perusahaan/bulk-delete', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Konfigurasi berhasil dihapus.'); } }); }
-function bulkRestore() { router.post('/operator-perusahaan/konfigurasi-perusahaan/bulk-restore', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Konfigurasi berhasil dipulihkan.'); } }); }
+function bulkDelete() { router.post('/operator-perusahaan/konfigurasi-perusahaan/bulk-delete', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; fetchData(); toast.success('Konfigurasi berhasil dihapus.'); } }); }
+function bulkRestore() { router.post('/operator-perusahaan/konfigurasi-perusahaan/bulk-restore', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; fetchData(); toast.success('Konfigurasi berhasil dipulihkan.'); } }); }
 
 function openImport() { importForm.reset(); showImportModal.value = true; }
 function submitImport() { importing.value = true; importForm.post('/operator-perusahaan/konfigurasi-perusahaan/import', { onSuccess: () => { showImportModal.value = false; importing.value = false; fetchData(); toast.success('Import berhasil.'); }, onError: () => { importing.value = false; toast.error('Import gagal.'); } }); }
@@ -175,8 +178,8 @@ const isTrashedView = computed(() => terhapusFilter.value === 'ya');
         <div class="overflow-x-auto"><table class="w-full text-sm min-w-[800px]"><thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"><tr><th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 text-sky-600" /></th><th @click="sort('key')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Key <i :class="['fas', sortIcon('key'), 'text-[10px]', sortField === 'key' ? 'text-sky-500' : 'text-gray-400']"></i></span></th><th @click="sort('type')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none w-28"><span class="inline-flex items-center gap-1">Tipe <i :class="['fas', sortIcon('type'), 'text-[10px]', sortField === 'type' ? 'text-sky-500' : 'text-gray-400']"></i></span></th><th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Value</th><th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Description</th><th @click="sort('created_at')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">Tgl Dibuat <i :class="['fas', sortIcon('created_at'), 'text-[10px]', sortField === 'created_at' ? 'text-sky-500' : 'text-gray-400']"></i></span></th><th class="px-4 py-3 text-center font-semibold text-gray-600 dark:text-gray-400 w-24">Aksi</th></tr></thead>
         <tbody>
           <tr v-if="items.length === 0"><td colspan="7" class="px-4 py-16 text-center text-gray-400 dark:text-gray-500"><i class="fas fa-inbox text-4xl mb-3 block"></i><span class="text-sm">Tidak ada data konfigurasi</span></td></tr>
-          <tr v-for="item in items" :key="item.id" @click="(e) => { if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('a')) toggleSelect(item.id); }" :class="['border-t border-gray-100 dark:border-gray-700 cursor-pointer transition-colors', item.dihapus ? 'opacity-60' : '', 'hover:bg-gray-50 dark:hover:bg-gray-700/30']">
-            <td class="px-4 py-3" @click.stop><input v-model="selectedIds" :value="item.id" type="checkbox" @change="toggleSelect(item.id)" class="rounded border-gray-300 text-sky-600" /></td>
+          <tr v-for="item in items" :key="item.id" @click="(e) => { if (!e.target.closest('button') && !e.target.closest('input') && !e.target.closest('a')) selectedIds = selectedIds.includes(item.id) ? selectedIds.filter(x => x !== item.id) : [...selectedIds, item.id]; }" :class="['border-t border-gray-100 dark:border-gray-700 cursor-pointer transition-colors', item.dihapus ? 'opacity-60' : '', 'hover:bg-gray-50 dark:hover:bg-gray-700/30']">
+            <td class="px-4 py-3" @click.stop><input v-model="selectedIds" :value="item.id" type="checkbox" class="rounded border-gray-300 text-sky-600" /></td>
             <td class="px-4 py-3"><code class="text-sm font-mono text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{{ item.key }}</code></td>
             <td class="px-4 py-3"><span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', typeBadgeClass(item.type)]"><i :class="['fas mr-1 text-[10px]', typeIcon(item.type)]"></i>{{ typeLabel(item.type) }}</span></td>
             <td class="px-4 py-3">
@@ -193,7 +196,7 @@ const isTrashedView = computed(() => terhapusFilter.value === 'ya');
                 <button v-if="can('konfigurasi-perusahaan.list')" @click="openDetail(item)" title="Detail" class="p-1.5 rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-indigo-900/30"><i class="fas fa-eye"></i></button>
                 <button v-if="can('konfigurasi-perusahaan.edit') && !item.dihapus" @click="openEdit(item)" title="Edit" class="p-1.5 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-amber-900/30"><i class="fas fa-edit"></i></button>
                 <button v-if="can('konfigurasi-perusahaan.delete') && !item.dihapus" @click="openDelete(item)" title="Hapus" class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/30"><i class="fas fa-trash-alt"></i></button>
-                <span v-if="item.dihapus" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" title="Terhapus"><i class="fas fa-trash-alt text-[10px]"></i></span>
+                <span v-if="item.dihapus" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" title="Terhapus"><i class="fas fa-trash-alt text-[10px]"></i><span>Terhapus</span></span>
               </div>
             </td>
           </tr>

@@ -1,5 +1,7 @@
 - [Testing dengan headed browser](testing-with-headed-browser.md) — selalu `headless: false` untuk debug visual, jangan silent
 - [Prioritas testing adalah Playwright](testing-prioritas-playwright.md) — JANGAN jalankan PHPUnit untuk verify UI/Vue; output Playwright benar = semuanya benar
+- [Deep verify, no quick](deep-verify-no-quick.md) — tidak ada "quick verify", pakai `DeepVerify*.cjs` atau `Verify{Specific}.cjs`, cakupan harus menyeluruh
+- [Push setelah commit](push-after-commit.md) — SELALU push ke remote setelah commit (backup cloud)
 - [Tidak bisa lihat gambar](cant-see-images.md) — selalu minta deskripsi teks untuk masalah visual, jangan iterate tanpa kepastian
 - [DomPDF tidak support flex](dompdf-no-flex.md) — pakai table-based layout untuk semua PDF/Word generation
 - [Workflow teliti](teliti-workflow.md) — confirm → todo list (user verify) → 1 file: screenshot + verify + recheck → lanjut
