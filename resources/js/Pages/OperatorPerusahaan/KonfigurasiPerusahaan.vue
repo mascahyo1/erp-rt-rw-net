@@ -27,9 +27,10 @@ const showImportModal = ref(false);
 
 // Value masking state: per-row for datatable, per-modal for create/edit/detail
 const revealedIds = ref(new Set());
-const createValueVisible = ref(true);
-const editValueVisible = ref(false);
 const detailValueVisible = ref(false);
+// Kredensial: toggle input type between "password" (masked) and "text" (visible).
+// Default = password (masked). Click eye to reveal as plain text.
+const kredensialReveal = ref(false);
 
 function buildQuery(o = {}) {
   const p = { ...o };
@@ -87,18 +88,9 @@ const editForm = useForm({ key: '', type: 'text', value: '', description: '' });
 const importForm = useForm({ file: null });
 const importing = ref(false);
 
-// Computed: only kredensial can be hidden via eye toggle. Other types are always visible.
-const valueVisible = computed(() => {
-  const t = (showCreateModal.value ? createForm.type : editForm.type);
-  if (t === 'kredensial') {
-    return showCreateModal.value ? createValueVisible.value : editValueVisible.value;
-  }
-  return true;
-});
-
-function openCreate() { createForm.reset(); createForm.type = 'text'; createValueVisible.value = true; showCreateModal.value = true; }
+function openCreate() { createForm.reset(); createForm.type = 'text'; kredensialReveal.value = false; showCreateModal.value = true; }
 function submitCreate() { createForm.post('/operator-perusahaan/konfigurasi-perusahaan', { onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Konfigurasi berhasil ditambahkan.'); } }); }
-function openEdit(item) { editForm.defaults({ key: item.key, type: item.type, value: item.value, description: item.description || '' }); editForm.reset(); selectedItem.value = item; editValueVisible.value = item.type === 'kredensial'; showEditModal.value = true; }
+function openEdit(item) { editForm.defaults({ key: item.key, type: item.type, value: item.value, description: item.description || '' }); editForm.reset(); selectedItem.value = item; kredensialReveal.value = false; showEditModal.value = true; }
 function submitEdit() { editForm.put('/operator-perusahaan/konfigurasi-perusahaan/' + selectedItem.value.id, { onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Konfigurasi berhasil diperbarui.'); } }); }
 function openDetail(item) { selectedItem.value = item; detailValueVisible.value = item.type === 'kredensial'; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
@@ -242,15 +234,12 @@ const isTrashedView = computed(() => terhapusFilter.value === 'ya');
         <div>
           <div class="flex items-center justify-between mb-1.5">
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value <span class="text-red-500">*</span></label>
-            <button v-if="(showCreateModal ? createForm : editForm).type === 'kredensial'" type="button" @click="showCreateModal ? (createValueVisible = !createValueVisible) : (editValueVisible = !editValueVisible)" :title="(showCreateModal ? createValueVisible : editValueVisible) ? 'Sembunyikan value' : 'Tampilkan value'" class="p-1.5 rounded text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"><i :class="['fas text-xs', (showCreateModal ? createValueVisible : editValueVisible) ? 'fa-eye-slash' : 'fa-eye']"></i></button>
+            <button v-if="(showCreateModal ? createForm : editForm).type === 'kredensial'" type="button" @click="kredensialReveal = !kredensialReveal" :title="kredensialReveal ? 'Sembunyikan value' : 'Tampilkan value'" class="p-1.5 rounded text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"><i :class="['fas text-xs', kredensialReveal ? 'fa-eye-slash' : 'fa-eye']"></i></button>
           </div>
-          <template v-if="valueVisible">
-            <textarea v-if="(showCreateModal ? createForm : editForm).type === 'text' || (showCreateModal ? createForm : editForm).type === 'file'" v-model="(showCreateModal ? createForm : editForm).value" rows="4" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none resize-none" :placeholder="(showCreateModal ? createForm : editForm).type === 'file' ? 'Path file atau URL' : 'Teks bebas'"></textarea>
-            <input v-else-if="(showCreateModal ? createForm : editForm).type === 'number'" :value="(showCreateModal ? createForm : editForm).value" @input="(showCreateModal ? createForm : editForm).value = String($event.target.value)" type="number" step="any" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none" />
-            <select v-else-if="(showCreateModal ? createForm : editForm).type === 'boolean'" :value="(showCreateModal ? createForm : editForm).value" @change="(showCreateModal ? createForm : editForm).value = String($event.target.value)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"><option value="true">true (Ya)</option><option value="false">false (Tidak)</option></select>
-            <input v-else-if="(showCreateModal ? createForm : editForm).type === 'kredensial'" v-model="(showCreateModal ? createForm : editForm).value" type="password" autocomplete="off" placeholder="API key / token / secret" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-rose-500 outline-none" />
-          </template>
-          <div v-else class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-mono text-sm select-none">•••••••••••••••• (disembunyikan - klik eye untuk menampilkan)</div>
+          <textarea v-if="(showCreateModal ? createForm : editForm).type === 'text' || (showCreateModal ? createForm : editForm).type === 'file'" v-model="(showCreateModal ? createForm : editForm).value" rows="4" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none resize-none" :placeholder="(showCreateModal ? createForm : editForm).type === 'file' ? 'Path file atau URL' : 'Teks bebas'"></textarea>
+          <input v-else-if="(showCreateModal ? createForm : editForm).type === 'number'" :value="(showCreateModal ? createForm : editForm).value" @input="(showCreateModal ? createForm : editForm).value = String($event.target.value)" type="number" step="any" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none" />
+          <select v-else-if="(showCreateModal ? createForm : editForm).type === 'boolean'" :value="(showCreateModal ? createForm : editForm).value" @change="(showCreateModal ? createForm : editForm).value = String($event.target.value)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"><option value="true">true (Ya)</option><option value="false">false (Tidak)</option></select>
+          <input v-else-if="(showCreateModal ? createForm : editForm).type === 'kredensial'" v-model="(showCreateModal ? createForm : editForm).value" :type="kredensialReveal ? 'text' : 'password'" autocomplete="off" :placeholder="kredensialReveal ? 'API key / token / secret (visible)' : 'API key / token / secret (masked)'" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-rose-500 outline-none" />
           <p v-if="(showCreateModal ? createForm : editForm).errors.value" class="text-red-500 text-xs mt-1">{{ (showCreateModal ? createForm : editForm).errors.value }}</p>
         </div>
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Description</label><textarea v-model="(showCreateModal ? createForm : editForm).description" rows="2" placeholder="Penjelasan singkat (opsional)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>
