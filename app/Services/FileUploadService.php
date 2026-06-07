@@ -21,7 +21,10 @@ class FileUploadService
         $this->maxWidth = $maxDim;
         $this->maxHeight = $maxDim;
         $this->maxFileSizeKb = (int) \App\Models\SaasConfig::getValue('default_upload_max_file_size_in_kb', 2048);
-        $this->autoCompress = (bool) \App\Models\SaasConfig::getValue('default_auto_compress_file_upload', true);
+        $this->autoCompress = filter_var(
+            \App\Models\SaasConfig::getValue('default_auto_compress_file_upload', true),
+            FILTER_VALIDATE_BOOLEAN
+        );
     }
 
     public function processImage(UploadedFile $file, string $folder = 'general'): ?string

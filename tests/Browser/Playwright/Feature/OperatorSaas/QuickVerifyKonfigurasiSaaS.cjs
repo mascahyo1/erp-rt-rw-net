@@ -64,6 +64,15 @@ async function main() {
         await typeSelect.selectOption('file');
         await page.waitForTimeout(500);
         await shot(page, '05-create-type-file.png');
+        // kredensial — verify password input
+        await typeSelect.selectOption('kredensial');
+        await page.waitForTimeout(500);
+        const isPasswordInput = await page.evaluate(() => {
+            const inputs = document.querySelectorAll('input[type="password"]');
+            return inputs.length;
+        });
+        console.log('  → password input count after type=kredensial:', isPasswordInput);
+        await shot(page, '06-create-type-kredensial.png');
         // close
         await page.keyboard.press('Escape');
         await page.locator('.fa-times').first().click();
@@ -72,12 +81,12 @@ async function main() {
         console.log('  ! Tambah button not found');
     }
 
-    console.log('[4] Apply Boolean filter');
-    const booleanFilter = page.locator('button:has-text("Boolean")').first();
-    if (await booleanFilter.count() > 0) {
-        await booleanFilter.click();
+    console.log('[4] Apply Kredensial filter');
+    const kredFilter = page.locator('button:has-text("Kredensial")').first();
+    if (await kredFilter.count() > 0) {
+        await kredFilter.click();
         await page.waitForTimeout(1500);
-        await shot(page, '06-filter-boolean.png');
+        await shot(page, '07-filter-kredensial.png');
         const resetBtn = page.locator('button:has-text("Reset Filter")');
         if (await resetBtn.count() > 0) {
             await resetBtn.click();
@@ -88,14 +97,14 @@ async function main() {
     console.log('[5] Toggle dark mode');
     await page.evaluate(() => document.documentElement.classList.add('dark'));
     await page.waitForTimeout(800);
-    await shot(page, '07-dark.png');
+    await shot(page, '08-dark.png');
 
     console.log('[6] Open Detail modal in dark');
     const eyeBtn = page.locator('button[title="Detail"]').first();
     if (await eyeBtn.count() > 0) {
         await eyeBtn.click();
         await page.waitForTimeout(800);
-        await shot(page, '08-detail-dark.png');
+        await shot(page, '09-detail-dark.png');
         await page.keyboard.press('Escape');
         await page.locator('.fa-times').first().click();
         await page.waitForTimeout(500);
@@ -106,7 +115,7 @@ async function main() {
     if (await importBtn.count() > 0) {
         await importBtn.click();
         await page.waitForTimeout(800);
-        await shot(page, '09-import-modal.png');
+        await shot(page, '10-import-modal.png');
         await page.keyboard.press('Escape');
         await page.locator('.fa-times').first().click();
         await page.waitForTimeout(500);
@@ -115,7 +124,7 @@ async function main() {
     console.log('[8] Mobile viewport');
     await page.setViewportSize({ width: 390, height: 800 });
     await page.waitForTimeout(500);
-    await shot(page, '10-mobile.png');
+    await shot(page, '11-mobile.png');
 
     console.log('Done.');
     await page.waitForTimeout(2000);

@@ -66,13 +66,14 @@ function typeBadgeClass(t) {
     'file': 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400',
     'number': 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
     'boolean': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+    'kredensial': 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
   }[t] || 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
 }
 function typeIcon(t) {
-  return { text: 'fa-font', file: 'fa-file', number: 'fa-hashtag', boolean: 'fa-toggle-on' }[t] || 'fa-circle';
+  return { text: 'fa-font', file: 'fa-file', number: 'fa-hashtag', boolean: 'fa-toggle-on', kredensial: 'fa-key' }[t] || 'fa-circle';
 }
 function typeLabel(t) {
-  return { text: 'Teks', file: 'File', number: 'Angka', boolean: 'Boolean' }[t] || t;
+  return { text: 'Teks', file: 'File', number: 'Angka', boolean: 'Boolean', kredensial: 'Kredensial' }[t] || t;
 }
 function toggleReveal(id) {
   if (revealedIds.value.has(id)) revealedIds.value.delete(id);
@@ -86,11 +87,20 @@ const editForm = useForm({ key: '', type: 'text', value: '', description: '' });
 const importForm = useForm({ file: null });
 const importing = ref(false);
 
+// Computed: only kredensial can be hidden via eye toggle. Other types are always visible.
+const valueVisible = computed(() => {
+  const t = (showCreateModal.value ? createForm.type : editForm.type);
+  if (t === 'kredensial') {
+    return showCreateModal.value ? createValueVisible.value : editValueVisible.value;
+  }
+  return true;
+});
+
 function openCreate() { createForm.reset(); createForm.type = 'text'; createValueVisible.value = true; showCreateModal.value = true; }
 function submitCreate() { createForm.post('/operator-perusahaan/konfigurasi-perusahaan', { onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Konfigurasi berhasil ditambahkan.'); } }); }
-function openEdit(item) { editForm.defaults({ key: item.key, type: item.type, value: item.value, description: item.description || '' }); editForm.reset(); selectedItem.value = item; editValueVisible.value = false; showEditModal.value = true; }
+function openEdit(item) { editForm.defaults({ key: item.key, type: item.type, value: item.value, description: item.description || '' }); editForm.reset(); selectedItem.value = item; editValueVisible.value = item.type === 'kredensial'; showEditModal.value = true; }
 function submitEdit() { editForm.put('/operator-perusahaan/konfigurasi-perusahaan/' + selectedItem.value.id, { onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Konfigurasi berhasil diperbarui.'); } }); }
-function openDetail(item) { selectedItem.value = item; detailValueVisible.value = false; showDetailModal.value = true; }
+function openDetail(item) { selectedItem.value = item; detailValueVisible.value = item.type === 'kredensial'; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
 function confirmDelete() { router.delete('/operator-perusahaan/konfigurasi-perusahaan/' + selectedItem.value.id, { onSuccess: () => { showDeleteModal.value = false; fetchData(); toast.success('Konfigurasi berhasil dihapus.'); } }); }
 function bulkDelete() { router.post('/operator-perusahaan/konfigurasi-perusahaan/bulk-delete', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Konfigurasi berhasil dihapus.'); } }); }
@@ -150,7 +160,7 @@ const isTrashedView = computed(() => terhapusFilter.value === 'ya');
         <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto flex-wrap">
           <div class="relative w-full sm:w-72"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div><input v-model="searchInput" type="text" placeholder="Cari key atau value..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-sky-500 outline-none" @keydown.enter="applySearch" /><div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5"><button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white" title="Clear"><i class="fas fa-times text-xs"></i></button><button @click="applySearch" class="px-2 py-1 rounded bg-sky-600 text-white hover:bg-sky-700" title="Cari"><i class="fas fa-search text-xs"></i></button></div></div>
           <div class="flex gap-1 flex-wrap">
-            <button v-for="t in [{v:'',l:'Semua'},{v:'text',l:'Teks'},{v:'file',l:'File'},{v:'number',l:'Angka'},{v:'boolean',l:'Boolean'}]" :key="t.v" @click="applyTypeFilter(t.v)" :class="['px-3 py-2 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap', typeFilter === t.v ? 'bg-sky-50 border-sky-300 text-sky-700 dark:bg-sky-900/30 dark:border-sky-700 dark:text-sky-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400']"><i v-if="t.v" :class="['fas mr-1', typeIcon(t.v)]"></i>{{ t.l }}</button>
+            <button v-for="t in [{v:'',l:'Semua'},{v:'text',l:'Teks'},{v:'file',l:'File'},{v:'number',l:'Angka'},{v:'boolean',l:'Boolean'},{v:'kredensial',l:'Kredensial'}]" :key="t.v" @click="applyTypeFilter(t.v)" :class="['px-3 py-2 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap', typeFilter === t.v ? 'bg-sky-50 border-sky-300 text-sky-700 dark:bg-sky-900/30 dark:border-sky-700 dark:text-sky-400' : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400']"><i v-if="t.v" :class="['fas mr-1', typeIcon(t.v)]"></i>{{ t.l }}</button>
           </div>
           <div class="flex gap-1 flex-wrap">
             <button v-for="t in [{v:'tidak',l:'Aktif'},{v:'ya',l:'Terhapus'}]" :key="t.v" @click="applyTerhapusFilter(t.v)" :class="['px-3 py-2 rounded-lg text-xs font-medium border transition-colors whitespace-nowrap', terhapusFilter === t.v ? (t.v === 'ya' ? 'bg-red-50 border-red-300 text-red-700 dark:bg-red-900/30 dark:border-red-700 dark:text-red-400' : 'bg-sky-50 border-sky-300 text-sky-700 dark:bg-sky-900/30 dark:border-sky-700 dark:text-sky-400') : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400']"><i :class="['fas mr-1', t.v === 'ya' ? 'fa-trash-alt' : 'fa-check-circle']"></i>{{ t.l }}</button>
@@ -179,8 +189,9 @@ const isTrashedView = computed(() => terhapusFilter.value === 'ya');
             <td class="px-4 py-3"><span :class="['inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium', typeBadgeClass(item.type)]"><i :class="['fas mr-1 text-[10px]', typeIcon(item.type)]"></i>{{ typeLabel(item.type) }}</span></td>
             <td class="px-4 py-3">
               <div class="flex items-center gap-2 max-w-xs">
-                <code class="font-mono text-xs truncate" :class="revealedIds.has(item.id) ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 select-none'">{{ revealedIds.has(item.id) ? item.value : '••••••••' }}</code>
-                <button @click.stop="toggleReveal(item.id)" :title="revealedIds.has(item.id) ? 'Sembunyikan value' : 'Tampilkan value'" class="shrink-0 p-1 rounded text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"><i :class="['fas text-xs', revealedIds.has(item.id) ? 'fa-eye-slash' : 'fa-eye']"></i></button>
+                <code v-if="item.type === 'kredensial'" class="font-mono text-xs truncate" :class="revealedIds.has(item.id) ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500 select-none'">{{ revealedIds.has(item.id) ? item.value : '••••••••' }}</code>
+                <code v-else class="font-mono text-xs truncate text-gray-900 dark:text-white">{{ item.value }}</code>
+                <button v-if="item.type === 'kredensial'" @click.stop="toggleReveal(item.id)" :title="revealedIds.has(item.id) ? 'Sembunyikan value' : 'Tampilkan value'" class="shrink-0 p-1 rounded text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"><i :class="['fas text-xs', revealedIds.has(item.id) ? 'fa-eye-slash' : 'fa-eye']"></i></button>
               </div>
             </td>
             <td class="px-4 py-3 text-gray-500 dark:text-gray-400 max-w-xs truncate text-xs">{{ item.description || '-' }}</td>
@@ -208,9 +219,11 @@ const isTrashedView = computed(() => terhapusFilter.value === 'ya');
           <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Tipe</label><p><span :class="['inline-flex items-center px-2 py-0.5 rounded text-xs font-medium', typeBadgeClass(selectedItem.type)]"><i :class="['fas mr-1', typeIcon(selectedItem.type)]"></i>{{ typeLabel(selectedItem.type) }}</span></p></div>
         </div>
         <div>
-          <div class="flex items-center justify-between mb-1.5"><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Value</label><button type="button" @click="detailValueVisible = !detailValueVisible" :title="detailValueVisible ? 'Sembunyikan value' : 'Tampilkan value'" class="p-1.5 rounded text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"><i :class="['fas text-xs', detailValueVisible ? 'fa-eye-slash' : 'fa-eye']"></i></button></div>
-          <pre v-if="detailValueVisible" class="font-mono text-sm break-all bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg p-3 whitespace-pre-wrap">{{ selectedItem.value }}</pre>
-          <div v-else class="font-mono text-sm bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 rounded-lg p-3 select-none">••••••••</div>
+          <div v-if="selectedItem.type === 'kredensial'" class="flex items-center justify-between mb-1.5"><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Value</label><button type="button" @click="detailValueVisible = !detailValueVisible" :title="detailValueVisible ? 'Sembunyikan value' : 'Tampilkan value'" class="p-1.5 rounded text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"><i :class="['fas text-xs', detailValueVisible ? 'fa-eye-slash' : 'fa-eye']"></i></button></div>
+          <label v-else class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 block">Value</label>
+          <pre v-if="selectedItem.type !== 'kredensial'" class="font-mono text-sm break-all bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg p-3 whitespace-pre-wrap">{{ selectedItem.value }}</pre>
+          <pre v-else-if="detailValueVisible" class="font-mono text-sm break-all bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg p-3 whitespace-pre-wrap">{{ selectedItem.value }}</pre>
+          <div v-else class="font-mono text-sm bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 rounded-lg p-3 select-none">••••••••••••••••</div>
         </div>
         <div><label class="text-xs font-medium text-gray-500 dark:text-gray-400">Description</label><p class="mt-1 text-sm text-gray-700 dark:text-gray-300 break-words">{{ selectedItem.description || '-' }}</p></div>
         <div class="grid grid-cols-2 gap-3">
@@ -225,15 +238,19 @@ const isTrashedView = computed(() => terhapusFilter.value === 'ya');
 
     <Teleport to="body"><Transition name="modal"><div v-if="showCreateModal || showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = showEditModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i :class="['fas mr-2', showCreateModal ? 'fa-plus text-emerald-500' : 'fa-edit text-amber-500']"></i>{{ showCreateModal ? 'Tambah Konfigurasi' : 'Edit Konfigurasi' }}</h3><button @click="showCreateModal = showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><form class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll" @submit.prevent="showCreateModal ? submitCreate() : submitEdit()">
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Key <span class="text-red-500">*</span></label><input v-model="(showCreateModal ? createForm : editForm).key" type="text" placeholder="Contoh: company.tagline" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none" /><p v-if="(showCreateModal ? createForm : editForm).errors.key" class="text-red-500 text-xs mt-1">{{ (showCreateModal ? createForm : editForm).errors.key }}</p></div>
-        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipe</label><select v-model="(showCreateModal ? createForm : editForm).type" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"><option value="text">Teks</option><option value="file">File</option><option value="number">Angka</option><option value="boolean">Boolean (true/false)</option></select></div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tipe</label><select v-model="(showCreateModal ? createForm : editForm).type" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"><option value="text">Teks</option><option value="file">File</option><option value="number">Angka</option><option value="boolean">Boolean (true/false)</option><option value="kredensial">Kredensial (disembunyikan default)</option></select></div>
         <div>
-          <div class="flex items-center justify-between mb-1.5"><label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value <span class="text-red-500">*</span></label><button type="button" @click="showCreateModal ? (createValueVisible = !createValueVisible) : (editValueVisible = !editValueVisible)" :title="(showCreateModal ? createValueVisible : editValueVisible) ? 'Sembunyikan value' : 'Tampilkan value'" class="p-1.5 rounded text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"><i :class="['fas text-xs', (showCreateModal ? createValueVisible : editValueVisible) ? 'fa-eye-slash' : 'fa-eye']"></i></button></div>
-          <template v-if="showCreateModal ? createValueVisible : editValueVisible">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Value <span class="text-red-500">*</span></label>
+            <button v-if="(showCreateModal ? createForm : editForm).type === 'kredensial'" type="button" @click="showCreateModal ? (createValueVisible = !createValueVisible) : (editValueVisible = !editValueVisible)" :title="(showCreateModal ? createValueVisible : editValueVisible) ? 'Sembunyikan value' : 'Tampilkan value'" class="p-1.5 rounded text-gray-400 hover:text-sky-600 dark:hover:text-sky-400"><i :class="['fas text-xs', (showCreateModal ? createValueVisible : editValueVisible) ? 'fa-eye-slash' : 'fa-eye']"></i></button>
+          </div>
+          <template v-if="valueVisible">
             <textarea v-if="(showCreateModal ? createForm : editForm).type === 'text' || (showCreateModal ? createForm : editForm).type === 'file'" v-model="(showCreateModal ? createForm : editForm).value" rows="4" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none resize-none" :placeholder="(showCreateModal ? createForm : editForm).type === 'file' ? 'Path file atau URL' : 'Teks bebas'"></textarea>
             <input v-else-if="(showCreateModal ? createForm : editForm).type === 'number'" :value="(showCreateModal ? createForm : editForm).value" @input="(showCreateModal ? createForm : editForm).value = String($event.target.value)" type="number" step="any" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-sky-500 outline-none" />
             <select v-else-if="(showCreateModal ? createForm : editForm).type === 'boolean'" :value="(showCreateModal ? createForm : editForm).value" @change="(showCreateModal ? createForm : editForm).value = String($event.target.value)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"><option value="true">true (Ya)</option><option value="false">false (Tidak)</option></select>
+            <input v-else-if="(showCreateModal ? createForm : editForm).type === 'kredensial'" v-model="(showCreateModal ? createForm : editForm).value" type="password" autocomplete="off" placeholder="API key / token / secret" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm font-mono focus:ring-2 focus:ring-rose-500 outline-none" />
           </template>
-          <div v-else class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-mono text-sm select-none">•••••••• (disembunyikan - klik eye untuk menampilkan)</div>
+          <div v-else class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-500 font-mono text-sm select-none">•••••••••••••••• (disembunyikan - klik eye untuk menampilkan)</div>
           <p v-if="(showCreateModal ? createForm : editForm).errors.value" class="text-red-500 text-xs mt-1">{{ (showCreateModal ? createForm : editForm).errors.value }}</p>
         </div>
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Description</label><textarea v-model="(showCreateModal ? createForm : editForm).description" rows="2" placeholder="Penjelasan singkat (opsional)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>

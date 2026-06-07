@@ -69,6 +69,15 @@ async function main() {
         await typeSelect.selectOption('boolean');
         await page.waitForTimeout(500);
         await shot(page, '04-create-type-boolean.png');
+        // kredensial — verify password input
+        await typeSelect.selectOption('kredensial');
+        await page.waitForTimeout(500);
+        const isPasswordInput = await page.evaluate(() => {
+            const inputs = document.querySelectorAll('input[type="password"]');
+            return inputs.length;
+        });
+        console.log('  → password input count after type=kredensial:', isPasswordInput);
+        await shot(page, '05-create-type-kredensial.png');
         // close
         await page.keyboard.press('Escape');
         await page.locator('.fa-times').first().click();

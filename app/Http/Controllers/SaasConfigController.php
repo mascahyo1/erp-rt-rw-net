@@ -23,6 +23,22 @@ class SaasConfigController extends Controller
         };
     }
 
+    /**
+     * Normalize a value for a given type before persisting.
+     * - boolean: always store as 'true' / 'false' string (handles 1/0/true/false/on/off/yes/no).
+     * - number: store as the canonical string form of the number.
+     */
+    private function normalizeValue(string $type, mixed $value): string
+    {
+        if ($type === 'boolean') {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+        }
+        if ($type === 'number') {
+            return (string) (is_numeric($value) ? 0 + $value : $value);
+        }
+        return (string) $value;
+    }
+
     public function index(Request $request): Response
     {
         $query = SaasConfig::query()
@@ -84,11 +100,18 @@ class SaasConfigController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'key' => ['required', 'string', 'max:255', Rule::unique('saas_configs')],
-            'type' => ['required', 'in:text,file,number,boolean'],
+            'key' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('saas_configs', 'key')->whereNull('deleted_at'),
+            ],
+            'type' => ['required', 'in:text,file,number,boolean,kredensial'],
             'value' => ['required', 'string', 'max:65535'],
             'description' => ['nullable', 'string', 'max:65535'],
         ]);
+
+        $validated['value'] = $this->normalizeValue($validated['type'], $validated['value']);
 
         SaasConfig::create($validated);
 
@@ -102,12 +125,16 @@ class SaasConfigController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('saas_configs')->ignore($saasConfig->id),
+                Rule::unique('saas_configs', 'key')
+                    ->ignore($saasConfig->id, 'id')
+                    ->whereNull('deleted_at'),
             ],
-            'type' => ['required', 'in:text,file,number,boolean'],
+            'type' => ['required', 'in:text,file,number,boolean,kredensial'],
             'value' => ['required', 'string', 'max:65535'],
             'description' => ['nullable', 'string', 'max:65535'],
         ]);
+
+        $validated['value'] = $this->normalizeValue($validated['type'], $validated['value']);
 
         $saasConfig->update($validated);
 
@@ -223,7 +250,7 @@ class SaasConfigController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Konfigurasi');
 
-        $headers = ['Key (wajib unique)', 'Type (text|file|number|boolean)', 'Value', 'Description'];
+        $headers = ['Key (wajib unique)', 'Type (text|file|number|boolean|kredensial)', 'Value', 'Description'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -245,6 +272,11 @@ class SaasConfigController extends Controller
         $sheet->setCellValueExplicit('B4', 'boolean', DataType::TYPE_STRING);
         $sheet->setCellValueExplicit('C4', 'false', DataType::TYPE_STRING);
         $sheet->setCellValueExplicit('D4', 'Status mode maintenance platform', DataType::TYPE_STRING);
+
+        $sheet->setCellValueExplicit('A5', 'app.stripe_secret', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('B5', 'kredensial', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('C5', 'sk_live_xxx_REPLACE_ME', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('D5', 'Stripe secret key (disembunyikan default di UI)', DataType::TYPE_STRING);
 
         $filename = 'template-konfigurasi-saas.xlsx';
         $tempPath = storage_path("app/temp/{$filename}");
@@ -275,7 +307,7 @@ class SaasConfigController extends Controller
 
         $success = 0;
         $errors = [];
-        $allowedTypes = ['text', 'file', 'number', 'boolean'];
+        $allowedTypes = ['text', 'file', 'number', 'boolean', 'kredensial'];
         $inserts = [];
 
         foreach ($rows as $i => $row) {
@@ -304,7 +336,7 @@ class SaasConfigController extends Controller
                 'id' => Str::uuid7(),
                 'key' => $key,
                 'type' => $type,
-                'value' => $value,
+                'value' => $this->normalizeValue($type, $value),
                 'description' => $description ?: null,
                 'created_at' => now(),
                 'updated_at' => now(),

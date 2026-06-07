@@ -29,6 +29,22 @@ class KonfigurasiPerusahaanController extends Controller
         return (string) $request->user()->company_id;
     }
 
+    /**
+     * Normalize a value for a given type before persisting.
+     * - boolean: always store as 'true' / 'false' string (handles 1/0/true/false/on/off/yes/no).
+     * - number: store as the canonical string form of the number.
+     */
+    private function normalizeValue(string $type, mixed $value): string
+    {
+        if ($type === 'boolean') {
+            return filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
+        }
+        if ($type === 'number') {
+            return (string) (is_numeric($value) ? 0 + $value : $value);
+        }
+        return (string) $value;
+    }
+
     public function index(Request $request): Response
     {
         $companyId = $this->companyId($request);
@@ -95,11 +111,20 @@ class KonfigurasiPerusahaanController extends Controller
         $companyId = $this->companyId($request);
 
         $validated = $request->validate([
-            'key' => ['required', 'string', 'max:255', Rule::unique('company_configs')->where('company_id', $companyId)],
-            'type' => ['required', 'in:text,file,number,boolean'],
+            'key' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('company_configs', 'key')
+                    ->where('company_id', $companyId)
+                    ->whereNull('deleted_at'),
+            ],
+            'type' => ['required', 'in:text,file,number,boolean,kredensial'],
             'value' => ['required', 'string', 'max:65535'],
             'description' => ['nullable', 'string', 'max:65535'],
         ]);
+
+        $validated['value'] = $this->normalizeValue($validated['type'], $validated['value']);
 
         CompanyConfig::create($validated + ['company_id' => $companyId]);
 
@@ -119,14 +144,17 @@ class KonfigurasiPerusahaanController extends Controller
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('company_configs')
+                Rule::unique('company_configs', 'key')
                     ->where('company_id', $companyId)
-                    ->ignore($companyConfig->id),
+                    ->whereNull('deleted_at')
+                    ->ignore($companyConfig->id, 'id'),
             ],
-            'type' => ['required', 'in:text,file,number,boolean'],
+            'type' => ['required', 'in:text,file,number,boolean,kredensial'],
             'value' => ['required', 'string', 'max:65535'],
             'description' => ['nullable', 'string', 'max:65535'],
         ]);
+
+        $validated['value'] = $this->normalizeValue($validated['type'], $validated['value']);
 
         $companyConfig->update($validated);
 
@@ -245,7 +273,7 @@ class KonfigurasiPerusahaanController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Konfigurasi');
 
-        $headers = ['Key (wajib unique per company)', 'Type (text|file|number|boolean)', 'Value', 'Description'];
+        $headers = ['Key (wajib unique per company)', 'Type (text|file|number|boolean|kredensial)', 'Value', 'Description'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -265,6 +293,11 @@ class KonfigurasiPerusahaanController extends Controller
         $sheet->setCellValueExplicit('B4', 'boolean', DataType::TYPE_STRING);
         $sheet->setCellValueExplicit('C4', 'true', DataType::TYPE_STRING);
         $sheet->setCellValueExplicit('D4', 'Status aktif perusahaan', DataType::TYPE_STRING);
+
+        $sheet->setCellValueExplicit('A5', 'company.mikrotik_api_key', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('B5', 'kredensial', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('C5', 'REPLACE_WITH_YOUR_MIKROTIK_KEY', DataType::TYPE_STRING);
+        $sheet->setCellValueExplicit('D5', 'API key MikroTik (disembunyikan default di UI)', DataType::TYPE_STRING);
 
         $filename = 'template-konfigurasi-perusahaan.xlsx';
         $tempPath = storage_path("app/temp/{$filename}");
@@ -296,7 +329,7 @@ class KonfigurasiPerusahaanController extends Controller
 
         $success = 0;
         $errors = [];
-        $allowedTypes = ['text', 'file', 'number', 'boolean'];
+        $allowedTypes = ['text', 'file', 'number', 'boolean', 'kredensial'];
 
         foreach ($rows as $i => $row) {
             $line = $i + 2;
@@ -325,7 +358,7 @@ class KonfigurasiPerusahaanController extends Controller
                 'company_id' => $companyId,
                 'key' => $key,
                 'type' => $type,
-                'value' => $value,
+                'value' => $this->normalizeValue($type, $value),
                 'description' => $description ?: null,
                 'created_at' => now(),
                 'updated_at' => now(),
