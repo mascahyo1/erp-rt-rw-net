@@ -39,12 +39,31 @@ metadata:
 **Indonesian day names untuk filename (lowercase):**
 senin, selasa, rabu, kamis, jumat, sabtu, minggu
 
+**Prinsip Estimasi JUJUR (jangan over-estimate):**
+
+User pernah complain: "progressnya seharusnya overall lebih rendah". Contoh: pagi saya tulis ~92%, sore user revisi ke ~60%. Lesson: **"Vue page ada" ≠ "fitur work end-to-end". "Backend ✅" ≠ "deep test ✅".**
+
+Rules:
+- Modul dengan Vue page exist TAPI backend data kosong / placeholder → **🟡 50%**, bukan ✅ 100%
+- Modul dengan Backend ✅ UI ✅ Docs ✅ TAPI deep test belum ada → **🟡 75%**, bukan ✅ 100%
+- Modul dengan otomasi yang hanya manual button, TIDAK ADA cron job → **🟡 75%** (otomasi 0% counted separately)
+- Overall % = per-portal weighted average, **JANGAN** ambil rata-rata checklist item (akan terlalu tinggi)
+
+Contoh hitung overall (47 modul):
+- SaaS 10 modul avg 70% = 700
+- Perusahaan 16 modul avg 65% = 1040
+- Karyawan 7 modul avg 20% = 140
+- Customer 5 modul avg 15% = 75
+- Landing 9 modul avg 100% = 900
+- Total: 2855 / 47 = **~60%**
+
 **Cara jawab pertanyaan klien (workflow cepat):**
 - "Progress sampai mana?" → Baca `briefing/report/progress.md` section "Ringkasan Cepat"
 - "Kemarin ngerjain apa?" → `briefing/report/daily/{kemarin Y M D Hari}.md`
 - "Minggu ini?" → `briefing/report/weekly/{Senin minggu ini Y M D Senin}.md`
 - "Status modul X?" → Search di `briefing/report/progress.md` tabel "Detail Per Modul"
 - "Sisa kerja?" → Section "Sisa Kerja (Phase 1 MVP — yang belum selesai)" di progress.md
+- **Setelah jawab progress %, SELALU tanya "ada pertanyaan lain?" atau "butuh detail modul mana?"** — jangan over-promise
 
 **Related memories:**
 - `push-after-commit.md` — backup cloud setiap commit
