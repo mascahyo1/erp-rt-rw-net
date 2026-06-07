@@ -1,0 +1,32 @@
+fix(konfigurasi): detail modal kredensial default masked (bukan revealed)
+
+User feedback: 'modal detail ketika dibuka tipenya kredensial kok langsung
+tampil? harusnya ke mask dulu. cek juga yg operator perusahaan'
+
+Bug:
+- openDetail() set detailValueVisible = item.type === 'kredensial' (TRUE)
+- Ini artinya untuk kredensial, value langsung terbuka tanpa harus klik eye
+- Tidak konsisten dengan table row & form edit/create yang masked by default
+
+Fix (Konfigurasi.vue SaaS + KonfigurasiPerusahaan.vue):
+- openDetail() sekarang set detailValueVisible = false (selalu)
+- Template detail modal sudah punya:
+  * Untuk non-kredensial: value pre langsung visible (tidak ada eye)
+  * Untuk kredensial: bullets + eye toggle, user klik eye untuk reveal
+- Hasil: kredensial di detail modal sekarang masked by default, sama
+  seperti di table row dan form edit
+
+Test (VerifyKonfigurasiDetailKredensialMasked.cjs):
+- Deep verify BOTH halaman (SaaS + Perusahaan) dengan skenario:
+  1. Setup: create kredensial record via Tambah modal
+  2. Table row masking: row punya eye, default bullets, click eye reveal,
+     click eye lagi mask (roundtrip)
+  3. Detail modal masking (BUG FIX): modal terbuka, punya eye button,
+     TIDAK menampilkan pre by default, bullets tampil, eye title
+     'Tampilkan value', icon fa-eye. Click eye: pre dengan secret
+     visible, title 'Sembunyikan value'. Click lagi: masked lagi.
+  4. Regression: non-kred detail modal TIDAK ada eye, value visible langsung
+  5. Cleanup: delete kred record
+- Hasil: 40/40 PASS, 0 FAIL (20 assertion x 2 scenario)
+
+Regression: DeepVerifyKonfigurasiSaaS.cjs 43/43 pass, QuickVerifyKonfigurasiPerusahaan.cjs pass

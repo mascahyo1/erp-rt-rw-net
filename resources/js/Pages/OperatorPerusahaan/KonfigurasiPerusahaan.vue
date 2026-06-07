@@ -95,7 +95,7 @@ function openCreate() { createForm.reset(); createForm.type = 'text'; kredensial
 function submitCreate() { createForm.post('/operator-perusahaan/konfigurasi-perusahaan', { onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Konfigurasi berhasil ditambahkan.'); } }); }
 function openEdit(item) { editForm.defaults({ key: item.key, type: item.type, value: item.value, description: item.description || '' }); editForm.reset(); selectedItem.value = item; kredensialReveal.value = false; showEditModal.value = true; }
 function submitEdit() { editForm.put('/operator-perusahaan/konfigurasi-perusahaan/' + selectedItem.value.id, { onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Konfigurasi berhasil diperbarui.'); } }); }
-function openDetail(item) { selectedItem.value = item; detailValueVisible.value = item.type === 'kredensial'; showDetailModal.value = true; }
+function openDetail(item) { selectedItem.value = item; detailValueVisible.value = false; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
 function confirmDelete() { router.delete('/operator-perusahaan/konfigurasi-perusahaan/' + selectedItem.value.id, { onSuccess: () => { showDeleteModal.value = false; fetchData(); toast.success('Konfigurasi berhasil dihapus.'); } }); }
 function bulkDelete() { router.post('/operator-perusahaan/konfigurasi-perusahaan/bulk-delete', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; fetchData(); toast.success('Konfigurasi berhasil dihapus.'); } }); }
