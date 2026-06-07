@@ -1,5 +1,6 @@
 <script setup>
 import OperatorSaasLayout from '@/Layouts/OperatorSaasLayout.vue';
+import CountryCodeSelect from '@/Components/CountryCodeSelect.vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -11,6 +12,8 @@ const user = page.props.auth.user;
 const form = useForm({
   name: user.name,
   email: user.email,
+  phone_country_code: user.phone_country_code || '+62',
+  phone_number: user.phone_number || '',
   current_password: '',
   password: '',
   password_confirmation: '',
@@ -51,6 +54,18 @@ function submit() {
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
             <input v-model="form.email" type="email" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
             <p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon</label>
+            <div class="flex gap-2">
+              <div class="w-36 shrink-0">
+                <CountryCodeSelect v-model="form.phone_country_code" accent="indigo" />
+              </div>
+              <input v-model="form.phone_number" type="text" inputmode="numeric" placeholder="812xxxxxxxx" class="flex-1 px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none" />
+            </div>
+            <p v-if="form.errors.phone_country_code" class="text-red-500 text-xs mt-1">{{ form.errors.phone_country_code }}</p>
+            <p v-if="form.errors.phone_number" class="text-red-500 text-xs mt-1">{{ form.errors.phone_number }}</p>
           </div>
 
           <div class="border-t border-gray-200 dark:border-gray-700 pt-5">

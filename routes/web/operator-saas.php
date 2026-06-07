@@ -23,10 +23,22 @@ Route::middleware(['auth:admin-saas', 'ensure.user.active:admin-saas'])->group(f
         $user = auth()->user();
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:admin_saas,email,' . $user->id],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'phone_country_code' => ['required', 'string', 'regex:/^\+\d{1,4}$/'],
+            'phone_number' => ['nullable', 'string', 'regex:/^\d{6,15}$/'],
             'current_password' => ['nullable', 'string'],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
+
+        // Manual email uniqueness check (UUID v7 key + model has no $keyType=string set)
+        $emailTaken = \App\Models\AdminSaas::where('email', $data['email'])
+            ->where('id', '!=', $user->id)
+            ->exists();
+        if ($emailTaken) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'email' => ['Email sudah digunakan oleh user lain.'],
+            ]);
+        }
 
         if ($data['password'] ?? null) {
             if (!\Hash::check($data['current_password'], $user->password)) {
@@ -37,6 +49,8 @@ Route::middleware(['auth:admin-saas', 'ensure.user.active:admin-saas'])->group(f
 
         $user->name = $data['name'];
         $user->email = $data['email'];
+        $user->phone_country_code = $data['phone_country_code'];
+        $user->phone_number = $data['phone_number'] ?? null;
         $user->save();
 
         return back()->with('success', 'Profil berhasil diperbarui.');

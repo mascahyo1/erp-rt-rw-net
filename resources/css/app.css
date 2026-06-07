@@ -9,6 +9,9 @@
 /* Font Awesome */
 @import "@fortawesome/fontawesome-free/css/all.css";
 
+/* Flag Icons (lipis/flag-icons) — CDN-free SVG flag icons untuk CountryCodeSelect */
+@import "flag-icons/css/flag-icons.min.css";
+
 /* Custom base styles */
 @layer base {
     body {

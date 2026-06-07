@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
+import CountryCodeSelect from '@/Components/CountryCodeSelect.vue';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
@@ -380,7 +381,7 @@ function confirmDelete() {
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon <span class="text-red-500">*</span></label>
                 <div class="flex gap-2">
-                  <select v-model="createForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-colors"><option v-for="k in kodeNegaraList" :key="k" :value="k">{{ k }}</option></select>
+                  <select v-model="createForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-colors hidden"><option v-for="k in kodeNegaraList" :key="k" :value="k">{{ k }}</option></select><div class="w-36"><CountryCodeSelect v-model="createForm.kode_negara" accent="sky" size="sm" /></div>
                   <input v-model="createForm.no_telp" type="text" placeholder="81234567890" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']" />
                 </div>
                 <p v-if="createForm.errors.no_telp" class="text-red-500 text-xs mt-1">{{ createForm.errors.no_telp }}</p>
@@ -429,7 +430,7 @@ function confirmDelete() {
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon <span class="text-red-500">*</span></label>
                 <div class="flex gap-2">
-                  <select v-model="editForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-colors"><option v-for="k in kodeNegaraList" :key="k" :value="k">{{ k }}</option></select>
+                  <select v-model="editForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-colors hidden"><option v-for="k in kodeNegaraList" :key="k" :value="k">{{ k }}</option></select><div class="w-36"><CountryCodeSelect v-model="editForm.kode_negara" accent="sky" size="sm" /></div>
                   <input v-model="editForm.no_telp" type="text" placeholder="81234567890" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']" />
                 </div>
                 <p v-if="editForm.errors.no_telp" class="text-red-500 text-xs mt-1">{{ editForm.errors.no_telp }}</p>

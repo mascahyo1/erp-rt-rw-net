@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
+import CountryCodeSelect from '@/Components/CountryCodeSelect.vue';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
@@ -10,7 +11,6 @@ defineOptions({ layout: OperatorPerusahaanLayout });
 const page = usePage();
 const toast = useToast();
 const user = computed(() => page.props.auth?.user);
-const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
 
 const editMode = ref(false);
 const showPassword = ref(false);
@@ -113,7 +113,7 @@ function changePassword() {
           <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email <span class="text-red-500">*</span></label><input v-model="profileForm.email" type="email" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white', formErrors.email ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']" /><p v-if="formErrors.email" class="text-red-500 text-xs mt-1">{{ formErrors.email }}</p></div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Negara</label><select v-model="profileForm.phone_country_code" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm"><option v-for="k in kodeNegaraList" :key="k" :value="k">{{ k }}</option></select></div>
+          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Negara</label><CountryCodeSelect v-model="profileForm.phone_country_code" accent="sky" /></div>
           <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">No. HP</label><input v-model="profileForm.phone_number" type="text" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none" /></div>
         </div>
 

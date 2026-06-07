@@ -2,6 +2,7 @@
 import { ref, reactive, computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import OperatorSaasLayout from '@/Layouts/OperatorSaasLayout.vue';
+import CountryCodeSelect from '@/Components/CountryCodeSelect.vue';
 import { useToast } from '@/Composables/useToast';
 import { useAjaxForm } from '@/Composables/useAjaxForm';
 import ToastContainer from '@/Components/ToastContainer.vue';
@@ -542,9 +543,10 @@ async function restoreCompany(c) {
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon <span class="text-red-500">*</span></label>
                 <div class="flex gap-2">
-                  <select v-model="createForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
+                  <select v-model="createForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors hidden">
                     <option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option>
                   </select>
+                  <div class="w-36"><CountryCodeSelect v-model="createForm.kode_negara" accent="indigo" size="sm" /></div>
                   <input v-model="createForm.no_telp" type="text" placeholder="81234567890" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
                 </div>
                 <p v-if="errors.no_telp" class="text-red-500 text-xs mt-1">{{ errors.no_telp[0] }}</p>
@@ -633,9 +635,10 @@ async function restoreCompany(c) {
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon <span class="text-red-500">*</span></label>
                 <div class="flex gap-2">
-                  <select v-model="editForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors">
+                  <select v-model="editForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors hidden">
                     <option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option>
                   </select>
+                  <div class="w-36"><CountryCodeSelect v-model="editForm.kode_negara" accent="indigo" size="sm" /></div>
                   <input v-model="editForm.no_telp" type="text" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
                 </div>
                 <p v-if="errors.no_telp" class="text-red-500 text-xs mt-1">{{ errors.no_telp[0] }}</p>
@@ -738,3 +741,9 @@ async function restoreCompany(c) {
 .dark .modal-scroll::-webkit-scrollbar-thumb { background: #374151; }
 .dark .modal-scroll::-webkit-scrollbar-thumb:hover { background: #4b5563; }
 </style>
+
+
+
+
+
+
