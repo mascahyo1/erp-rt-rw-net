@@ -185,6 +185,22 @@ Route::middleware(['auth:admin-saas', 'ensure.user.active:admin-saas'])->group(f
         Route::post('/operator-saas/konfigurasi/bulk-delete', [SaasConfigController::class, 'bulkDelete'])
             ->name('operator-saas.konfigurasi.bulk-delete');
     });
+    Route::middleware('permission:konfigurasi.restore')->group(function () {
+        Route::post('/operator-saas/konfigurasi/{id}/restore', [SaasConfigController::class, 'restore'])
+            ->name('operator-saas.konfigurasi.restore');
+        Route::post('/operator-saas/konfigurasi/bulk-restore', [SaasConfigController::class, 'bulkRestore'])
+            ->name('operator-saas.konfigurasi.bulk-restore');
+    });
+    Route::middleware('permission:konfigurasi.export')->group(function () {
+        Route::get('/operator-saas/konfigurasi/export', [SaasConfigController::class, 'export'])
+            ->name('operator-saas.konfigurasi.export');
+        Route::get('/operator-saas/konfigurasi/template', [SaasConfigController::class, 'downloadTemplate'])
+            ->name('operator-saas.konfigurasi.template');
+    });
+    Route::middleware('permission:konfigurasi.import')->group(function () {
+        Route::post('/operator-saas/konfigurasi/import', [SaasConfigController::class, 'import'])
+            ->name('operator-saas.konfigurasi.import');
+    });
 
     // Role SaaS
     Route::middleware('permission:role-saas.list')->group(function () {

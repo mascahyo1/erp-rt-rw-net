@@ -36,6 +36,9 @@ enum Permissions: string
     case KonfigurasiCreate = 'konfigurasi.create';
     case KonfigurasiEdit   = 'konfigurasi.edit';
     case KonfigurasiDelete = 'konfigurasi.delete';
+    case KonfigurasiRestore = 'konfigurasi.restore';
+    case KonfigurasiExport = 'konfigurasi.export';
+    case KonfigurasiImport = 'konfigurasi.import';
 
     case RoleSaaSList   = 'role-saas.list';
     case RoleSaaSCreate = 'role-saas.create';
@@ -252,6 +255,9 @@ enum Permissions: string
                 self::KonfigurasiCreate->value,
                 self::KonfigurasiEdit->value,
                 self::KonfigurasiDelete->value,
+                self::KonfigurasiRestore->value,
+                self::KonfigurasiExport->value,
+                self::KonfigurasiImport->value,
                 self::RoleSaaSList->value,
                 self::RoleSaaSCreate->value,
                 self::RoleSaaSEdit->value,
