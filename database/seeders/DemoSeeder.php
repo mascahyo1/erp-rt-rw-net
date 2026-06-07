@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\AdminCompany;
 use App\Models\AdminSaas;
 use App\Models\Company;
+use App\Models\CompanyConfig;
 use App\Models\Customer;
 use App\Models\Employee;
 use App\Models\SaasConfig;
@@ -60,7 +61,7 @@ class DemoSeeder extends Seeder
                 'key' => 'contact.phone',
                 'type' => 'text',
                 'value' => '+62 812-3456-7890',
-                'descripton' => 'Nomor telepon kontak utama halaman Hubungi Kami',
+                'description' => 'Nomor telepon kontak utama halaman Hubungi Kami',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -69,7 +70,7 @@ class DemoSeeder extends Seeder
                 'key' => 'contact.email',
                 'type' => 'text',
                 'value' => 'support@rtrwnet.id',
-                'descripton' => 'Email kontak utama halaman Hubungi Kami',
+                'description' => 'Email kontak utama halaman Hubungi Kami',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -78,7 +79,7 @@ class DemoSeeder extends Seeder
                 'key' => 'contact.address',
                 'type' => 'text',
                 'value' => 'Jl. Teknologi No. 10, Jakarta Selatan, DKI Jakarta 12950',
-                'descripton' => 'Alamat kantor halaman Hubungi Kami',
+                'description' => 'Alamat kantor halaman Hubungi Kami',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -86,8 +87,8 @@ class DemoSeeder extends Seeder
                 'id' => Str::uuid(),
                 'key' => 'contact.working_schedule',
                 'type' => 'text',
-                'value' => "Senin — Jumat: 08:00 — 20:00 WIB\nSabtu: 09:00 — 15:00 WIB",
-                'descripton' => 'Jadwal operasional lengkap (bisa termasuk hari libur, akhir pekan, 24/7)',
+                'value' => "Senin â€” Jumat: 08:00 â€” 20:00 WIB\nSabtu: 09:00 â€” 15:00 WIB",
+                'description' => 'Jadwal operasional lengkap (bisa termasuk hari libur, akhir pekan, 24/7)',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -96,7 +97,7 @@ class DemoSeeder extends Seeder
                 'key' => 'contact.whatsapp',
                 'type' => 'text',
                 'value' => '+62 812-3456-7890',
-                'descripton' => 'Nomor WhatsApp kontak',
+                'description' => 'Nomor WhatsApp kontak',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -105,7 +106,7 @@ class DemoSeeder extends Seeder
                 'key' => 'company.email',
                 'type' => 'text',
                 'value' => 'support@erprtrw.net',
-                'descripton' => 'Email perusahaan untuk halaman error',
+                'description' => 'Email perusahaan untuk halaman error',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -114,7 +115,7 @@ class DemoSeeder extends Seeder
                 'key' => 'company.phone',
                 'type' => 'text',
                 'value' => '+62 851-2345-6789',
-                'descripton' => 'Telepon perusahaan untuk halaman error',
+                'description' => 'Telepon perusahaan untuk halaman error',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -123,7 +124,7 @@ class DemoSeeder extends Seeder
                 'key' => 'contact.email_terms',
                 'type' => 'text',
                 'value' => 'legal@rtrwnet.id',
-                'descripton' => 'Email kontak halaman Syarat & Ketentuan',
+                'description' => 'Email kontak halaman Syarat & Ketentuan',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -132,7 +133,7 @@ class DemoSeeder extends Seeder
                 'key' => 'contact.email_privacy',
                 'type' => 'text',
                 'value' => 'privacy@rtrwnet.id',
-                'descripton' => 'Email kontak halaman Kebijakan Privasi',
+                'description' => 'Email kontak halaman Kebijakan Privasi',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -142,7 +143,7 @@ class DemoSeeder extends Seeder
                 'key' => 'default_upload_max_width_and_height_image',
                 'type' => 'number',
                 'value' => '1920',
-                'descripton' => 'Max width/height for image upload in pixels',
+                'description' => 'Max width/height for image upload in pixels',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -151,7 +152,7 @@ class DemoSeeder extends Seeder
                 'key' => 'default_upload_max_file_size_in_kb',
                 'type' => 'number',
                 'value' => '2048',
-                'descripton' => 'Max file size for upload in KB (2048 = 2MB)',
+                'description' => 'Max file size for upload in KB (2048 = 2MB)',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
@@ -160,15 +161,61 @@ class DemoSeeder extends Seeder
                 'key' => 'default_auto_compress_file_upload',
                 'type' => 'boolean',
                 'value' => '1',
-                'descripton' => 'Auto compress image uploads to WebP (1=enabled, 0=disabled)',
+                'description' => 'Auto compress image uploads to WebP (1=enabled, 0=disabled)',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
         ]);
 
+        // Company-scoped configs (one set per demo company)
         $company1Id = $companies[0]['id'];
         $company2Id = $companies[1]['id'];
         $company3Id = $companies[2]['id'];
+
+        foreach ([$company1Id, $company2Id, $company3Id] as $cid) {
+            CompanyConfig::query()->insert([
+                [
+                    'id' => Str::uuid(),
+                    'company_id' => $cid,
+                    'key' => 'company.tagline',
+                    'type' => 'text',
+                    'value' => 'ISP terpercaya dengan jangkauan luas di kota Anda',
+                    'description' => 'Tagline utama yang ditampilkan di dashboard',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'id' => Str::uuid(),
+                    'company_id' => $cid,
+                    'key' => 'company.max_devices',
+                    'type' => 'number',
+                    'value' => '5',
+                    'description' => 'Maksimum device yang boleh terhubung per pelanggan',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'id' => Str::uuid(),
+                    'company_id' => $cid,
+                    'key' => 'company.is_active',
+                    'type' => 'boolean',
+                    'value' => 'true',
+                    'description' => 'Status aktif perusahaan (true = beroperasi, false = maintenance)',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+                [
+                    'id' => Str::uuid(),
+                    'company_id' => $cid,
+                    'key' => 'company.terms_pdf',
+                    'type' => 'file',
+                    'value' => 'storage/company-configs/' . $cid . '/terms.pdf',
+                    'description' => 'Path file PDF Syarat & Ketentuan',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ],
+            ]);
+        }
         $company4Id = $companies[3]['id'];
         $company5Id = $companies[4]['id'];
 

@@ -2,19 +2,25 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasBlameable;
+use App\Models\Traits\HasSoftDelete;
+use App\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CompanyConfig extends Model
 {
+    use HasUuidV7, HasBlameable, HasSoftDelete;
+
     protected $table = 'company_configs';
 
     protected $fillable = [
+        'id',
         'company_id',
         'key',
         'type',
         'value',
-        'descripton',
+        'description',
     ];
 
     public function company(): BelongsTo
@@ -49,5 +55,3 @@ class CompanyConfig extends Model
         return static::getValue('logo', null, $companyId);
     }
 }
-
-

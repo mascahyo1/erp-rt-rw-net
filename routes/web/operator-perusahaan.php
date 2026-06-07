@@ -221,11 +221,21 @@ Route::middleware('auth:admin-company')->group(function () {
             Route::post('/konfigurasi-perusahaan', [KonfigurasiPerusahaanController::class, 'store'])->name('konfigurasi-perusahaan.store');
         });
         Route::middleware('permission:konfigurasi-perusahaan.edit')->group(function () {
-            Route::put('/konfigurasi-perusahaan/{saasConfig}', [KonfigurasiPerusahaanController::class, 'update'])->name('konfigurasi-perusahaan.update');
+            Route::put('/konfigurasi-perusahaan/{companyConfig}', [KonfigurasiPerusahaanController::class, 'update'])->name('konfigurasi-perusahaan.update');
         });
         Route::middleware('permission:konfigurasi-perusahaan.delete')->group(function () {
-            Route::delete('/konfigurasi-perusahaan/{saasConfig}', [KonfigurasiPerusahaanController::class, 'destroy'])->name('konfigurasi-perusahaan.destroy');
+            Route::delete('/konfigurasi-perusahaan/{companyConfig}', [KonfigurasiPerusahaanController::class, 'destroy'])->name('konfigurasi-perusahaan.destroy');
             Route::post('/konfigurasi-perusahaan/bulk-delete', [KonfigurasiPerusahaanController::class, 'bulkDelete'])->name('konfigurasi-perusahaan.bulkDelete');
+        });
+        Route::middleware('permission:konfigurasi-perusahaan.restore')->group(function () {
+            Route::post('/konfigurasi-perusahaan/bulk-restore', [KonfigurasiPerusahaanController::class, 'bulkRestore'])->name('konfigurasi-perusahaan.bulkRestore');
+        });
+        Route::middleware('permission:konfigurasi-perusahaan.export')->group(function () {
+            Route::get('/konfigurasi-perusahaan/export', [KonfigurasiPerusahaanController::class, 'export'])->name('konfigurasi-perusahaan.export');
+            Route::get('/konfigurasi-perusahaan/template', [KonfigurasiPerusahaanController::class, 'downloadTemplate'])->name('konfigurasi-perusahaan.template');
+        });
+        Route::middleware('permission:konfigurasi-perusahaan.import')->group(function () {
+            Route::post('/konfigurasi-perusahaan/import', [KonfigurasiPerusahaanController::class, 'import'])->name('konfigurasi-perusahaan.import');
         });
 
         // Profil Saya

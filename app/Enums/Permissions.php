@@ -170,6 +170,9 @@ enum Permissions: string
     case KonfigurasiPerusahaanCreate = 'konfigurasi-perusahaan.create';
     case KonfigurasiPerusahaanEdit   = 'konfigurasi-perusahaan.edit';
     case KonfigurasiPerusahaanDelete = 'konfigurasi-perusahaan.delete';
+    case KonfigurasiPerusahaanRestore = 'konfigurasi-perusahaan.restore';
+    case KonfigurasiPerusahaanExport = 'konfigurasi-perusahaan.export';
+    case KonfigurasiPerusahaanImport = 'konfigurasi-perusahaan.import';
 
     // ============================================================
     // KARYAWAN (7 module — 1 view-only + 5 full CRUD + profil)
@@ -367,6 +370,9 @@ enum Permissions: string
                 self::KonfigurasiPerusahaanCreate->value,
                 self::KonfigurasiPerusahaanEdit->value,
                 self::KonfigurasiPerusahaanDelete->value,
+                self::KonfigurasiPerusahaanRestore->value,
+                self::KonfigurasiPerusahaanExport->value,
+                self::KonfigurasiPerusahaanImport->value,
             ],
             'karyawan_perusahaan' => [
                 self::ProfilSayaList->value,

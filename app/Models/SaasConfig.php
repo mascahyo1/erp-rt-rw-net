@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Traits\HasBlameable;
+use App\Models\Traits\HasSoftDelete;
 use App\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Model;
 
 class SaasConfig extends Model
 {
-    use HasUuidV7, HasBlameable;
+    use HasUuidV7, HasBlameable, HasSoftDelete;
 
     protected $table = 'saas_configs';
 
@@ -17,7 +18,7 @@ class SaasConfig extends Model
         'key',
         'type',
         'value',
-        'descripton',
+        'description',
     ];
 
     protected function casts(): array
