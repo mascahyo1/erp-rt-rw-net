@@ -387,71 +387,44 @@ class TagihanController extends Controller
         return back()->with(empty($errors) ? 'success' : 'warning', $msg);
     }
 
-    public function generate(Request $request): RedirectResponse
+    public function generate(Request $request, \App\Services\InvoiceGeneratorService $service): RedirectResponse
     {
         $request->validate([
-            'period_year' => ['required', 'integer', 'min:2020', 'max:2099'],
+            'period_year' => ['required', 'integer', 'min:2020'],
             'period_month' => ['required', 'integer', 'min:1', 'max:12'],
+            'due_date' => ['nullable', 'date'],
         ]);
 
         $companyId = auth()->user()->company_id;
-        $year = $request->input('period_year');
-        $month = $request->input('period_month');
+        $year = (int) $request->input('period_year');
+        $month = (int) $request->input('period_month');
         $dueDate = $request->input('due_date');
 
-        $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
-
-        $langganans = CustInternet::with('customer')
-            ->whereHas('customer', fn($q) => $q->where('company_id', $companyId))
-            ->where('internet_status', 'active')
-            ->whereBetween('billing_cycle_start', [$startDate, $endDate])
-            ->orWhereBetween('billing_cycle_end', [$startDate, $endDate])
-            ->get();
-
-        if ($langganans->isEmpty()) {
-            return back()->with('error', 'Tidak ada langganan aktif untuk periode tersebut.');
+        // Convert due_date string to due_days override (days from end of period)
+        $dueDaysOverride = null;
+        if ($dueDate) {
+            $endOfMonth = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+            $parsed = \Carbon\Carbon::parse($dueDate);
+            $dueDaysOverride = max(0, (int) $endOfMonth->diffInDays($parsed, false));
         }
 
-        $count = 0;
-        $inserts = [];
+        $result = $service->generate($companyId, $year, $month, $dueDaysOverride);
 
-        foreach ($langganans as $langganan) {
-            $existing = CustInternetInvc::where('cust_internet_id', $langganan->id)
-                ->whereMonth('usage_start_date', $month)
-                ->whereYear('usage_start_date', $year)
-                ->exists();
+        $periodLabel = \Carbon\Carbon::create($year, $month, 1)->translatedFormat('F Y');
 
-            if ($existing) continue;
-
-            $grandTotal = $langganan->billing_amount;
-
-            $inserts[] = [
-                'id' => \Illuminate\Support\Str::uuid7(),
-                'cust_internet_id' => $langganan->id,
-                'invoice_number' => 'INV-' . $year . str_pad($month, 2, '0', STR_PAD_LEFT) . '-' . str_pad($count + 1, 4, '0', STR_PAD_LEFT),
-                'usage_start_date' => $startDate->format('Y-m-d'),
-                'usage_end_date' => $endDate->format('Y-m-d'),
-                'total_amount' => $grandTotal,
-                'discount_amount' => 0,
-                'tax_amount' => 0,
-                'grand_total' => $grandTotal,
-                'due_date' => $dueDate ?: $endDate->copy()->addDays(30)->format('Y-m-d'),
-                'payment_status' => 'unpaid',
-                'description' => "Tagihan periode " . $startDate->translatedFormat('F Y'),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-            $count++;
+        if ($result['generated'] === 0 && $result['skipped_existing'] === 0 && $result['skipped_cycle'] === 0) {
+            return back()->with('error', "Tidak ada langganan aktif untuk periode {$periodLabel}.");
         }
 
-        if (!empty($inserts)) {
-            foreach (array_chunk($inserts, 500) as $chunk) {
-                CustInternetInvc::insert($chunk);
-            }
+        $msg = "{$result['generated']} tagihan berhasil digenerate untuk periode {$periodLabel}.";
+        if ($result['skipped_existing'] > 0) {
+            $msg .= " {$result['skipped_existing']} dilewati (sudah ada).";
+        }
+        if ($result['skipped_cycle'] > 0) {
+            $msg .= " {$result['skipped_cycle']} dilewati (cycle non-monthly).";
         }
 
-        return back()->with('success', "{$count} tagihan berhasil digenerate untuk periode " . $startDate->translatedFormat('F Y') . ".");
+        return back()->with('success', $msg);
     }
 
     public function exportPdf(string $id): \Symfony\Component\HttpFoundation\BinaryFileResponse
