@@ -24,7 +24,10 @@ const registerForm = useForm({
 });
 
 const submitLogin = () => {
-    loginForm.post('/login-pelanggan', {
+    loginForm.transform((data) => ({
+        ...data,
+        company_id: selectedCompany.value?.id ?? '',
+    })).post('/login-pelanggan', {
         onFinish: () => loginForm.reset('password'),
     });
 };
@@ -32,7 +35,7 @@ const submitLogin = () => {
 const submitRegister = () => {
     registerForm.transform((data) => ({
         ...data,
-        company_id: selectedCompany.value?.value ?? '',
+        company_id: selectedCompany.value?.id ?? '',
     })).post('/daftar-pelanggan', {
         onFinish: () => registerForm.reset('password', 'password_confirmation'),
     });
@@ -78,8 +81,9 @@ const submitRegister = () => {
 
                             <form v-if="activeTab === 'login'" class="space-y-4" @submit.prevent="submitLogin">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                     <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                                    <p v-if="loginForm.errors.company_id" class="text-red-500 text-xs mt-1">{{ loginForm.errors.company_id }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
@@ -112,8 +116,9 @@ const submitRegister = () => {
 
                             <form v-if="activeTab === 'register'" class="space-y-4" @submit.prevent="submitRegister">
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                     <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                                    <p v-if="registerForm.errors.company_id" class="text-red-500 text-xs mt-1">{{ registerForm.errors.company_id }}</p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Lengkap</label>

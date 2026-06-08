@@ -76,3 +76,38 @@ Route::post('/daftar-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionCont
 
 Route::post('/logout-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionController::class, 'destroy'])
     ->name('employee.logout');
+
+// Public company search endpoint (for login pages)
+Route::get('/api/companies/search', function (\Illuminate\Http\Request $request) {
+    $q = trim((string) $request->query('q', ''));
+    $page = max(1, (int) $request->query('page', 1));
+    $perPage = 10;
+
+    $query = \App\Models\Company::query()->where('is_active', true);
+    if ($q !== '') {
+        $query->where(function ($w) use ($q) {
+            $w->where('name', 'like', '%' . $q . '%')
+              ->orWhere('email', 'like', '%' . $q . '%')
+              ->orWhere('address', 'like', '%' . $q . '%');
+        });
+    }
+
+    $total = (clone $query)->count();
+    $items = $query->orderBy('name')
+        ->skip(($page - 1) * $perPage)
+        ->take($perPage)
+        ->get(['id', 'name', 'email', 'address'])
+        ->map(fn($c) => [
+            'id' => $c->id,
+            'nama' => $c->name,
+            'email' => $c->email,
+            'kota' => $c->address, // address used as 'kota' for backwards compat
+        ]);
+
+    return response()->json([
+        'data' => $items,
+        'hasMore' => ($page * $perPage) < $total,
+        'page' => $page,
+        'total' => $total,
+    ]);
+})->name('api.companies.search');

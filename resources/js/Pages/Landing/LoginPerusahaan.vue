@@ -15,7 +15,10 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post('/login-perusahaan', {
+    form.transform((data) => ({
+        ...data,
+        company_id: selectedCompany.value?.id ?? '',
+    })).post('/login-perusahaan', {
         onFinish: () => form.reset('password'),
     });
 };
@@ -58,8 +61,9 @@ const submit = () => {
 
                         <form class="space-y-4" @submit.prevent="submit">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                 <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
+                                <p v-if="form.errors.company_id" class="text-red-500 text-xs mt-1">{{ form.errors.company_id }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>

@@ -7,3 +7,4 @@
 - [DomPDF tidak support flex](dompdf-no-flex.md) — pakai table-based layout untuk semua PDF/Word generation
 - [Workflow teliti](teliti-workflow.md) — confirm → todo list (user verify) → 1 file: screenshot + verify + recheck → lanjut
 - [Keydown preventDefault blocks input](keydown-preventdefault-blocks-input.md) — document-level keydown handler yang preventDefault() unconditional akan block typing di search input; pakai type() bukan fill() untuk verify
+- **JANGAN PERNAH jalankan PHPUnit** untuk regression check di repo ini — PHPUnit deprecated per CLAUDE.md, existing test ditulis sebelum fix dan akan fail. Selalu pakai Playwright (Node.js) headed. Pelanggaran berulang → user pernah interupt & ingatkan.

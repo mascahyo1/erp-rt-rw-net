@@ -23,10 +23,13 @@ class CustomerSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
+        $data = $request->validate([
+            'company_id' => ['required', 'string', 'exists:companies,id'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        $credentials = ['email' => $data['email'], 'password' => $data['password']];
 
         if (! Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
@@ -34,7 +37,17 @@ class CustomerSessionController extends Controller
             ]);
         }
 
-        if (! Auth::guard('customer')->user()->is_active) {
+        $user = Auth::guard('customer')->user();
+
+        if ($user->company_id !== $data['company_id']) {
+            Auth::guard('customer')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Email tidak terdaftar di perusahaan ini.',
+            ]);
+        }
+
+        if (! $user->is_active) {
             Auth::guard('customer')->logout();
 
             throw ValidationException::withMessages([

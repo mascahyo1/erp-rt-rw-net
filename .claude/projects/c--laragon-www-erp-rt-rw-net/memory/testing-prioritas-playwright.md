@@ -5,7 +5,19 @@ metadata:
   type: feedback
 ---
 
-Untuk verify perubahan di repo ini, **SELALU gunakan Playwright Node.js (headed) sebagai test utama** — JANGAN jalankan `php artisan test` (PHPUnit) untuk cek perubahan UI/Vue/Inertia/Inertia.
+Untuk verify perubahan di repo ini, **SELALU gunakan Playwright Node.js (headed) sebagai test utama** — JANGAN PERNAH jalankan `php artisan test` (PHPUnit) atau `vendor/bin/phpunit` apapun perubahan-nya, kecuali user minta eksplisit untuk backend logic murni.
+
+**PELANGGARAN UMUM YANG SERING KE-ULANG:** "Habis commit fix bugfix, gw run `phpunit` untuk regression check" — **SALAH**. PHPUnit test di repo ini EXISTING (sudah ditulis) dan akan FAIL bukan karena bug, tapi karena:
+1. Test ditulis SEBELUM fix saya (mereka test code lama, gak tau code baru)
+2. Test cuma test 1 layer (biasanya backend only), gak cover UI/Vue
+3. PHPUnit ada 4 test file di `tests/Feature/Auth/` (AdminCompany, AdminSaas, Customer, Employee) yang akan FAIL setelah fix apapun ke auth karena pattern login berubah
+4. CLAUDE.md tegas: "NOT used: PHPUnit Feature/Unit tests (deprecated)"
+
+**Yang benar setelah fix auth/CRUD/UI:**
+- Build: `npm run build`
+- Run custom Playwright verification (e.g., `tests/Browser/Playwright/Feature/result/{Area}/FixTest.cjs`) yang gw tulis sendiri
+- Compare before/after dengan baseline + after screenshots
+- Verify visual via screenshot Read tool
 
 **Why:**
 - Testing utama di repo ini adalah Playwright (lihat `tests/Browser/Playwright/Feature/**/*.cjs`) — `AGENTS.md` sudah tegaskan ini di section "Test runners — use the right one".

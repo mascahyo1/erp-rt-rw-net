@@ -23,10 +23,13 @@ class EmployeeSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
+        $data = $request->validate([
+            'company_id' => ['required', 'string', 'exists:companies,id'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        $credentials = ['email' => $data['email'], 'password' => $data['password']];
 
         if (! Auth::guard('employee')->attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
@@ -34,7 +37,17 @@ class EmployeeSessionController extends Controller
             ]);
         }
 
-        if (! Auth::guard('employee')->user()->is_active) {
+        $user = Auth::guard('employee')->user();
+
+        if ($user->company_id !== $data['company_id']) {
+            Auth::guard('employee')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Email tidak terdaftar di perusahaan ini.',
+            ]);
+        }
+
+        if (! $user->is_active) {
             Auth::guard('employee')->logout();
 
             throw ValidationException::withMessages([

@@ -23,10 +23,13 @@ class AdminCompanySessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
+        $data = $request->validate([
+            'company_id' => ['required', 'string', 'exists:companies,id'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ]);
+
+        $credentials = ['email' => $data['email'], 'password' => $data['password']];
 
         if (! Auth::guard('admin-company')->attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
@@ -34,7 +37,17 @@ class AdminCompanySessionController extends Controller
             ]);
         }
 
-        if (! Auth::guard('admin-company')->user()->is_active) {
+        $user = Auth::guard('admin-company')->user();
+
+        if ($user->company_id !== $data['company_id']) {
+            Auth::guard('admin-company')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Email tidak terdaftar di perusahaan ini.',
+            ]);
+        }
+
+        if (! $user->is_active) {
             Auth::guard('admin-company')->logout();
 
             throw ValidationException::withMessages([
@@ -43,7 +56,7 @@ class AdminCompanySessionController extends Controller
         }
 
         if ($request->hasSession()) {
-            $request->session()->put('auth_id', Auth::guard('admin-company')->user()->getAuthIdentifier());
+            $request->session()->put('auth_id', $user->getAuthIdentifier());
             $request->session()->put('auth_guard', 'admin-company');
             $request->session()->regenerate();
         }
