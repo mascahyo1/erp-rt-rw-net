@@ -1,6 +1,6 @@
 # Project Progress — ERP RT/RW Net
 
-> **Last update:** 2026-06-07 (Minggu) — direvisi user (jangan over-estimate)  
+> **Last update:** 2026-06-08 (Senin) — bug fix CountryCodeSelect, no progress delta  
 > **Source of truth:** File ini adalah satu-satunya sumber kebenaran status modul & progress %.  
 > **Update rule:** Setiap habis commit, file ini + `daily/` + `weekly/` di-update manual.  
 > **Calculation basis:** Per-portal weighted average, dengan checklist (Backend / UI / Test / Docs) per modul.  
@@ -80,7 +80,7 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 | 7 | Role SaaS | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
 | 8 | Admin SaaS | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
 | 9 | Admin Role SaaS | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 10 | Profil Saya | ✅ | ✅ | ➖ | ✅ | 🟡 75% |
+| 10 | Profil Saya | ✅ | ✅ | 🟡 | ✅ | 🟡 75% (search bug fixed 2026-06-08) |
 
 **SaaS Subtotal: ~70%** (Backend+UI+Docs mostly ✅, tapi deep test banyak ❌)
 
@@ -260,6 +260,7 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 | 2026-06-06 | ~90% | Tagihan fix (revisi: ~55% overall) |
 | **2026-06-07 (Minggu pagi)** | **~92%** | **Konfigurasi SaaS/Perusahaan 100%, BRD/PRD v1.1.0** |
 | **2026-06-07 (Minggu sore — REVISI USER)** | **~60%** | **User merevisi: SaaS 70% (deep test unsure), Perusahaan 65% (otomasi gap), Karyawan 20% (login doang), Customer 15% (login doang). Ditambah: otomasi generate invoice cron + cek piutang masih PR banyak.** |
+| 2026-06-08 (Senin) | ~60% | Bug fix CountryCodeSelect: document keydown preventDefault() block typing di search input. Fix affects 4 profil-saya pages + form Admin. 2 commit (fix + memory gotcha). No progress delta (bug fix, bukan fitur baru). Test semua pass, 0 regression. |
 
 ---
 
