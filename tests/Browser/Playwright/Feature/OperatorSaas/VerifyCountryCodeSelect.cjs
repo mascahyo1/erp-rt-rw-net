@@ -117,7 +117,7 @@ async function main() {
     await page.waitForTimeout(500);
     const japanResults = await page.evaluate(() => {
         // Scope to inside dropdown panel only (fixed z-[60] container)
-        const dropdown = document.querySelector('.fixed.z-\\[60\\]');
+        const dropdown = document.querySelector('[data-testid="countrycode-dropdown"]');
         if (!dropdown) return [];
         const items = Array.from(dropdown.querySelectorAll('button')).filter(b => b.querySelector('span.fi'));
         return items.map(i => i.textContent.trim().slice(0, 60));
@@ -133,7 +133,7 @@ async function main() {
     await searchInput.fill('44');
     await page.waitForTimeout(500);
     const dial44Results = await page.evaluate(() => {
-        const dropdown = document.querySelector('.fixed.z-\\[60\\]');
+        const dropdown = document.querySelector('[data-testid="countrycode-dropdown"]');
         if (!dropdown) return [];
         const items = Array.from(dropdown.querySelectorAll('button')).filter(b => b.querySelector('span.fi') && (b.textContent.includes('+44') || b.textContent.includes('+449') || b.textContent.includes('+441')));
         return items.map(i => i.textContent.trim().slice(0, 60));
@@ -149,7 +149,7 @@ async function main() {
     await page.waitForTimeout(500);
     // Click using JS to avoid backdrop interception
     await page.evaluate(() => {
-        const dropdown = document.querySelector('.fixed.z-\\[60\\]');
+        const dropdown = document.querySelector('[data-testid="countrycode-dropdown"]');
         if (!dropdown) return;
         const buttons = Array.from(dropdown.querySelectorAll('button')).filter(b => b.textContent.includes('Indonesia') && b.querySelector('span.fi'));
         if (buttons.length > 0) buttons[0].click();
@@ -174,14 +174,14 @@ async function main() {
     await page.waitForTimeout(500);
     // Click via JS to avoid backdrop
     await page.evaluate(() => {
-        const dropdown = document.querySelector('.fixed.z-\\[60\\]');
+        const dropdown = document.querySelector('[data-testid="countrycode-dropdown"]');
         if (!dropdown) return;
         const buttons = Array.from(dropdown.querySelectorAll('button')).filter(b => b.textContent.includes('Japan') && b.querySelector('span.fi'));
         if (buttons.length > 0) buttons[0].click();
     });
     await page.waitForTimeout(800);
     // Check dropdown is closed
-    const dropdownStillOpen = await page.evaluate(() => !!document.querySelector('.fixed.z-\\[60\\]'));
+    const dropdownStillOpen = await page.evaluate(() => !!document.querySelector('[data-testid="countrycode-dropdown"]'));
     if (dropdownStillOpen) {
         console.log('  ! Dropdown still open, closing via ESC');
         await page.keyboard.press('Escape');
@@ -278,7 +278,7 @@ async function main() {
     await searchInput.fill('indonesia');
     await page.waitForTimeout(500);
     await page.evaluate(() => {
-        const dropdown = document.querySelector('.fixed.z-\\[60\\]');
+        const dropdown = document.querySelector('[data-testid="countrycode-dropdown"]');
         if (!dropdown) return;
         const buttons = Array.from(dropdown.querySelectorAll('button')).filter(b => b.textContent.includes('Indonesia') && b.querySelector('span.fi'));
         if (buttons.length > 0) buttons[0].click();

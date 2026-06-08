@@ -107,7 +107,7 @@ async function main() {
     await searchInput.fill('singapore');
     await page.waitForTimeout(500);
     const searchResult = await page.evaluate(() => {
-        const dropdown = document.querySelector('.fixed.z-\\[60\\]');
+        const dropdown = document.querySelector('[data-testid="countrycode-dropdown"]');
         if (!dropdown) return { count: 0 };
         const items = Array.from(dropdown.querySelectorAll('button')).filter(b => b.querySelector('span.fi'));
         return { count: items.length, first: items[0]?.textContent.trim().slice(0, 60) };

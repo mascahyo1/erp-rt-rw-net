@@ -125,7 +125,7 @@ async function main() {
     await page.screenshot({ path: path.join(RESULT_DIR, '03-search-japan.png'), fullPage: false });
 
     const afterSearch = await page.evaluate(() => {
-        const dropdown = document.querySelector('.fixed.z-\\[60\\]');
+        const dropdown = document.querySelector('[data-testid="countrycode-dropdown"]');
         if (!dropdown) return { error: 'no dropdown' };
         const buttons = Array.from(dropdown.querySelectorAll('button')).filter(b => b.querySelector('span.fi'));
         return {

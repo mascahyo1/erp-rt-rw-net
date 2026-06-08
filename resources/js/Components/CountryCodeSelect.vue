@@ -96,14 +96,18 @@ function onArrowDown(e) {
         }
         return;
     }
-    e.preventDefault();
+    // Only preventDefault for keys we actually handle — regular characters must
+    // pass through to the search input. Otherwise typing "japan" gets blocked.
     if (e.key === 'ArrowDown') {
+        e.preventDefault();
         highlightedIndex.value = Math.min(highlightedIndex.value + 1, filteredCountries.value.length - 1);
         scrollToHighlighted();
     } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
         highlightedIndex.value = Math.max(highlightedIndex.value - 1, 0);
         scrollToHighlighted();
     } else if (e.key === 'Enter') {
+        e.preventDefault();
         if (filteredCountries.value[highlightedIndex.value]) {
             selectCountry(filteredCountries.value[highlightedIndex.value]);
         }
@@ -168,7 +172,7 @@ onBeforeUnmount(() => {
                     v-if="isOpen"
                     data-countrycode-dropdown
                     data-testid="countrycode-dropdown"
-                    class="fixed inset-0 z-[60] flex items-start justify-center pt-[12vh] px-4"
+                    class="fixed inset-0 z-60 flex items-start justify-center pt-[12vh] px-4"
                     @click.self="close"
                 >
                     <div class="fixed inset-0 bg-black/30 backdrop-blur-[1px]" @click="close"></div>
