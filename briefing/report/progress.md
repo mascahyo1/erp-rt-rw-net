@@ -93,7 +93,7 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 | 1 | Dashboard | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
 | 2 | Perusahaan Saya | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
 | 3 | Daftar Paket | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
-| 4 | Customer | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
+| 4 | Customer | ✅ | ✅ | ✅ | ✅ | ✅ 100% (height/overflow fix 2026-06-08) |
 | 5 | Langganan Customer | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
 | 6 | Tagihan (CRUD) | ✅ | ✅ | 🟡 | ✅ | 🟡 88% |
 | 6a | Tagihan Generate (manual) | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
@@ -261,6 +261,7 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 | **2026-06-07 (Minggu pagi)** | **~92%** | **Konfigurasi SaaS/Perusahaan 100%, BRD/PRD v1.1.0** |
 | **2026-06-07 (Minggu sore — REVISI USER)** | **~60%** | **User merevisi: SaaS 70% (deep test unsure), Perusahaan 65% (otomasi gap), Karyawan 20% (login doang), Customer 15% (login doang). Ditambah: otomasi generate invoice cron + cek piutang masih PR banyak.** |
 | 2026-06-08 (Senin) | ~60% | Bug fix CountryCodeSelect: document keydown preventDefault() block typing di search input. Fix affects 4 profil-saya pages + form Admin. 2 commit (fix + memory gotcha). No progress delta (bug fix, bukan fitur baru). Test semua pass, 0 regression. |
+| 2026-06-08 (Senin, siang) | ~60% | UI fix Customer.vue: CountryCodeSelect height mismatch (30 vs 42px) di desktop + horizontal overflow 93px di mobile. 1 commit, 1 file. Pattern fix (size default + w responsive + min-w-0) bisa di-replicate ke 4 profil-saya + form Admin lain. Carry-over: apply ke page lain. |
 
 ---
 
