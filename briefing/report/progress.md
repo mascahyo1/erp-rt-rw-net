@@ -97,7 +97,7 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 | 5 | Langganan Customer | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
 | 6 | Tagihan (CRUD) | ✅ | ✅ | 🟡 | ✅ | 🟡 88% |
 | 6a | Tagihan Generate (manual) | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 6b | Tagihan Otomasi (cron) | ❌ | ❌ | ❌ | 🟡 | ❌ 0% |
+| 6b | Tagihan Otomasi (cron) | ✅ | ✅ | ❌ | 🟡 | 🟡 75% (Day 1 artisan+scheduler done, Day 2-3 piutang+widget+UI carry-over) |
 | 6c | Tagihan Piutang Report | ❌ | ❌ | ❌ | ❌ | ❌ 0% |
 | 7 | Insentif | ✅ | ✅ | 🟡 | ✅ | 🟡 75% |
 | 8 | Riwayat Insentif | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
@@ -264,6 +264,7 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 | 2026-06-08 (Senin, siang) | ~60% | UI fix Customer.vue: CountryCodeSelect height mismatch (30 vs 42px) di desktop + horizontal overflow 93px di mobile. 1 commit, 1 file. Pattern fix (size default + w responsive + min-w-0) bisa di-replicate ke 4 profil-saya + form Admin lain. Carry-over: apply ke page lain. |
 | 2026-06-08 (Senin, sore) | ~60% | UI fix Customer.vue comprehensive: top bar responsive (mobile: tombol full-width stacked, single line) + 5 modal responsive (padding px-4 sm:px-6, title text-base sm:text-lg, footer flex-col-reverse). 5 viewport × 2 theme × 5 modal tested, 0 overflow issues, no regression. CRUD 19/20 PASS. Pattern fix bisa di-replicate ke 5 page lain (Karyawan, AdminPerusahaan, AdminSaaS, Perusahaan, AdminRolePerusahaan). |
 | 2026-06-08 (Senin, sore+) | ~60% | **FATAL security fix** company selection bypass: 3 login views tidak kirim company_id + 3 controller tidak validasi + CompanySearchInput pakai hardcoded fake data (id: 1,2,3) bukan UUID real. Exploit: user bisa login ke company manapun dengan email+password valid. Fix: 3 views add company_id via transform() + 3 controller add validation+match user.company_id + CompanySearchInput fetch dari real API + new endpoint GET /api/companies/search. Test 9/10 PASS (T1/T2/T4/T5 blocked, T3 correct company→dashboard, T6 SaaS no regression). |
+| 2026-06-08 (Senin, malm) | ~60% | **Day 1 Otomasi Invoice**: InvoiceGeneratorService (reusable) + GenerateInvoicesCommand (artisan, --month/--due-days/--company) + scheduler (monthlyOn tgl 1 jam 00:00) + TagihanController refactored pakai service + hapus max=2099. 2 Migrations: add billing columns to cust_internets + drop unique invoice_number. Test: CLI 4/4 PASS (T1 idempotent 34 skipped, T2 new month 34 generated, T3 --due-days=14 due=2026-09-14, T4 --company scope 1 company) + UI 5/5 PASS (Generate button → modal → fill → submit → toast → INV-202610 in table). |
 
 ---
 
