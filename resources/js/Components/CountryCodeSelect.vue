@@ -137,6 +137,8 @@ onBeforeUnmount(() => {
             ref="triggerRef"
             type="button"
             :id="inputId"
+            name="countrycode-trigger"
+            data-testid="countrycode-trigger"
             @click="toggle"
             @keydown="onArrowDown"
             :disabled="disabled"
@@ -165,11 +167,13 @@ onBeforeUnmount(() => {
                 <div
                     v-if="isOpen"
                     data-countrycode-dropdown
+                    data-testid="countrycode-dropdown"
                     class="fixed inset-0 z-[60] flex items-start justify-center pt-[12vh] px-4"
                     @click.self="close"
                 >
                     <div class="fixed inset-0 bg-black/30 backdrop-blur-[1px]" @click="close"></div>
                     <div
+                        data-testid="countrycode-dropdown-panel"
                         :class="[
                             'relative w-full max-w-md max-h-[60vh] flex flex-col rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl overflow-hidden',
                         ]"
@@ -182,6 +186,8 @@ onBeforeUnmount(() => {
                                     ref="searchInputRef"
                                     v-model="searchQuery"
                                     type="text"
+                                    name="countrycode-search"
+                                    data-testid="countrycode-search"
                                     :placeholder="placeholder"
                                     :class="[
                                         'w-full pl-9 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white outline-none',
