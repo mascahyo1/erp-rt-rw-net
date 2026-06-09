@@ -84,7 +84,7 @@ class InvoiceGeneratorService
                 continue;
             }
 
-            $grandTotal = $langganan->billing_amount;
+            $grandTotal = $langganan->internetPackage->price ?? 0;
 
             $inserts[] = [
                 'id' => Str::uuid7(),
@@ -94,7 +94,6 @@ class InvoiceGeneratorService
                 'usage_start_date' => $startDate->format('Y-m-d'),
                 'usage_end_date' => $endDate->format('Y-m-d'),
                 'invoice_due_date' => $dueDate->format('Y-m-d'),
-                'due_date' => $dueDate->format('Y-m-d'),
                 'amount' => $grandTotal,
                 'total_amount' => $grandTotal,
                 'grand_total' => $grandTotal,

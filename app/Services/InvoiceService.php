@@ -16,9 +16,7 @@ class InvoiceService
     {
         $period ??= new \DateTime('first day of this month');
 
-        $billingAmount = $langganan->billing_amount > 0
-            ? $langganan->billing_amount
-            : ($langganan->internetPackage?->price ?? 0);
+        $billingAmount = $langganan->internetPackage?->price ?? 0;
 
         $discount = 0;
         $tax = 0;
@@ -33,7 +31,6 @@ class InvoiceService
             'discount_amount' => $discount,
             'tax_amount' => $tax,
             'grand_total' => $grandTotal,
-            'due_date' => (clone $period)->modify('+15 days'),
             'invoice_due_date' => (clone $period)->modify('+15 days'),
             'payment_status' => 'unpaid',
             'status' => 'unpaid',

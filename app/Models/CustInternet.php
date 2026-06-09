@@ -27,17 +27,11 @@ class CustInternet extends Model
         'usage_download_kb',
         'internet_status',
         'company_notes',
-        'billing_amount',
-        'billing_cycle_start',
-        'billing_cycle_end',
     ];
 
     protected function casts(): array
     {
         return [
-            'billing_cycle_start' => 'date',
-            'billing_cycle_end' => 'date',
-            'billing_amount' => 'decimal:2',
             'usage_upload_kb' => 'decimal:2',
             'usage_download_kb' => 'decimal:2',
             'customer_address_lat' => 'decimal:7',

@@ -40,7 +40,7 @@ class LanggananController extends Controller
             $query->where('internet_package_id', $paket);
         }
 
-        $allowedSorts = ['internet_status', 'billing_amount', 'created_at', 'deleted_at'];
+        $allowedSorts = ['internet_status', 'created_at', 'deleted_at'];
         if ($sortField = $request->input('sort_field')) {
             $sortDir = $request->input('sort_dir', 'asc');
             if (in_array($sortField, $allowedSorts)) {
@@ -73,7 +73,7 @@ class LanggananController extends Controller
                 'usage_upload_kb' => $item->usage_upload_kb,
                 'usage_download_kb' => $item->usage_download_kb,
                 'company_notes' => $item->company_notes,
-                'billing_amount' => $item->billing_amount,
+                'billing_amount' => $item->internetPackage?->price,
                 'dihapus' => $item->trashed(),
                 'deleted_at' => $item->deleted_at?->format('Y-m-d H:i'),
                 'created_at' => $item->created_at->format('Y-m-d H:i'),
@@ -217,7 +217,7 @@ class LanggananController extends Controller
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $statusLabel, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValue($this->excelColumn($col++) . $row, $item->usage_upload_kb);
             $sheet->setCellValue($this->excelColumn($col++) . $row, $item->usage_download_kb);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, (string) ($item->billing_amount ? number_format((float)$item->billing_amount, 0, ',', '.') : '0'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, (string) ($item->internetPackage?->price ? number_format((float) $item->internetPackage->price, 0, ',', '.') : '0'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->company_notes ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->created_at->format('Y-m-d H:i'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $row++;
