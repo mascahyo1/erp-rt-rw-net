@@ -114,7 +114,7 @@ class PembayaranController extends Controller
                 'deleted_at' => $item->deleted_at?->format('Y-m-d H:i'),
                 'created_at' => $item->created_at->format('Y-m-d H:i'),
                 'updated_at' => $item->updated_at->format('Y-m-d H:i'),
-                'restored_at' => $item->restored_at?->format('Y-m-d H:i'),
+                'restored_at' => is_string($item->restored_at) ? $item->restored_at : $item->restored_at?->format('Y-m-d H:i'),
                 'created_by' => $item->createdBy?->name,
                 'updated_by' => $item->updatedBy?->name,
                 'deleted_by' => $item->deletedBy?->name,

@@ -38,3 +38,5 @@
 /tests/Browser/tests/Browser/videos/
 # Debug screenshots
 debug-screenshots/
+# Test result dirs (Playwright headed runs produce fullPage screenshots)
+/tests/Browser/Playwright/Feature/*/Day*/

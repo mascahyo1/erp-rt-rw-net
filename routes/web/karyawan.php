@@ -135,4 +135,22 @@ Route::middleware('auth:employee')->group(function () {
         ->delete('/karyawan/riwayat-pembayaran/{custInternetPayment}', [$perusahaanNs.'\PembayaranController', 'destroy']);
     Route::middleware('permission:karyawan-riwayat-pembayaran.restore')
         ->patch('/karyawan/riwayat-pembayaran/{id}/restore', [$perusahaanNs.'\PembayaranController', 'restore']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.delete')
+        ->post('/karyawan/riwayat-pembayaran/bulk-delete', [$perusahaanNs.'\PembayaranController', 'bulkDelete']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.restore')
+        ->post('/karyawan/riwayat-pembayaran/bulk-restore', [$perusahaanNs.'\PembayaranController', 'bulkRestore']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.persetujuan')
+        ->post('/karyawan/riwayat-pembayaran/bulk-review', [$perusahaanNs.'\PembayaranController', 'bulkReview']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.persetujuan')
+        ->post('/karyawan/riwayat-pembayaran/{id}/review', [$perusahaanNs.'\PembayaranController', 'review']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.export')
+        ->get('/karyawan/riwayat-pembayaran/export', [$perusahaanNs.'\PembayaranController', 'export']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.import')
+        ->get('/karyawan/riwayat-pembayaran/template', [$perusahaanNs.'\PembayaranController', 'downloadTemplate']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.import')
+        ->post('/karyawan/riwayat-pembayaran/import', [$perusahaanNs.'\PembayaranController', 'import']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.export')
+        ->get('/karyawan/riwayat-pembayaran/{id}/pdf', [$perusahaanNs.'\PembayaranController', 'downloadPdf']);
+    Route::middleware('permission:karyawan-riwayat-pembayaran.export')
+        ->get('/karyawan/riwayat-pembayaran/{id}/word', [$perusahaanNs.'\PembayaranController', 'downloadWord']);
 });

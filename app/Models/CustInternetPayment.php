@@ -26,6 +26,7 @@ class CustInternetPayment extends Model
             'payment_date' => 'datetime',
             'amount_paid' => 'decimal:2',
             'data' => 'array',
+            'restored_at' => 'datetime',
         ];
     }
 

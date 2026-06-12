@@ -228,6 +228,9 @@ enum Permissions: string
     case KaryawanRiwayatPembayaranDetail = 'karyawan-riwayat-pembayaran.detail';
     case KaryawanRiwayatPembayaranDelete = 'karyawan-riwayat-pembayaran.delete';
     case KaryawanRiwayatPembayaranRestore = 'karyawan-riwayat-pembayaran.restore';
+    case KaryawanRiwayatPembayaranPersetujuan = 'karyawan-riwayat-pembayaran.persetujuan';
+    case KaryawanRiwayatPembayaranExport = 'karyawan-riwayat-pembayaran.export';
+    case KaryawanRiwayatPembayaranImport = 'karyawan-riwayat-pembayaran.import';
 
     // Paket (read-only via karyawan, no CRUD)
     case KaryawanPaketList   = 'karyawan-paket.list';
@@ -430,6 +433,9 @@ enum Permissions: string
                 self::KaryawanRiwayatPembayaranDetail->value,
                 self::KaryawanRiwayatPembayaranDelete->value,
                 self::KaryawanRiwayatPembayaranRestore->value,
+                self::KaryawanRiwayatPembayaranPersetujuan->value,
+                self::KaryawanRiwayatPembayaranExport->value,
+                self::KaryawanRiwayatPembayaranImport->value,
                 self::KaryawanPaketList->value,
                 self::KaryawanPaketDetail->value,
             ],
