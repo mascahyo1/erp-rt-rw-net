@@ -336,7 +336,7 @@ class InvoiceGeneratorService
             'invoice_number' => $invoiceNumber,
             'usage_start_date' => $startDate->format('Y-m-d'),
             'usage_end_date' => $endDate->format('Y-m-d'),
-            'invoice_due_date' => $dueDate->format('Y-m-d'),
+            'due_date' => $dueDate->format('Y-m-d'),
             'amount' => $amount,
             'total_amount' => $amount,
             'grand_total' => $amount,

@@ -128,10 +128,12 @@ class TagihanController extends Controller
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $grandTotal = ($validated['total_amount'] ?? 0) - ($validated['discount_amount'] ?? 0) + ($validated['tax_amount'] ?? 0);
+        $totalAmount = (float) ($validated['total_amount'] ?? 0);
+        $grandTotal = $totalAmount - (float) ($validated['discount_amount'] ?? 0) + (float) ($validated['tax_amount'] ?? 0);
 
         CustInternetInvc::create($validated + [
             'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . rand(1000, 9999),
+            'amount' => $totalAmount,
             'grand_total' => $grandTotal,
             'payment_status' => 'unpaid',
         ]);
@@ -152,9 +154,13 @@ class TagihanController extends Controller
             'description' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $grandTotal = ($validated['total_amount'] ?? 0) - ($validated['discount_amount'] ?? 0) + ($validated['tax_amount'] ?? 0);
+        $totalAmount = (float) ($validated['total_amount'] ?? 0);
+        $grandTotal = $totalAmount - (float) ($validated['discount_amount'] ?? 0) + (float) ($validated['tax_amount'] ?? 0);
 
-        $custInternetInvc->update($validated + ['grand_total' => $grandTotal]);
+        $custInternetInvc->update($validated + [
+            'amount' => $totalAmount,
+            'grand_total' => $grandTotal,
+        ]);
 
         return back()->with('success', 'Tagihan berhasil diperbarui.');
     }

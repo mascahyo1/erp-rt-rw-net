@@ -744,7 +744,7 @@ class DemoSeeder extends Seeder
                         'total_amount' => $pkg['price'],
                         'grand_total' => $pkg['price'],
                         'cycle' => $pkg['billing_cycle'],
-                        'invoice_due_date' => $dueDate,
+                        'due_date' => $dueDate,
                         'payment_status' => $status,
                         'status' => $status,
                         'status_description' => $status === 'paid' ? 'Lunas' : 'Menunggu pembayaran',

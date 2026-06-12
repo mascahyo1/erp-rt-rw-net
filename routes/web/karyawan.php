@@ -91,6 +91,26 @@ Route::middleware('auth:employee')->group(function () {
         ->delete('/karyawan/tagihan/{custInternetInvc}', [$perusahaanNs.'\TagihanController', 'destroy']);
     Route::middleware('permission:karyawan-tagihan.restore')
         ->patch('/karyawan/tagihan/{id}/restore', [$perusahaanNs.'\TagihanController', 'restore']);
+    Route::middleware('permission:karyawan-tagihan.delete')
+        ->post('/karyawan/tagihan/bulk-delete', [$perusahaanNs.'\TagihanController', 'bulkDelete']);
+    Route::middleware('permission:karyawan-tagihan.restore')
+        ->post('/karyawan/tagihan/bulk-restore', [$perusahaanNs.'\TagihanController', 'bulkRestore']);
+    Route::middleware('permission:karyawan-tagihan.edit')
+        ->post('/karyawan/tagihan/bulk-status', [$perusahaanNs.'\TagihanController', 'bulkToggleStatus']);
+    Route::middleware('permission:karyawan-tagihan.generate')
+        ->post('/karyawan/tagihan/generate', [$perusahaanNs.'\TagihanController', 'generate']);
+    Route::middleware('permission:karyawan-tagihan.export')
+        ->get('/karyawan/tagihan/export', [$perusahaanNs.'\TagihanController', 'export']);
+    Route::middleware('permission:karyawan-tagihan.import')
+        ->get('/karyawan/tagihan/template', [$perusahaanNs.'\TagihanController', 'downloadTemplate']);
+    Route::middleware('permission:karyawan-tagihan.import')
+        ->post('/karyawan/tagihan/import', [$perusahaanNs.'\TagihanController', 'import']);
+    Route::middleware('permission:karyawan-tagihan.export')
+        ->get('/karyawan/tagihan/{id}/export-pdf', [$perusahaanNs.'\TagihanController', 'exportPdf']);
+    Route::middleware('permission:karyawan-tagihan.export')
+        ->get('/karyawan/tagihan/{id}/export-word', [$perusahaanNs.'\TagihanController', 'exportWord']);
+    Route::middleware('permission:karyawan-tagihan.detail')
+        ->get('/karyawan/api/tagihan/{id}/payments', [$perusahaanNs.'\TagihanController', 'paymentsAjax']);
 
     // Insentif
     Route::middleware('permission:karyawan-insentif.list')
