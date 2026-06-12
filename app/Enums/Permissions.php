@@ -222,6 +222,10 @@ enum Permissions: string
     case KaryawanRiwayatPembayaranDelete = 'karyawan-riwayat-pembayaran.delete';
     case KaryawanRiwayatPembayaranRestore = 'karyawan-riwayat-pembayaran.restore';
 
+    // Paket (read-only via karyawan, no CRUD)
+    case KaryawanPaketList   = 'karyawan-paket.list';
+    case KaryawanPaketDetail = 'karyawan-paket.detail';
+
     // ============================================================
     // SCOPE MAPPING
     // ============================================================
@@ -412,6 +416,8 @@ enum Permissions: string
                 self::KaryawanRiwayatPembayaranDetail->value,
                 self::KaryawanRiwayatPembayaranDelete->value,
                 self::KaryawanRiwayatPembayaranRestore->value,
+                self::KaryawanPaketList->value,
+                self::KaryawanPaketDetail->value,
             ],
             default => [],
         };

@@ -39,6 +39,10 @@ Route::middleware('auth:employee')->group(function () {
     Route::middleware('permission:karyawan-customer.restore')
         ->patch('/karyawan/customer/{id}/restore', [$perusahaanNs.'\CustomerController', 'restore']);
 
+    // Paket (read-only list+detail for karyawan)
+    Route::middleware('permission:karyawan-paket.list')
+        ->get('/karyawan/paket', [$perusahaanNs.'\PaketController', 'index'])->defaults('view', 'Karyawan/Paket');
+
     // Langganan
     Route::middleware('permission:karyawan-langganan.list')
         ->get('/karyawan/langganan-customer', [$perusahaanNs.'\LanggananController', 'index'])->defaults('view', 'Karyawan/LanggananCustomer');
