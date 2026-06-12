@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\OperatorPerusahaan;
 
 use App\Http\Controllers\Controller;
+use App\Models\Employee;
 use App\Models\EmpIncentiveLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,6 +23,11 @@ class RiwayatInsentifController extends Controller
 
         $query = EmpIncentiveLog::query()->with(['empIncentive', 'invoice.custInternet.customer', 'createdBy', 'updatedBy', 'deletedBy', 'restoredBy'])
             ->whereHas('empIncentive', fn($q) => $q->where('company_id', $companyId));
+
+        if ($this->isEmployeeScope()) {
+            $query->where('submitted_by_type', Employee::class)
+                  ->where('submitted_by_id', auth()->id());
+        }
 
         if ($request->input('terhapus') === 'ya') {
             $query->onlyTrashed();
@@ -117,25 +123,36 @@ class RiwayatInsentifController extends Controller
             $attachmentPath = $request->file('attachment')->store('insentif-attachments', 'disk');
         }
 
-        EmpIncentiveLog::create([
+        $payload = [
             'emp_incentive_id' => $validated['emp_incentive_id'],
             'cust_internet_invcs_id' => $validated['cust_internet_invcs_id'],
             'amount' => $validated['amount'],
             'date' => $validated['date'],
             'invoice_number' => $request->input('invoice_number'),
-            'submitted_by_type' => !empty($validated['submitted_by_id']) ? 'employee' : ($validated['submitted_by_type'] ?? null),
-            'submitted_by_id' => $validated['submitted_by_id'] ?? null,
-            'submitted_by_name' => $validated['submitted_by_name'] ?? null,
             'reason' => $validated['reason'] ?? null,
             'attachment' => $attachmentPath,
             'review_status' => 'pending',
-        ]);
+        ];
+
+        if ($this->isEmployeeScope()) {
+            $payload['submitted_by_type'] = Employee::class;
+            $payload['submitted_by_id'] = (string) auth()->id();
+            $payload['submitted_by_name'] = auth()->user()->name;
+        } else {
+            $payload['submitted_by_type'] = !empty($validated['submitted_by_id']) ? 'employee' : ($validated['submitted_by_type'] ?? null);
+            $payload['submitted_by_id'] = $validated['submitted_by_id'] ?? null;
+            $payload['submitted_by_name'] = $validated['submitted_by_name'] ?? null;
+        }
+
+        EmpIncentiveLog::create($payload);
 
         return back()->with('success', 'Riwayat insentif berhasil ditambahkan.');
     }
 
     public function update(Request $request, EmpIncentiveLog $empIncentiveLog): RedirectResponse
     {
+        $this->assertOwnership($empIncentiveLog);
+
         if ($empIncentiveLog->review_status !== 'pending') {
             return back()->with('error', 'Hanya data dengan status pending yang bisa diedit.');
         }
@@ -172,6 +189,12 @@ class RiwayatInsentifController extends Controller
 
     public function destroy(EmpIncentiveLog $empIncentiveLog): RedirectResponse
     {
+        $this->assertOwnership($empIncentiveLog);
+
+        if ($empIncentiveLog->review_status !== 'pending') {
+            return back()->with('error', 'Hanya data pending yang bisa dihapus.');
+        }
+
         $empIncentiveLog->delete();
         return back()->with('success', 'Riwayat insentif berhasil dihapus.');
     }
@@ -179,6 +202,7 @@ class RiwayatInsentifController extends Controller
     public function restore(string $id): RedirectResponse
     {
         $item = EmpIncentiveLog::withTrashed()->findOrFail($id);
+        $this->assertOwnership($item);
         $item->restore();
         return back()->with('success', 'Riwayat insentif berhasil dipulihkan.');
     }
@@ -452,6 +476,21 @@ class RiwayatInsentifController extends Controller
             return back()->with('success', "{$imported} riwayat insentif berhasil diimport." . (count($errors) > 0 ? ' ' . count($errors) . ' baris dilewati.' : ''));
         }
         return back()->with('error', 'Gagal mengimport riwayat insentif. ' . implode(' ', $errors));
+    }
+
+    private function isEmployeeScope(): bool
+    {
+        return auth()->user() instanceof Employee;
+    }
+
+    private function assertOwnership(EmpIncentiveLog $log): void
+    {
+        if (! $this->isEmployeeScope()) {
+            return;
+        }
+        $isOwner = $log->submitted_by_type === Employee::class
+            && (string) $log->submitted_by_id === (string) auth()->id();
+        abort_unless($isOwner, 403, 'Anda tidak berhak mengubah klaim insentif ini.');
     }
 
     private function excelColumn(int $index): string

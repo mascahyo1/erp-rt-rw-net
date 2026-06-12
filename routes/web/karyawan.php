@@ -112,17 +112,17 @@ Route::middleware('auth:employee')->group(function () {
     Route::middleware('permission:karyawan-tagihan.detail')
         ->get('/karyawan/api/tagihan/{id}/payments', [$perusahaanNs.'\TagihanController', 'paymentsAjax']);
 
-    // Insentif
-    Route::middleware('permission:karyawan-insentif.list')
-        ->get('/karyawan/insentif-saya', [$perusahaanNs.'\InsentifController', 'index'])->defaults('view', 'Karyawan/InsentifSaya');
-    Route::middleware('permission:karyawan-insentif.create')
-        ->post('/karyawan/insentif-saya', [$perusahaanNs.'\InsentifController', 'store']);
-    Route::middleware('permission:karyawan-insentif.edit')
-        ->put('/karyawan/insentif-saya/{empIncentive}', [$perusahaanNs.'\InsentifController', 'update']);
-    Route::middleware('permission:karyawan-insentif.delete')
-        ->delete('/karyawan/insentif-saya/{empIncentive}', [$perusahaanNs.'\InsentifController', 'destroy']);
-    Route::middleware('permission:karyawan-insentif.restore')
-        ->patch('/karyawan/insentif-saya/{id}/restore', [$perusahaanNs.'\InsentifController', 'restore']);
+    // Insentif Saya (log/submission klaim insentif - scope karyawan sendiri)
+    Route::middleware('permission:riwayat-insentif.list')
+        ->get('/karyawan/insentif-saya', [$perusahaanNs.'\RiwayatInsentifController', 'index'])->defaults('view', 'Karyawan/InsentifSaya');
+    Route::middleware('permission:riwayat-insentif.create')
+        ->post('/karyawan/insentif-saya', [$perusahaanNs.'\RiwayatInsentifController', 'store']);
+    Route::middleware('permission:riwayat-insentif.edit')
+        ->put('/karyawan/insentif-saya/{empIncentiveLog}', [$perusahaanNs.'\RiwayatInsentifController', 'update']);
+    Route::middleware('permission:riwayat-insentif.delete')
+        ->delete('/karyawan/insentif-saya/{empIncentiveLog}', [$perusahaanNs.'\RiwayatInsentifController', 'destroy']);
+    Route::middleware('permission:riwayat-insentif.restore')
+        ->patch('/karyawan/insentif-saya/{id}/restore', [$perusahaanNs.'\RiwayatInsentifController', 'restore']);
 
     // Riwayat Pembayaran
     Route::middleware('permission:karyawan-riwayat-pembayaran.list')
