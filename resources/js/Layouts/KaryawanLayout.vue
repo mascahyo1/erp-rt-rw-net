@@ -17,6 +17,7 @@ const menuItems = computed(() => {
     { label: 'Dashboard', href: '/karyawan/dashboard', icon: 'fa-tachometer-alt' },
   ];
   if (perms.includes('profil-saya.list')) items.push({ label: 'Profil Saya', href: '/karyawan/profil-saya', icon: 'fa-user' });
+  if (perms.includes('karyawan-paket.list')) items.push({ label: 'Paket Internet', href: '/karyawan/paket', icon: 'fa-box' });
   if (perms.includes('karyawan-customer.list')) items.push({ label: 'Customer', href: '/karyawan/customer', icon: 'fa-users' });
   if (perms.includes('karyawan-langganan.list')) items.push({ label: 'Langganan Customer', href: '/karyawan/langganan-customer', icon: 'fa-link' });
   if (perms.includes('karyawan-tagihan.list')) items.push({ label: 'Tagihan', href: '/karyawan/tagihan', icon: 'fa-file-invoice' });
