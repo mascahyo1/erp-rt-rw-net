@@ -79,7 +79,7 @@ function statusLabel(s) {
 
 const createForm = useForm({ cust_internet_id: '', usage_start_date: '', usage_end_date: '', total_amount: '', discount_amount: '', tax_amount: '', due_date: '', description: '' });
 const editForm = useForm({ cust_internet_id: '', usage_start_date: '', usage_end_date: '', total_amount: '', discount_amount: '', tax_amount: '', due_date: '', description: '' });
-const generateForm = useForm({ period_year: new Date().getFullYear(), period_month: new Date().getMonth() + 1, due_date: '' });
+const generateForm = useForm({ cycle: 'monthly', period_year: new Date().getFullYear(), period_month: new Date().getMonth() + 1, usage_date: new Date().toISOString().slice(0, 10), due_date: '' });
 const importForm = useForm({ file: null });
 const importing = ref(false);
 
@@ -119,7 +119,7 @@ function bulkDelete() { router.post('/operator-perusahaan/tagihan/bulk-delete', 
 function bulkRestore() { router.post('/operator-perusahaan/tagihan/bulk-restore', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Tagihan berhasil dipulihkan.'); } }); }
 function bulkSetStatus(status) { router.post('/operator-perusahaan/tagihan/bulk-status', { ids: selectedIds.value, status }, { onSuccess: () => { selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Status berhasil diubah.'); } }); }
 
-function openGenerate() { generateForm.reset(); generateForm.period_year = new Date().getFullYear(); generateForm.period_month = new Date().getMonth() + 1; showGenerateModal.value = true; }
+function openGenerate() { generateForm.reset(); generateForm.cycle = 'monthly'; generateForm.period_year = new Date().getFullYear(); generateForm.period_month = new Date().getMonth() + 1; generateForm.usage_date = new Date().toISOString().slice(0, 10); showGenerateModal.value = true; }
 function submitGenerate() { generateForm.post('/operator-perusahaan/tagihan/generate', { onSuccess: () => { showGenerateModal.value = false; fetchData(); toast.success('Tagihan berhasil digenerate.'); } }); }
 
 function openImport() { importForm.reset(); showImportModal.value = true; }
@@ -341,9 +341,27 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
 
     <!-- GENERATE MODAL -->
     <Teleport to="body"><Transition name="modal"><div v-if="showGenerateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showGenerateModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form @submit.prevent="submitGenerate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md"><div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-magic text-purple-500 mr-2"></i>Generate Tagihan Massal</h3><button type="button" @click="showGenerateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="px-6 py-5 space-y-4">
-        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-400"><i class="fas fa-info-circle mr-1"></i> Generate akan membuat tagihan untuk semua langganan aktif pada periode yang dipilih.</div>
-        <div class="grid grid-cols-2 gap-3"><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tahun <span class="text-red-500">*</span></label><input v-model="generateForm.period_year" type="number" min="2020" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none" /></div><div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bulan <span class="text-red-500">*</span></label><select v-model="generateForm.period_month" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none"><option v-for="m in 12" :key="m" :value="m">{{ new Date(2000, m-1, 1).toLocaleString('id', { month: 'long' }) }}</option></select></div></div>
-        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Jatuh Tempo</label><input v-model="generateForm.due_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none dark:[color-scheme:dark]" /><p class="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan default 30 hari setelah akhir bulan</p></div>
+        <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-400"><i class="fas fa-info-circle mr-1"></i> Generate akan membuat tagihan untuk semua langganan aktif pada cycle & periode yang dipilih.</div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Billing Cycle <span class="text-red-500">*</span></label>
+          <div class="grid grid-cols-4 gap-2">
+            <label v-for="c in [{v:'daily',l:'Harian',i:'fa-calendar-day'},{v:'weekly',l:'Mingguan',i:'fa-calendar-week'},{v:'monthly',l:'Bulanan',i:'fa-calendar'},{v:'yearly',l:'Tahunan',i:'fa-calendar-alt'}]" :key="c.v" :class="['flex flex-col items-center justify-center px-2 py-2.5 rounded-lg border cursor-pointer text-xs font-medium transition-colors', generateForm.cycle === c.v ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300' : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500']"><input v-model="generateForm.cycle" type="radio" :value="c.v" class="sr-only" />{{ c.l }}<i :class="['fas mt-1', c.i, 'text-base']"></i></label>
+          </div>
+        </div>
+        <div v-if="generateForm.cycle === 'daily' || generateForm.cycle === 'weekly'">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usage Date <span class="text-red-500">*</span></label>
+          <input v-model="generateForm.usage_date" type="date" :min="generateForm.cycle === 'weekly' ? null : new Date().toISOString().slice(0, 10)" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none dark:[color-scheme:dark]" />
+          <p class="text-xs text-gray-500 mt-1" v-if="generateForm.cycle === 'weekly'">Akan di-snap ke hari Senin (Senin minggu itu)</p>
+        </div>
+        <div v-if="generateForm.cycle === 'monthly'" class="grid grid-cols-2 gap-3">
+          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tahun <span class="text-red-500">*</span></label><input v-model="generateForm.period_year" type="number" min="2020" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none" /></div>
+          <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bulan <span class="text-red-500">*</span></label><select v-model="generateForm.period_month" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none"><option v-for="m in 12" :key="m" :value="m">{{ new Date(2000, m-1, 1).toLocaleString('id', { month: 'long' }) }}</option></select></div>
+        </div>
+        <div v-if="generateForm.cycle === 'yearly'">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tahun <span class="text-red-500">*</span></label>
+          <input v-model="generateForm.period_year" type="number" min="2020" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none" />
+        </div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Jatuh Tempo (opsional)</label><input v-model="generateForm.due_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none dark:[color-scheme:dark]" /><p class="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan default 30 hari setelah akhir periode</p></div>
       </div><div class="flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showGenerateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button type="submit" :disabled="generateForm.processing" class="px-6 py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-magic mr-1.5"></i>Generate</button></div></form></div></Transition></Teleport>
 
     <!-- IMPORT MODAL -->

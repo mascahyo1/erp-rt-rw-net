@@ -389,39 +389,80 @@ class TagihanController extends Controller
 
     public function generate(Request $request, \App\Services\InvoiceGeneratorService $service): RedirectResponse
     {
-        $request->validate([
-            'period_year' => ['required', 'integer', 'min:2020'],
-            'period_month' => ['required', 'integer', 'min:1', 'max:12'],
+        // Multi-cycle: validate per cycle type
+        $validated = $request->validate([
+            'cycle' => ['required', 'string', 'in:daily,weekly,monthly,yearly'],
+            'usage_date' => ['nullable', 'date'],
+            'period_year' => ['nullable', 'integer', 'min:2020'],
+            'period_month' => ['nullable', 'integer', 'min:1', 'max:12'],
             'due_date' => ['nullable', 'date'],
         ]);
 
+        $cycle = $validated['cycle'];
         $companyId = auth()->user()->company_id;
-        $year = (int) $request->input('period_year');
-        $month = (int) $request->input('period_month');
-        $dueDate = $request->input('due_date');
+        $dueDate = $validated['due_date'] ?? null;
 
-        // Convert due_date string to due_days override (days from end of period)
+        // Build per-cycle period + due_days override
+        $period = [];
         $dueDaysOverride = null;
-        if ($dueDate) {
-            $endOfMonth = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
-            $parsed = \Carbon\Carbon::parse($dueDate);
-            $dueDaysOverride = max(0, (int) $endOfMonth->diffInDays($parsed, false));
+
+        switch ($cycle) {
+            case 'daily':
+            case 'weekly':
+                if (empty($validated['usage_date'])) {
+                    return back()->with('error', "usage_date wajib diisi untuk cycle {$cycle}.");
+                }
+                $usageDate = \Carbon\Carbon::parse($validated['usage_date']);
+                $period = ['usage_date' => $usageDate->format('Y-m-d')];
+                // due_days = days from end of period to due_date
+                if ($dueDate) {
+                    $endOfPeriod = $cycle === 'weekly'
+                        ? $usageDate->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->endOfWeek(\Carbon\Carbon::SUNDAY)
+                        : $usageDate->copy()->endOfDay();
+                    $dueDaysOverride = max(0, (int) $endOfPeriod->diffInDays(\Carbon\Carbon::parse($dueDate), false));
+                }
+                $periodLabel = $cycle === 'weekly'
+                    ? 'mingguan ' . $usageDate->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->translatedFormat('d F') . ' - ' . $usageDate->copy()->endOfWeek(\Carbon\Carbon::SUNDAY)->translatedFormat('d F Y')
+                    : 'harian ' . $usageDate->translatedFormat('d F Y');
+                break;
+
+            case 'monthly':
+                if (empty($validated['period_year']) || empty($validated['period_month'])) {
+                    return back()->with('error', "period_year dan period_month wajib diisi untuk cycle monthly.");
+                }
+                $year = (int) $validated['period_year'];
+                $month = (int) $validated['period_month'];
+                $period = ['year' => $year, 'month' => $month];
+                if ($dueDate) {
+                    $endOfMonth = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+                    $dueDaysOverride = max(0, (int) $endOfMonth->diffInDays(\Carbon\Carbon::parse($dueDate), false));
+                }
+                $periodLabel = \Carbon\Carbon::create($year, $month, 1)->translatedFormat('F Y');
+                break;
+
+            case 'yearly':
+                if (empty($validated['period_year'])) {
+                    return back()->with('error', "period_year wajib diisi untuk cycle yearly.");
+                }
+                $year = (int) $validated['period_year'];
+                $period = ['year' => $year];
+                if ($dueDate) {
+                    $endOfYear = \Carbon\Carbon::create($year, 1, 1)->endOfYear();
+                    $dueDaysOverride = max(0, (int) $endOfYear->diffInDays(\Carbon\Carbon::parse($dueDate), false));
+                }
+                $periodLabel = 'tahunan ' . $year;
+                break;
         }
 
-        $result = $service->generate($companyId, $year, $month, $dueDaysOverride);
+        $result = $service->generate($companyId, $cycle, $period, $dueDaysOverride);
 
-        $periodLabel = \Carbon\Carbon::create($year, $month, 1)->translatedFormat('F Y');
-
-        if ($result['generated'] === 0 && $result['skipped_existing'] === 0 && $result['skipped_cycle'] === 0) {
-            return back()->with('error', "Tidak ada langganan aktif untuk periode {$periodLabel}.");
+        if ($result['generated'] === 0 && $result['skipped_existing'] === 0) {
+            return back()->with('error', "Tidak ada langganan aktif untuk cycle {$cycle} periode {$periodLabel}.");
         }
 
-        $msg = "{$result['generated']} tagihan berhasil digenerate untuk periode {$periodLabel}.";
+        $msg = "{$result['generated']} tagihan berhasil digenerate untuk cycle {$cycle} periode {$periodLabel}.";
         if ($result['skipped_existing'] > 0) {
             $msg .= " {$result['skipped_existing']} dilewati (sudah ada).";
-        }
-        if ($result['skipped_cycle'] > 0) {
-            $msg .= " {$result['skipped_cycle']} dilewati (cycle non-monthly).";
         }
 
         return back()->with('success', $msg);

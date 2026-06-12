@@ -8,45 +8,49 @@ use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 /**
- * Bulk-generate tagihan (invoices) for all active langganan.
+ * Bulk-generate tagihan (invoices) untuk semua active langganan.
  *
- * Usage:
- *   php artisan app:invoice-generate --month=2026-06
- *   php artisan app:invoice-generate --month=2026-06 --due-days=14
- *   php artisan app:invoice-generate --month=2026-06 --company=72705ef8-ab2a-...
- *   php artisan app:invoice-generate --month=2026-06 --all-companies
+ * Multi-cycle (4 cycles: D/W/M/Y), idempotent per cycle:
+ * - daily:   php artisan app:invoice-generate --cycle=daily --usage-date=YYYY-MM-DD
+ * - weekly:  php artisan app:invoice-generate --cycle=weekly --usage-date=YYYY-MM-DD (Senin)
+ * - monthly: php artisan app:invoice-generate --cycle=monthly --month=YYYY-MM
+ * - yearly:  php artisan app:invoice-generate --cycle=yearly --year=YYYY
  *
- * Scheduler:
- *   - Default: jalan tiap tgl 1 jam 00:00 (auto-generate bulan sebelumnya)
- *   - Per-company: command bisa di-scope ke 1 company
+ * Scheduler (currently DISABLED, see routes/console.php):
+ * - When re-enabled, configure per-cycle scheduler entries.
  *
  * Idempotent: skip langganan yang sudah punya invoice di periode yang sama.
  */
 class GenerateInvoicesCommand extends Command
 {
     protected $signature = 'app:invoice-generate
-        {--month= : Target period YYYY-MM (default: bulan ini)}
+        {--cycle= : daily|weekly|monthly|yearly (required)}
+        {--usage-date= : Usage date for daily/weekly (YYYY-MM-DD)}
+        {--month= : Year-month for monthly (YYYY-MM)}
+        {--year= : Year for yearly (YYYY)}
         {--due-days= : Override due_days (skip CompanyConfig)}
         {--company= : Process only 1 company by UUID}
         {--all-companies : Process all active companies (default if --company not set)}';
 
-    protected $description = 'Bulk-generate tagihan (invoices) untuk semua langganan aktif. Idempotent — aman dijalan ulang.';
+    protected $description = 'Bulk-generate tagihan (invoices) untuk active langganan. Multi-cycle. Idempotent per cycle.';
 
     public function handle(InvoiceGeneratorService $service): int
     {
-        $monthOpt = $this->option('month');
-        if ($monthOpt) {
-            try {
-                $period = Carbon::createFromFormat('Y-m', $monthOpt)->startOfMonth();
-            } catch (\Throwable $e) {
-                $this->error("Format --month harus YYYY-MM. Contoh: --month=2026-06");
-                return self::FAILURE;
-            }
-        } else {
-            $period = Carbon::now()->startOfMonth();
+        $cycle = $this->option('cycle');
+        if (!$cycle) {
+            $this->error('--cycle required (daily|weekly|monthly|yearly)');
+            return self::FAILURE;
         }
-        $year = (int) $period->format('Y');
-        $month = (int) $period->format('n');
+        if (!in_array($cycle, InvoiceGeneratorService::ALL_CYCLES)) {
+            $this->error('--cycle must be one of: ' . implode(', ', InvoiceGeneratorService::ALL_CYCLES));
+            return self::FAILURE;
+        }
+
+        // Parse cycle-specific period
+        $period = $this->resolvePeriod($cycle);
+        if ($period === null) {
+            return self::FAILURE;
+        }
 
         $dueDays = $this->option('due-days') !== null ? (int) $this->option('due-days') : null;
         if ($dueDays !== null && $dueDays < 0) {
@@ -65,31 +69,29 @@ class GenerateInvoicesCommand extends Command
             $companies = Company::where('is_active', true)->get();
         }
 
-        $this->info("Generate invoices: " . $period->translatedFormat('F Y'));
+        $periodLabel = $this->formatPeriodLabel($cycle, $period);
+        $this->info("Generate invoices: cycle={$cycle} period={$periodLabel}");
         $this->info("Target companies: " . $companies->count() . " (due_days override: " . ($dueDays ?? 'from config') . ")");
         $this->newLine();
 
         $totalGenerated = 0;
         $totalSkippedExisting = 0;
-        $totalSkippedCycle = 0;
         $totalErrors = 0;
 
         foreach ($companies as $company) {
             try {
-                $result = $service->generate($company->id, $year, $month, $dueDays);
+                $result = $service->generate($company->id, $cycle, $period, $dueDays);
 
                 $this->line(sprintf(
-                    "  [%s] generated=%d skipped_existing=%d skipped_cycle=%d due_date=%s",
+                    "  [%s] generated=%d skipped_existing=%d due_date=%s",
                     $company->name,
                     $result['generated'],
                     $result['skipped_existing'],
-                    $result['skipped_cycle'],
                     $result['due_date']
                 ));
 
                 $totalGenerated += $result['generated'];
                 $totalSkippedExisting += $result['skipped_existing'];
-                $totalSkippedCycle += $result['skipped_cycle'];
             } catch (\Throwable $e) {
                 $this->error("  [{$company->name}] ERROR: " . $e->getMessage());
                 $totalErrors++;
@@ -98,11 +100,73 @@ class GenerateInvoicesCommand extends Command
 
         $this->newLine();
         $this->info("=== SUMMARY ===");
-        $this->info("Generated       : {$totalGenerated}");
-        $this->info("Skipped (exists): {$totalSkippedExisting}");
-        $this->info("Skipped (cycle) : {$totalSkippedCycle}");
-        $this->info("Errors          : {$totalErrors}");
+        $this->info("Cycle          : {$cycle}");
+        $this->info("Period         : {$periodLabel}");
+        $this->info("Generated      : {$totalGenerated}");
+        $this->info("Skipped (exist): {$totalSkippedExisting}");
+        $this->info("Errors         : {$totalErrors}");
 
         return $totalErrors > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    protected function resolvePeriod(string $cycle): ?array
+    {
+        switch ($cycle) {
+            case InvoiceGeneratorService::CYCLE_DAILY:
+            case InvoiceGeneratorService::CYCLE_WEEKLY:
+                $date = $this->option('usage-date');
+                if (!$date) {
+                    $this->error("--usage-date required for cycle={$cycle} (YYYY-MM-DD)");
+                    return null;
+                }
+                try {
+                    $parsed = Carbon::parse($date);
+                } catch (\Throwable $e) {
+                    $this->error("--usage-date format invalid. YYYY-MM-DD expected.");
+                    return null;
+                }
+                return ['usage_date' => $parsed->format('Y-m-d')];
+
+            case InvoiceGeneratorService::CYCLE_MONTHLY:
+                $monthOpt = $this->option('month');
+                if (!$monthOpt) {
+                    $this->error('--month required for cycle=monthly (YYYY-MM)');
+                    return null;
+                }
+                try {
+                    $parsed = Carbon::createFromFormat('Y-m', $monthOpt);
+                } catch (\Throwable $e) {
+                    $this->error('--month format invalid. YYYY-MM expected.');
+                    return null;
+                }
+                return ['year' => (int) $parsed->format('Y'), 'month' => (int) $parsed->format('n')];
+
+            case InvoiceGeneratorService::CYCLE_YEARLY:
+                $yearOpt = $this->option('year');
+                if (!$yearOpt) {
+                    $this->error('--year required for cycle=yearly (YYYY)');
+                    return null;
+                }
+                if (!is_numeric($yearOpt) || (int) $yearOpt < 2020) {
+                    $this->error('--year must be numeric >= 2020');
+                    return null;
+                }
+                return ['year' => (int) $yearOpt];
+        }
+        return null;
+    }
+
+    protected function formatPeriodLabel(string $cycle, array $period): string
+    {
+        switch ($cycle) {
+            case InvoiceGeneratorService::CYCLE_DAILY:
+            case InvoiceGeneratorService::CYCLE_WEEKLY:
+                return $period['usage_date'];
+            case InvoiceGeneratorService::CYCLE_MONTHLY:
+                return $period['year'] . '-' . str_pad($period['month'], 2, '0', STR_PAD_LEFT);
+            case InvoiceGeneratorService::CYCLE_YEARLY:
+                return (string) $period['year'];
+        }
+        return '?';
     }
 }

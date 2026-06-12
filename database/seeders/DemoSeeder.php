@@ -701,9 +701,12 @@ class DemoSeeder extends Seeder
     private function seedInternetPackages(string $companyId): void
     {
         $packages = [
+            ['code' => 'd05', 'name' => 'Daily 5Mbps', 'price' => 5000, 'speed_down_kbps' => 5120, 'speed_up_kbps' => 2560, 'quota_gb' => 10, 'billing_cycle' => 'daily', 'is_unlimited' => false],
+            ['code' => 'w20', 'name' => 'Weekly 20Mbps', 'price' => 35000, 'speed_down_kbps' => 20480, 'speed_up_kbps' => 10240, 'quota_gb' => 50, 'billing_cycle' => 'weekly', 'is_unlimited' => false],
             ['code' => 'b10', 'name' => 'Basic 10Mbps', 'price' => 150000, 'speed_down_kbps' => 10240, 'speed_up_kbps' => 5120, 'quota_gb' => 100, 'billing_cycle' => 'monthly', 'is_unlimited' => false],
             ['code' => 'p25', 'name' => 'Pro 25Mbps', 'price' => 250000, 'speed_down_kbps' => 25600, 'speed_up_kbps' => 10240, 'quota_gb' => 300, 'billing_cycle' => 'monthly', 'is_unlimited' => false],
             ['code' => 'u50', 'name' => 'Ultimate 50Mbps', 'price' => 400000, 'speed_down_kbps' => 51200, 'speed_up_kbps' => 20480, 'quota_gb' => 500, 'billing_cycle' => 'monthly', 'is_unlimited' => true],
+            ['code' => 'y30', 'name' => 'Yearly 30Mbps', 'price' => 3000000, 'speed_down_kbps' => 30720, 'speed_up_kbps' => 15360, 'quota_gb' => 1000, 'billing_cycle' => 'yearly', 'is_unlimited' => true],
         ];
 
         foreach ($packages as $pkg) {
@@ -740,7 +743,7 @@ class DemoSeeder extends Seeder
                         'amount' => $pkg['price'],
                         'total_amount' => $pkg['price'],
                         'grand_total' => $pkg['price'],
-                        'due_date' => $dueDate,
+                        'cycle' => $pkg['billing_cycle'],
                         'invoice_due_date' => $dueDate,
                         'payment_status' => $status,
                         'status' => $status,
