@@ -26,6 +26,15 @@ Route::middleware('auth:employee')->group(function () {
     });
 
     $perusahaanNs = 'App\Http\Controllers\OperatorPerusahaan';
+    $apiNs = 'App\Http\Controllers\Api';
+
+    // API search untuk SearchableSelectAjax component (karyawan scope)
+    Route::get('/karyawan/api/search/customers', [$apiNs.'\SearchController', 'customers']);
+    Route::get('/karyawan/api/search/packages', [$apiNs.'\SearchController', 'packages']);
+    Route::get('/karyawan/api/search/langganans', [$apiNs.'\SearchController', 'langganans']);
+    Route::get('/karyawan/api/search/invoices', [$apiNs.'\SearchController', 'invoices']);
+    Route::get('/karyawan/api/search/incentives', [$apiNs.'\SearchController', 'incentives']);
+    Route::get('/karyawan/api/search/employees', [$apiNs.'\SearchController', 'employees']);
 
     // Customer — reuse OpPerusahaan controller, render Karyawan view
     Route::middleware('permission:karyawan-customer.list')
@@ -64,6 +73,12 @@ Route::middleware('auth:employee')->group(function () {
         ->delete('/karyawan/langganan-customer/{custInternet}', [$perusahaanNs.'\LanggananController', 'destroy']);
     Route::middleware('permission:karyawan-langganan.restore')
         ->patch('/karyawan/langganan-customer/{id}/restore', [$perusahaanNs.'\LanggananController', 'restore']);
+    Route::middleware('permission:karyawan-langganan.export')
+        ->get('/karyawan/langganan-customer/export', [$perusahaanNs.'\LanggananController', 'export']);
+    Route::middleware('permission:karyawan-langganan.import')
+        ->get('/karyawan/langganan-customer/template', [$perusahaanNs.'\LanggananController', 'template']);
+    Route::middleware('permission:karyawan-langganan.import')
+        ->post('/karyawan/langganan-customer/import', [$perusahaanNs.'\LanggananController', 'import']);
 
     // Tagihan
     Route::middleware('permission:karyawan-tagihan.list')
