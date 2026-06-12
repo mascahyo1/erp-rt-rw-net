@@ -189,6 +189,8 @@ enum Permissions: string
     case KaryawanCustomerDetail = 'karyawan-customer.detail';
     case KaryawanCustomerDelete = 'karyawan-customer.delete';
     case KaryawanCustomerRestore = 'karyawan-customer.restore';
+    case KaryawanCustomerImport = 'karyawan-customer.import';
+    case KaryawanCustomerExport = 'karyawan-customer.export';
 
     // Langganan (full CRUD via karyawan)
     case KaryawanLanggananList   = 'karyawan-langganan.list';
@@ -392,6 +394,8 @@ enum Permissions: string
                 self::KaryawanCustomerDetail->value,
                 self::KaryawanCustomerDelete->value,
                 self::KaryawanCustomerRestore->value,
+                self::KaryawanCustomerImport->value,
+                self::KaryawanCustomerExport->value,
                 self::KaryawanLanggananList->value,
                 self::KaryawanLanggananCreate->value,
                 self::KaryawanLanggananEdit->value,

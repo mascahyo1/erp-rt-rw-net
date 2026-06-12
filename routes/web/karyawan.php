@@ -42,6 +42,12 @@ Route::middleware('auth:employee')->group(function () {
         ->post('/karyawan/customer/bulk-delete', [$perusahaanNs.'\CustomerController', 'bulkDelete']);
     Route::middleware('permission:karyawan-customer.edit')
         ->post('/karyawan/customer/bulk-status', [$perusahaanNs.'\CustomerController', 'bulkToggleStatus']);
+    Route::middleware('permission:karyawan-customer.export')
+        ->get('/karyawan/customer/export', [$perusahaanNs.'\CustomerController', 'export']);
+    Route::middleware('permission:karyawan-customer.import')
+        ->get('/karyawan/customer/template', [$perusahaanNs.'\CustomerController', 'template']);
+    Route::middleware('permission:karyawan-customer.import')
+        ->post('/karyawan/customer/import', [$perusahaanNs.'\CustomerController', 'import']);
 
     // Paket (read-only list+detail for karyawan)
     Route::middleware('permission:karyawan-paket.list')
