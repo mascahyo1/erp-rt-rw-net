@@ -38,6 +38,10 @@ Route::middleware('auth:employee')->group(function () {
         ->delete('/karyawan/customer/{customer}', [$perusahaanNs.'\CustomerController', 'destroy']);
     Route::middleware('permission:karyawan-customer.restore')
         ->patch('/karyawan/customer/{id}/restore', [$perusahaanNs.'\CustomerController', 'restore']);
+    Route::middleware('permission:karyawan-customer.delete')
+        ->post('/karyawan/customer/bulk-delete', [$perusahaanNs.'\CustomerController', 'bulkDelete']);
+    Route::middleware('permission:karyawan-customer.edit')
+        ->post('/karyawan/customer/bulk-status', [$perusahaanNs.'\CustomerController', 'bulkToggleStatus']);
 
     // Paket (read-only list+detail for karyawan)
     Route::middleware('permission:karyawan-paket.list')
