@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -68,6 +69,10 @@ class ForgotPasswordController extends Controller
      * Render Vue page forgot/reset. Mode ditentukan dari query string:
      *   - tanpa ?token → form input email
      *   - dengan ?token → form password baru
+     *
+     * Catatan: $request->query() sudah auto-decode URL-encoded values
+     * (PHP parse_str convention). Jangan urldecode() lagi — akan double-decode
+     * dan merubah '+' jadi spasi.
      */
     public function create(Request $request, string $portal): Response
     {
@@ -114,9 +119,11 @@ class ForgotPasswordController extends Controller
         $this->deleteExistingTokens($user, $config);
 
         // Insert token baru — composite key (email, company_id, guard).
-        // company_id='' untuk admin-saas (single tenant), UUID untuk multi-tenant.
+        // PENTING: gunakan getEmailForPasswordReset() (bukan $user->email) agar
+        // composite key match dgn URL query yang dikirim email. Untuk multi-tenant,
+        // composite = "{email}||{company_id}". Untuk admin-saas, composite = "{email}||".
         DB::table('password_reset_tokens')->insert([
-            'email' => $user->email,
+            'email' => $user->getEmailForPasswordReset(),
             'company_id' => $config['multiTenant'] ? $user->company_id : '',
             'guard' => $config['guard'],
             'token' => Hash::make($rawToken),
@@ -137,9 +144,16 @@ class ForgotPasswordController extends Controller
     {
         $config = $this->ensureValidPortal($portal);
 
+        Log::info('ForgotPassword.update START', [
+            'portal' => $portal,
+            'all' => $request->all(),
+        ]);
+
         $data = $request->validate([
             'token' => ['required', 'string'],
-            'email' => ['required', 'string', 'email'],
+            // 'email' = composite key ("{raw}||{company_id}"), bukan valid email format.
+            // Jadi hanya validasi 'required' + 'string' (no 'email' rule).
+            'email' => ['required', 'string'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
         if ($config['multiTenant']) {
@@ -160,9 +174,21 @@ class ForgotPasswordController extends Controller
         }
         $tokenRecord = $tokenQuery->first();
 
+        Log::info('ForgotPassword update', [
+            'email_form' => $data['email'],
+            'token_form_prefix' => substr($data['token'], 0, 8) . '...',
+            'guard' => $config['guard'],
+            'token_record_found' => (bool) $tokenRecord,
+        ]);
+
         if (! $tokenRecord) {
             return back()->withErrors(['email' => 'Token reset tidak valid atau sudah kadaluarsa.']);
         }
+
+        $hashCheck = Hash::check($data['token'], $tokenRecord->token);
+        Log::info('ForgotPassword hash check', [
+            'match' => $hashCheck,
+        ]);
 
         // Verify hash token (Laravel-style: token yang di-hash cocok dengan raw token dari URL)
         if (! Hash::check($data['token'], $tokenRecord->token)) {
@@ -176,8 +202,15 @@ class ForgotPasswordController extends Controller
             return back()->withErrors(['email' => 'Token reset sudah kadaluarsa. Silakan minta link baru.']);
         }
 
-        // Lookup user dan update password
-        $userQuery = $config['model']::query()->where('email', $data['email']);
+        // Lookup user dan update password.
+        // Catatan: $data['email'] dari form = composite key ("email||company_id" untuk multi-tenant,
+        // "email||" untuk admin-saas). Untuk lookup user, kita butuh extract raw email.
+        $rawEmail = $data['email'];
+        $sepPos = strpos($rawEmail, '||');
+        if ($sepPos !== false) {
+            $rawEmail = substr($rawEmail, 0, $sepPos);
+        }
+        $userQuery = $config['model']::query()->where('email', $rawEmail);
         if ($config['multiTenant']) {
             $userQuery->where('company_id', $data['company_id']);
         }
@@ -199,11 +232,12 @@ class ForgotPasswordController extends Controller
 
     /**
      * Hapus semua token existing untuk user (composite key).
+     * PENTING: pakai getEmailForPasswordReset() agar match dengan composite key di DB.
      */
     private function deleteExistingTokens(object $user, array $config): void
     {
         $query = DB::table('password_reset_tokens')
-            ->where('email', $user->email)
+            ->where('email', $user->getEmailForPasswordReset())
             ->where('guard', $config['guard']);
         if ($config['multiTenant']) {
             $query->where('company_id', $user->company_id);

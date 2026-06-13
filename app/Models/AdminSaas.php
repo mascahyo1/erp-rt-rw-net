@@ -44,6 +44,16 @@ class AdminSaas extends Authenticatable
     }
 
     /**
+     * Composite key untuk lookup token di password_reset_tokens.
+     * Single-tenant (admin-saas) → cukup email, company_id di-set '' (string kosong)
+     * karena kolom company_id NOT NULL dengan default '' di migration.
+     */
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->email . '||';
+    }
+
+    /**
      * Override default Laravel ResetPassword notification dengan custom branded
      * notification. Single-tenant (admin-saas tidak punya company_id).
      */

@@ -56,6 +56,15 @@ class Customer extends Authenticatable
     }
 
     /**
+     * Composite key untuk lookup token di password_reset_tokens.
+     * Multi-tenant — email SAMA di company BERBEDA harus jadi token BERBEDA.
+     */
+    public function getEmailForPasswordReset(): string
+    {
+        return $this->email . '||' . ($this->company_id ?? '');
+    }
+
+    /**
      * Override default Laravel ResetPassword notification dengan custom branded
      * notification. Multi-tenant — company_id di-pass ke URL agar token scoped
      * per company.
