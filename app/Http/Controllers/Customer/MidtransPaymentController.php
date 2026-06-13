@@ -217,6 +217,13 @@ class MidtransPaymentController extends Controller
      */
     public function handleWebhook(Request $request): JsonResponse
     {
+        // Gate: kalau SaaS config matikan webhook Midtrans, return ok tanpa update.
+        // Berguna untuk testing fallback "Verifikasi Manual" (tombol Sinkron Status).
+        if (!filter_var(\App\Models\SaasConfig::getValue('webhook_midtrans', true), FILTER_VALIDATE_BOOLEAN)) {
+            Log::info('Midtrans webhook received but disabled by config', $request->all());
+            return response()->json(['status' => 'ok', 'noop' => 'webhook_disabled']);
+        }
+
         $body = $request->all();
 
         $orderId = $body['order_id'] ?? null;
@@ -344,5 +351,110 @@ class MidtransPaymentController extends Controller
             'amount_paid' => (float) $p->amount_paid,
             'snap_token' => $p->snap_token,
         ];
+    }
+
+    /**
+     * Reusable manual verifier — dipanggil dari 3 portal (operator/karyawan/customer).
+     * Cek status real-time ke Midtrans API untuk payment yang masih pending.
+     * Return JSON {status, payment, changed, error?}.
+     *
+     * Caller harus sudah auth (middleware auth:*). Method ini handle ownership scope.
+     */
+    public function verifyStatus(Request $request, string $paymentId): JsonResponse
+    {
+        $payment = $this->resolvePaymentForCaller($paymentId);
+        if (!$payment) {
+            return response()->json(['error' => 'Payment Midtrans tidak ditemukan atau bukan hak Anda.'], 404);
+        }
+
+        // Kalau status sudah final, return langsung (no need call Midtrans)
+        if (in_array($payment->status, ['paid', 'expired', 'cancelled', 'rejected'])) {
+            return response()->json([
+                'status' => 'ok',
+                'payment' => $this->serializePayment($payment),
+                'changed' => false,
+                'message' => "Status sudah final ({$payment->status}).",
+            ]);
+        }
+
+        if (!$payment->midtrans_order_id) {
+            return response()->json(['error' => 'Order ID Midtrans tidak ditemukan pada payment ini.'], 422);
+        }
+
+        try {
+            $this->applyMidtransConfig();
+            $resp = Transaction::status($payment->midtrans_order_id);
+
+            $newStatus = $this->mapMidtransStatus(
+                $resp->transaction_status ?? null,
+                $resp->fraud_status ?? null,
+                $resp->payment_type ?? null
+            );
+
+            $changed = false;
+            if ($newStatus !== $payment->status) {
+                DB::transaction(function () use ($payment, $resp, $newStatus) {
+                    $payment->update([
+                        'status' => $newStatus,
+                        'midtrans_payment_type' => $resp->payment_type ?? null,
+                        'midtrans_va_number' => $resp->va_numbers[0]->va_number ?? null,
+                        'midtrans_fraud_status' => $resp->fraud_status ?? null,
+                        'midtrans_settled_at' => in_array($newStatus, ['paid', 'cancelled']) ? now() : null,
+                        'data' => array_merge($payment->data ?? [], [
+                            'last_manual_verify' => now()->toIso8601String(),
+                            'midtrans_response' => (array) $resp,
+                        ]),
+                    ]);
+                    if ($newStatus === 'paid' && $payment->custInternetInvc) {
+                        $payment->custInternetInvc->update([
+                            'payment_status' => 'paid',
+                            'paid_at' => now(),
+                        ]);
+                    }
+                });
+                $payment->refresh();
+                $changed = true;
+            }
+
+            return response()->json([
+                'status' => 'ok',
+                'payment' => $this->serializePayment($payment),
+                'changed' => $changed,
+                'message' => $changed
+                    ? "Status diperbarui ke {$payment->status}."
+                    : "Status masih {$payment->status} (tidak ada perubahan).",
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Midtrans manual verify failed', [
+                'order_id' => $payment->midtrans_order_id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'error' => 'Gagal cek status ke Midtrans: ' . $e->getMessage(),
+            ], 502);
+        }
+    }
+
+    /**
+     * Resolve payment by ID sesuai scope caller (customer/employee/admin-company).
+     * Admin SaaS tidak boleh (return null → 404).
+     */
+    private function resolvePaymentForCaller(string $paymentId): ?CustInternetPayment
+    {
+        $user = auth()->user();
+        $query = CustInternetPayment::with('custInternetInvc.custInternet.customer')
+            ->where('provider', PaymentProvider::MIDTRANS->value);
+
+        if ($user instanceof \App\Models\Customer) {
+            $query->whereHas('custInternetInvc.custInternet', fn($q) => $q->where('customer_id', $user->id));
+        } elseif ($user instanceof \App\Models\Employee) {
+            $query->whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $user->company_id));
+        } elseif ($user instanceof \App\Models\AdminCompany) {
+            $query->whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $user->company_id));
+        } else {
+            return null;
+        }
+
+        return $query->find($paymentId);
     }
 }

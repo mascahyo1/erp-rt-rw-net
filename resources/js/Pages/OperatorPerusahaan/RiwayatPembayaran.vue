@@ -185,6 +185,34 @@ function submitImport() {
   });
 }
 
+// Verifikasi manual status Midtrans (fallback saat webhook lambat/gagal).
+// Tampilkan spinner pada tombol saat request, reload data kalau status berubah.
+const verifyingId = ref(null);
+async function verifyMidtrans(item) {
+  if (verifyingId.value) return;
+  verifyingId.value = item.id;
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const res = await fetch(`/operator-perusahaan/api/riwayat-pembayaran/${item.id}/verify-midtrans`, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+      credentials: 'same-origin',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (data.changed) {
+      toast.success(data.message || `Status diperbarui ke ${data.payment?.status}.`);
+    } else {
+      toast.info(data.message || 'Status tidak berubah.');
+    }
+    fetchData();
+  } catch (err) {
+    toast.error(err.message || 'Gagal sinkron status Midtrans.');
+  } finally {
+    verifyingId.value = null;
+  }
+}
+
 function buildFilterParams() {
   const params = new URLSearchParams();
   if (searchInput.value) params.append('search', searchInput.value);
@@ -326,9 +354,15 @@ const providers = ['internal', 'external'];
                 <td class="px-3 py-3" @click.stop>
                   <div class="flex items-center justify-center gap-1">
                     <button @click="openDetail(item)" title="Detail" class="p-1.5 rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-indigo-900/30"><i class="fas fa-eye"></i></button>
-                    <button v-if="can('riwayat-pembayaran.edit') && !item.dihapus && item.status === 'pending'" @click="openEdit(item)" title="Edit" class="p-1.5 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-amber-900/30"><i class="fas fa-edit"></i></button>
-                    <button v-if="can('riwayat-pembayaran.persetujuan') && !item.dihapus && item.status === 'pending'" @click="openReview(item)" title="Review" class="p-1.5 rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-indigo-900/30"><i class="fas fa-clipboard-check"></i></button>
-                    <button v-if="can('riwayat-pembayaran.delete') && !item.dihapus" @click="openDelete(item)" title="Hapus" class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/30"><i class="fas fa-trash-alt"></i></button>
+                    <button v-if="can('riwayat-pembayaran.edit') && !item.dihapus && item.status === 'pending' && item.provider === 'internal'" @click="openEdit(item)" title="Edit" class="p-1.5 rounded-lg text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-amber-900/30"><i class="fas fa-edit"></i></button>
+                    <button v-if="can('riwayat-pembayaran.persetujuan') && !item.dihapus && item.status === 'pending' && item.provider === 'internal'" @click="openReview(item)" title="Review" class="p-1.5 rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-indigo-900/30"><i class="fas fa-clipboard-check"></i></button>
+                    <!-- Lock icon untuk payment non-internal (read-only) -->
+                    <span v-if="item.provider !== 'internal' && !item.dihapus" title="Read-only — pembayaran non-internal hanya bisa di-sinkronkan via Midtrans" class="p-1.5 text-gray-300 dark:text-gray-600 cursor-not-allowed"><i class="fas fa-lock"></i></span>
+                    <!-- Tombol Sinkron Status Midtrans (khusus midtrans+pending) -->
+                    <button v-if="item.provider === 'midtrans' && item.status === 'pending' && !item.dihapus" @click="verifyMidtrans(item)" :disabled="verifyingId === item.id" :title="verifyingId === item.id ? 'Sinkron sedang berjalan...' : 'Sinkron Status Midtrans (verifikasi manual saat webhook lambat)'" class="p-1.5 rounded-lg text-violet-600 hover:text-white hover:bg-violet-600 dark:text-violet-400 dark:hover:text-white dark:hover:bg-violet-500 transition-colors disabled:opacity-60 disabled:cursor-wait">
+                      <i :class="['fas', verifyingId === item.id ? 'fa-spinner fa-spin' : 'fa-sync-alt']"></i>
+                    </button>
+                    <button v-if="can('riwayat-pembayaran.delete') && !item.dihapus && item.provider === 'internal'" @click="openDelete(item)" title="Hapus" class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/30"><i class="fas fa-trash-alt"></i></button>
                     <button v-if="item.dihapus" @click="confirmRestore(item.id)" title="Pulihkan" class="p-1.5 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-900/30"><i class="fas fa-undo"></i></button>
                   </div>
                 </td>

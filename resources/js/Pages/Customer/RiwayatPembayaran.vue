@@ -15,6 +15,7 @@ const props = defineProps({
   midtransClientKey: { type: String, default: '' },
 });
 const payingId = ref(null);
+const verifyingId = ref(null);
 
 function formatRupiah(n) {
   if (n === null || n === undefined) return '—';
@@ -113,6 +114,33 @@ async function retryPayment(p) {
     payingId.value = null;
   }
 }
+
+// Sinkron Status Midtrans (manual verify) — fallback saat webhook lambat/gagal.
+// TIDAK buka Snap popup, hanya fetch status real-time dan update DB lokal.
+async function verifyMidtrans(p) {
+  if (verifyingId.value) return;
+  verifyingId.value = p.id;
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const res = await fetch(`/customer/pembayaran-tambah/${p.id}/verify-midtrans`, {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+      credentials: 'same-origin',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (data.changed) {
+      toast.success(data.message || `Status diperbarui ke ${data.payment?.status}.`);
+    } else {
+      toast.info(data.message || 'Status tidak berubah.');
+    }
+    router.reload();
+  } catch (err) {
+    toast.error(err.message || 'Gagal sinkron status Midtrans.');
+  } finally {
+    verifyingId.value = null;
+  }
+}
 </script>
 
 <template>
@@ -142,6 +170,10 @@ async function retryPayment(p) {
                 <div class="flex items-center justify-end gap-1.5">
                   <button v-if="p.provider === 'midtrans' && p.status === 'pending'" @click="retryPayment(p)" :disabled="payingId === p.id" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50">
                     <i class="fas fa-bolt"></i>{{ payingId === p.id ? 'Membuka...' : 'Bayar Sekarang' }}
+                  </button>
+                  <button v-if="p.provider === 'midtrans' && p.status === 'pending'" @click="verifyMidtrans(p)" :disabled="verifyingId === p.id" :title="verifyingId === p.id ? 'Sinkron sedang berjalan...' : 'Sinkron Status Midtrans (verifikasi manual saat webhook lambat)'" class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50">
+                    <i :class="['fas', verifyingId === p.id ? 'fa-spinner fa-spin' : 'fa-sync-alt']"></i>
+                    {{ verifyingId === p.id ? 'Sinkron...' : 'Sinkron Status' }}
                   </button>
                   <Link :href="`/customer/riwayat-pembayaran/detail?id=${p.id}`" class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors inline-block" title="Detail"><i class="fas fa-eye text-sm"></i></Link>
                 </div>

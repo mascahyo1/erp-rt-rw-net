@@ -165,6 +165,15 @@ class DemoSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'id' => Str::uuid(),
+                'key' => 'webhook_midtrans',
+                'type' => 'boolean',
+                'value' => 'true',
+                'description' => 'Aktifkan webhook Midtrans untuk auto-update status pembayaran via notification callback. Set false untuk simulasi webhook down — gunakan tombol Sinkron Status Midtrans di Riwayat Pembayaran sebagai fallback verifikasi manual.',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ]);
 
         // Company-scoped configs (one set per demo company)

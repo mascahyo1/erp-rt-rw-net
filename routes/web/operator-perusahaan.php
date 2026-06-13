@@ -345,6 +345,11 @@ Route::middleware('auth:admin-company')->group(function () {
         Route::post('/operator-perusahaan/riwayat-pembayaran/{id}/review', [PembayaranController::class, 'review'])->name('operator-perusahaan.pembayaran.review');
         Route::post('/operator-perusahaan/riwayat-pembayaran/bulk-review', [PembayaranController::class, 'bulkReview'])->name('operator-perusahaan.pembayaran.bulkReview');
     });
+    // AJAX: Verifikasi manual status Midtrans (fallback saat webhook lambat/gagal)
+    Route::middleware('permission:riwayat-pembayaran.persetujuan')->group(function () {
+        Route::post('/operator-perusahaan/api/riwayat-pembayaran/{id}/verify-midtrans', [PembayaranController::class, 'verifyMidtrans'])
+            ->name('api.operator-perusahaan.pembayaran.verify-midtrans');
+    });
     Route::middleware('permission:riwayat-pembayaran.export')->group(function () {
         Route::get('/operator-perusahaan/riwayat-pembayaran/export', [PembayaranController::class, 'export'])->name('operator-perusahaan.pembayaran.export');
         Route::get('/operator-perusahaan/riwayat-pembayaran/template', [PembayaranController::class, 'downloadTemplate'])->name('operator-perusahaan.pembayaran.template');

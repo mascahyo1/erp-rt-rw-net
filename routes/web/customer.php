@@ -430,4 +430,7 @@ Route::middleware('auth:customer')->group(function () {
         ->name('customer.midtrans.create-snap-token');
     Route::get('/customer/pembayaran-tambah/{paymentId}/status', [\App\Http\Controllers\Customer\MidtransPaymentController::class, 'checkStatus'])
         ->name('customer.midtrans.check-status');
+    // POST variant: verifikasi manual (sinkron status) — dipakai untuk fallback saat webhook gagal
+    Route::post('/customer/pembayaran-tambah/{paymentId}/verify-midtrans', [\App\Http\Controllers\Customer\MidtransPaymentController::class, 'verifyStatus'])
+        ->name('customer.midtrans.verify-status');
 });

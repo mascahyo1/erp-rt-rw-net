@@ -160,6 +160,12 @@ class PembayaranController extends Controller
 
     public function update(Request $request, CustInternetPayment $custInternetPayment): RedirectResponse
     {
+        // GUARD: Pembayaran non-internal (Midtrans/External/Customer Portal) tidak bisa diedit manual.
+        // Untuk Midtrans pending, gunakan tombol "Sinkron Status Midtrans" (verifikasi manual).
+        if ($custInternetPayment->provider !== PaymentProvider::INTERNAL->value) {
+            return back()->with('error', 'Pembayaran dengan provider non-internal tidak dapat diedit manual. Gunakan tombol Sinkron Status Midtrans untuk data dari payment gateway.');
+        }
+
         $validated = $request->validate([
             'amount_paid' => ['required', 'numeric'],
             'payment_date' => ['nullable', 'date'],
@@ -185,6 +191,10 @@ class PembayaranController extends Controller
 
     public function destroy(CustInternetPayment $custInternetPayment): RedirectResponse
     {
+        // GUARD: Pembayaran non-internal tidak boleh dihapus (dibuat otomatis oleh payment gateway/customer portal).
+        if ($custInternetPayment->provider !== PaymentProvider::INTERNAL->value) {
+            return back()->with('error', 'Pembayaran non-internal tidak dapat dihapus.');
+        }
         $custInternetPayment->delete();
         return back()->with('success', 'Pembayaran berhasil dihapus.');
     }
@@ -205,6 +215,11 @@ class PembayaranController extends Controller
         ]);
 
         $payment = CustInternetPayment::findOrFail($id);
+
+        // GUARD: Pembayaran non-internal tidak bisa di-review manual (status final-nya ditentukan payment gateway).
+        if ($payment->provider !== PaymentProvider::INTERNAL->value) {
+            return back()->with('error', 'Pembayaran non-internal tidak dapat di-review. Gunakan Sinkron Status Midtrans untuk data dari payment gateway.');
+        }
 
         $updateData = [
             'status' => $validated['review_status'] === 'approved' ? 'paid' : 'rejected',
@@ -241,7 +256,13 @@ class PembayaranController extends Controller
             $reviewAttachmentPath = $uploadService->processDocument($request->file('review_attachment'), 'payment-reviews');
         }
 
-        $count = CustInternetPayment::whereIn('id', $validated['ids'])->update([
+        // GUARD: Bulk review HANYA untuk payment internal. Payment non-internal di-skip + counter.
+        $eligibleIds = CustInternetPayment::whereIn('id', $validated['ids'])
+            ->where('provider', PaymentProvider::INTERNAL->value)
+            ->pluck('id')->all();
+        $skipped = count($validated['ids']) - count($eligibleIds);
+
+        $count = CustInternetPayment::whereIn('id', $eligibleIds)->update([
             'status' => $validated['review_status'] === 'approved' ? 'paid' : 'rejected',
             'status_reason' => $validated['review_reason'] ?: null,
             'review_attachment' => $reviewAttachmentPath,
@@ -255,7 +276,11 @@ class PembayaranController extends Controller
         }
 
         $label = $validated['review_status'] === 'approved' ? 'disetujui' : 'ditolak';
-        return back()->with('success', "{$count} pembayaran berhasil {$label}.");
+        $msg = "{$count} pembayaran berhasil {$label}.";
+        if ($skipped > 0) {
+            $msg .= " {$skipped} item non-internal dilewati (hanya bisa di-sinkron via Midtrans).";
+        }
+        return back()->with('success', $msg);
     }
 
     public function bulkDelete(Request $request): RedirectResponse
@@ -279,12 +304,47 @@ class PembayaranController extends Controller
         $ids = $request->input('ids', []);
         if (empty($ids)) return back()->with('error', 'Tidak ada pembayaran yang dipilih.');
 
-        $count = CustInternetPayment::whereIn('id', $ids)->update([
+        // GUARD: Bulk approve HANYA untuk payment internal.
+        $eligibleIds = CustInternetPayment::whereIn('id', $ids)
+            ->where('provider', PaymentProvider::INTERNAL->value)
+            ->pluck('id')->all();
+        $skipped = count($ids) - count($eligibleIds);
+
+        $count = CustInternetPayment::whereIn('id', $eligibleIds)->update([
             'status' => 'paid',
             'status_reason' => 'Disetujui secara bulk oleh admin perusahaan',
         ]);
 
-        return back()->with('success', "{$count} pembayaran berhasil disetujui.");
+        $msg = "{$count} pembayaran berhasil disetujui.";
+        if ($skipped > 0) {
+            $msg .= " {$skipped} item non-internal dilewati.";
+        }
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * AJAX endpoint: verifikasi manual status Midtrans untuk payment pending.
+     * Delegate ke MidtransPaymentController::verifyStatus (3 portal — operator/karyawan/customer).
+     */
+    public function verifyMidtrans(Request $request, string $id): \Illuminate\Http\JsonResponse
+    {
+        $companyId = auth()->user()->company_id;
+
+        // Verify payment milik company ini DAN provider Midtrans
+        $payment = CustInternetPayment::whereHas(
+            'custInternetInvc.custInternet.customer',
+            fn($q) => $q->where('company_id', $companyId)
+        )
+            ->where('id', $id)
+            ->where('provider', PaymentProvider::MIDTRANS->value)
+            ->first();
+
+        if (!$payment) {
+            return response()->json(['error' => 'Payment Midtrans tidak ditemukan atau bukan milik perusahaan Anda.'], 404);
+        }
+
+        return app(\App\Http\Controllers\Customer\MidtransPaymentController::class)
+            ->verifyStatus($request, $id);
     }
 
     public function export(Request $request): BinaryFileResponse
