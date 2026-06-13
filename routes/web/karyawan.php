@@ -22,7 +22,70 @@ Route::middleware('auth:employee')->group(function () {
     })->name('employee.dashboard');
 
     Route::middleware('permission:profil-saya.list')->group(function () {
-        Route::get('/karyawan/profil-saya', function () { return Inertia::render('Karyawan/ProfilSaya'); });
+        Route::get('/karyawan/profil-saya', function () {
+            $employee = auth()->user();
+            $employee->load('company');
+            return Inertia::render('Karyawan/ProfilSaya', [
+                'employee' => [
+                    'id' => $employee->id,
+                    'code' => $employee->code,
+                    'name' => $employee->name,
+                    'email' => $employee->email,
+                    'phone_country_code' => $employee->phone_country_code,
+                    'phone_number' => $employee->phone_number,
+                    'no_nik' => $employee->no_nik,
+                    'no_kk' => $employee->no_kk,
+                    'photo_ktp' => $employee->photo_ktp,
+                    'photo_ktp_url' => $employee->photo_ktp ? route('file.proxy', ['path' => $employee->photo_ktp, 'disk' => 'minio']) : null,
+                    'photo_kk' => $employee->photo_kk,
+                    'photo_kk_url' => $employee->photo_kk ? route('file.proxy', ['path' => $employee->photo_kk, 'disk' => 'minio']) : null,
+                    'photo_profile' => $employee->photo_profile,
+                    'photo_profile_url' => $employee->photo_profile ? route('file.proxy', ['path' => $employee->photo_profile, 'disk' => 'minio']) : null,
+                    'company' => $employee->company ? [
+                        'id' => $employee->company->id,
+                        'name' => $employee->company->name,
+                    ] : null,
+                ],
+            ]);
+        });
+        Route::put('/karyawan/profil-saya', function (\Illuminate\Http\Request $request) {
+            $employee = auth()->user();
+            $uploadService = new \App\Services\FileUploadService();
+
+            $validated = $request->validate([
+                'no_nik' => ['nullable', 'string', 'max:50'],
+                'no_kk' => ['nullable', 'string', 'max:50'],
+                'photo_ktp' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+                'photo_kk' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+                'photo_profile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            ], [
+                'photo_ktp.max' => 'Ukuran foto KTP maksimal 2MB.',
+                'photo_kk.max' => 'Ukuran foto KK maksimal 2MB.',
+                'photo_profile.max' => 'Ukuran foto profil maksimal 2MB.',
+            ]);
+
+            $data = [
+                'no_nik' => $validated['no_nik'] ?? null,
+                'no_kk' => $validated['no_kk'] ?? null,
+            ];
+
+            if ($request->hasFile('photo_ktp')) {
+                if ($employee->photo_ktp) $uploadService->deleteFile($employee->photo_ktp);
+                $data['photo_ktp'] = $uploadService->processDocument($request->file('photo_ktp'), 'employees');
+            }
+            if ($request->hasFile('photo_kk')) {
+                if ($employee->photo_kk) $uploadService->deleteFile($employee->photo_kk);
+                $data['photo_kk'] = $uploadService->processDocument($request->file('photo_kk'), 'employees');
+            }
+            if ($request->hasFile('photo_profile')) {
+                if ($employee->photo_profile) $uploadService->deleteFile($employee->photo_profile);
+                $data['photo_profile'] = $uploadService->processImage($request->file('photo_profile'), 'employees');
+            }
+
+            $employee->update($data);
+
+            return back()->with('success', 'Profil berhasil diperbarui.');
+        });
     });
 
     $perusahaanNs = 'App\Http\Controllers\OperatorPerusahaan';
