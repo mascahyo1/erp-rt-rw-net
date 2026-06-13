@@ -246,6 +246,10 @@ Route::middleware('auth:customer')->group(function () {
 
         return Inertia::render('Customer/PembayaranTambah', [
             'tagihans' => $tagihans,
+            'snapScriptUrl' => config('midtrans.is_production')
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js',
+            'midtransClientKey' => config('midtrans.client_key'),
         ]);
     });
 
@@ -376,10 +380,17 @@ Route::middleware('auth:customer')->group(function () {
                 'created_at' => $p->created_at?->format('Y-m-d'),
                 'status' => $p->status,
                 'status_description' => $p->status_description,
+                'provider' => $p->provider,
+                'midtrans_order_id' => $p->midtrans_order_id,
+                'snap_token' => $p->snap_token,
             ]);
 
         return Inertia::render('Customer/RiwayatPembayaran', [
             'pembayarans' => $pembayarans,
+            'snapScriptUrl' => config('midtrans.is_production')
+                ? 'https://app.midtrans.com/snap/snap.js'
+                : 'https://app.sandbox.midtrans.com/snap/snap.js',
+            'midtransClientKey' => config('midtrans.client_key'),
         ]);
     });
 
@@ -402,7 +413,21 @@ Route::middleware('auth:customer')->group(function () {
                 'created_at' => $p->created_at?->format('Y-m-d'),
                 'keterangan' => $p->status_description,
                 'status' => $p->status,
+                'provider' => $p->provider,
+                'midtrans_order_id' => $p->midtrans_order_id,
+                'midtrans_payment_type' => $p->midtrans_payment_type,
+                'midtrans_va_number' => $p->midtrans_va_number,
+                'midtrans_expires_at' => $p->midtrans_expires_at?->format('Y-m-d H:i'),
+                'midtrans_settled_at' => $p->midtrans_settled_at?->format('Y-m-d H:i'),
+                'snap_token' => $p->snap_token,
+                'client_key' => config('midtrans.client_key'),
             ],
         ]);
     });
+
+    // Midtrans Snap payment gateway endpoints
+    Route::post('/customer/pembayaran-tambah/create-snap-token', [\App\Http\Controllers\Customer\MidtransPaymentController::class, 'createSnapToken'])
+        ->name('customer.midtrans.create-snap-token');
+    Route::get('/customer/pembayaran-tambah/{paymentId}/status', [\App\Http\Controllers\Customer\MidtransPaymentController::class, 'checkStatus'])
+        ->name('customer.midtrans.check-status');
 });
