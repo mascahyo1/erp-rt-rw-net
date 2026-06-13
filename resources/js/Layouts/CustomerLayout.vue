@@ -14,6 +14,7 @@ const profileDropdownOpen = ref(false);
 const menuItems = [
   { label: 'Dashboard', href: '/customer/dashboard', icon: 'fa-tachometer-alt' },
   { label: 'Profil Saya', href: '/customer/profil-saya', icon: 'fa-user' },
+  { label: 'Daftar Paket', href: '/customer/daftar-paket', icon: 'fa-th-large' },
   { label: 'Paket Saya', href: '/customer/paket-saya', icon: 'fa-box' },
   { label: 'Tagihan Saya', href: '/customer/tagihan-saya', icon: 'fa-file-invoice' },
   { label: 'Riwayat Pembayaran', href: '/customer/riwayat-pembayaran', icon: 'fa-history' },
