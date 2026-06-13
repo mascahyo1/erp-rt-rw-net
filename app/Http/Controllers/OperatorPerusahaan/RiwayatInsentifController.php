@@ -69,6 +69,12 @@ class RiwayatInsentifController extends Controller
         $perPage = min((int) $request->input('per_page', 10), 100);
 
         $items = $query->paginate($perPage)->through(function ($item) {
+            $attachmentUrl = $item->attachment
+                ? route('file.proxy', ['path' => $item->attachment, 'disk' => 'minio'])
+                : null;
+            $reviewAttachmentUrl = $item->review_attachment
+                ? route('file.proxy', ['path' => $item->review_attachment, 'disk' => 'minio'])
+                : null;
             return [
                 'id' => $item->id,
                 'emp_incentive_id' => $item->emp_incentive_id,
@@ -84,10 +90,12 @@ class RiwayatInsentifController extends Controller
                 'submitted_by_name' => $item->submitted_by_name,
                 'reason' => $item->reason,
                 'attachment' => $item->attachment,
+                'attachment_url' => $attachmentUrl,
                 'review_status' => $item->review_status,
                 'reviewed_at' => $item->reviewed_at?->format('Y-m-d H:i'),
                 'review_reason' => $item->review_reason,
                 'review_attachment' => $item->review_attachment,
+                'review_attachment_url' => $reviewAttachmentUrl,
                 'dihapus' => $item->trashed(),
                 'deleted_at' => $item->deleted_at?->format('Y-m-d H:i'),
                 'created_at' => $item->created_at->format('Y-m-d H:i'),

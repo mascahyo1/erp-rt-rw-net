@@ -294,7 +294,7 @@ const isAllSelected = computed(() => items.value.length > 0 && items.value.every
         <div><label class="text-xs text-gray-500 dark:text-gray-400">Status</label><p><span :class="['inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium', statusBadgeClass(selectedItem.review_status)]">{{ statusLabel(selectedItem.review_status) }}</span></p></div>
       </div>
       <div v-if="selectedItem.reason" class="mt-4"><label class="text-xs text-gray-500 dark:text-gray-400">Alasan Pengajuan</label><p class="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 rounded-lg p-3">{{ selectedItem.reason }}</p></div>
-      <div v-if="selectedItem.attachment" class="mt-4"><label class="text-xs text-gray-500 dark:text-gray-400">Bukti Pengajuan</label><a :href="'/storage/' + selectedItem.attachment" target="_blank" class="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400"><i class="fas fa-paperclip"></i> Lihat lampiran</a></div>
+      <div v-if="selectedItem.attachment_url" class="mt-4"><label class="text-xs text-gray-500 dark:text-gray-400">Bukti Pengajuan</label><a :href="selectedItem.attachment_url" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 text-sm text-amber-600 hover:text-amber-700 dark:text-amber-400"><i class="fas fa-paperclip"></i> Lihat lampiran</a></div>
       <div v-if="selectedItem.reviewed_at || selectedItem.review_reason" class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
         <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
           <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-2"><i class="fas fa-info-circle text-amber-500"></i><span class="font-medium">Info Review</span></div>
