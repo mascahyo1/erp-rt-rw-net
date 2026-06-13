@@ -88,7 +88,7 @@ function submit() {
                     <input v-model="form.remember" type="checkbox" class="rounded border-gray-300 dark:border-gray-700 text-indigo-600 focus:ring-indigo-500" />
                     <span>Ingat saya</span>
                   </label>
-                  <a href="#" class="text-indigo-600 dark:text-indigo-400 hover:underline">Lupa password?</a>
+                  <a href="/lupa-password-operator-saas" class="text-indigo-600 dark:text-indigo-400 hover:underline">Lupa password?</a>
                 </div>
 
                 <button

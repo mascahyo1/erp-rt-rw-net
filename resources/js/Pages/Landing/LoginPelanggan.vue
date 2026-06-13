@@ -106,6 +106,7 @@ const submitRegister = () => {
                                         <input v-model="loginForm.remember" type="checkbox" class="rounded border-gray-300 dark:border-gray-700 text-emerald-600 focus:ring-emerald-500" />
                                         <span>Ingat saya</span>
                                     </label>
+                                    <a href="/lupa-password-pelanggan" class="text-emerald-600 dark:text-emerald-400 hover:underline">Lupa password?</a>
                                 </div>
                                 <button type="submit" :disabled="loginForm.processing" class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50">
                                     <i v-if="loginForm.processing" class="fas fa-spinner fa-spin mr-2"></i>

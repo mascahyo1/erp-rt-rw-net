@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -48,7 +49,7 @@ Route::get('/login-operator-saas', [AuthenticatedSessionController::class, 'crea
     ->name('operator-saas.login');
 
 Route::post('/login-operator-saas', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('throttle:5,1');
+    ->middleware('throttle:30,1');
 
 Route::post('/logout-operator-saas', [AuthenticatedSessionController::class, 'destroy'])
     ->name('operator-saas.logout');
@@ -57,7 +58,7 @@ Route::get('/login-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionC
     ->name('operator-perusahaan.login');
 
 Route::post('/login-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionController::class, 'store'])
-    ->middleware('throttle:5,1');
+    ->middleware('throttle:30,1');
 
 Route::post('/logout-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionController::class, 'destroy'])
     ->name('operator-perusahaan.logout');
@@ -66,7 +67,7 @@ Route::get('/login-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionContro
     ->name('customer.login');
 
 Route::post('/login-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'store'])
-    ->middleware('throttle:5,1');
+    ->middleware('throttle:30,1');
 
 Route::post('/logout-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'destroy'])
     ->name('customer.logout');
@@ -76,6 +77,19 @@ Route::post('/daftar-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionCont
 
 Route::post('/logout-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionController::class, 'destroy'])
     ->name('employee.logout');
+
+// Lupa Password (3 portal landing)
+Route::get('/lupa-password-operator-saas', [ForgotPasswordController::class, 'create'])->defaults('portal', 'operator-saas')->name('forgot-password.operator-saas.form');
+Route::post('/lupa-password-operator-saas', [ForgotPasswordController::class, 'store'])->defaults('portal', 'operator-saas')->middleware('throttle:30,1')->name('forgot-password.operator-saas.send');
+Route::post('/lupa-password-operator-saas/reset', [ForgotPasswordController::class, 'update'])->defaults('portal', 'operator-saas')->middleware('throttle:30,1')->name('forgot-password.operator-saas.reset');
+
+Route::get('/lupa-password-perusahaan', [ForgotPasswordController::class, 'create'])->defaults('portal', 'perusahaan')->name('forgot-password.perusahaan.form');
+Route::post('/lupa-password-perusahaan', [ForgotPasswordController::class, 'store'])->defaults('portal', 'perusahaan')->middleware('throttle:30,1')->name('forgot-password.perusahaan.send');
+Route::post('/lupa-password-perusahaan/reset', [ForgotPasswordController::class, 'update'])->defaults('portal', 'perusahaan')->middleware('throttle:30,1')->name('forgot-password.perusahaan.reset');
+
+Route::get('/lupa-password-pelanggan', [ForgotPasswordController::class, 'create'])->defaults('portal', 'pelanggan')->name('forgot-password.pelanggan.form');
+Route::post('/lupa-password-pelanggan', [ForgotPasswordController::class, 'store'])->defaults('portal', 'pelanggan')->middleware('throttle:30,1')->name('forgot-password.pelanggan.send');
+Route::post('/lupa-password-pelanggan/reset', [ForgotPasswordController::class, 'update'])->defaults('portal', 'pelanggan')->middleware('throttle:30,1')->name('forgot-password.pelanggan.reset');
 
 // Public company search endpoint (for login pages)
 Route::get('/api/companies/search', function (\Illuminate\Http\Request $request) {

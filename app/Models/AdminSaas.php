@@ -42,4 +42,13 @@ class AdminSaas extends Authenticatable
             'restored_at' => 'datetime',
         ];
     }
+
+    /**
+     * Override default Laravel ResetPassword notification dengan custom branded
+     * notification. Single-tenant (admin-saas tidak punya company_id).
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token, 'admin-saas', null));
+    }
 }

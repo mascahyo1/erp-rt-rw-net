@@ -63,6 +63,9 @@ const submit = () => {
                                 </div>
                                 <p v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</p>
                             </div>
+                            <div class="text-right text-sm">
+                                <a href="/lupa-password-karyawan" class="text-amber-600 dark:text-amber-400 hover:underline">Lupa password?</a>
+                            </div>
                             <button
                                 type="submit"
                                 :disabled="form.processing"

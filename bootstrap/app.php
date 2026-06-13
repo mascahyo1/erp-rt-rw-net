@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Trust Cloudflare Tunnel + reverse proxy headers (X-Forwarded-Proto, X-Forwarded-For)
+        // supaya Laravel generate URL HTTPS saat di belakang Cloudflare, dan HTTP saat local dev.
+        // Reference: https://laravel.com/docs/11.x/requests#configuring-trusted-proxies
+        $middleware->trustProxies(at: '*');
         $middleware->alias([
             'ensure.user.active' => \App\Http\Middleware\EnsureUserIsActive::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,

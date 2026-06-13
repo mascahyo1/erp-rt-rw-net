@@ -54,4 +54,14 @@ class Customer extends Authenticatable
     {
         return $this->belongsTo(Company::class);
     }
+
+    /**
+     * Override default Laravel ResetPassword notification dengan custom branded
+     * notification. Multi-tenant — company_id di-pass ke URL agar token scoped
+     * per company.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new \App\Notifications\ResetPasswordNotification($token, 'customer', $this->company_id));
+    }
 }

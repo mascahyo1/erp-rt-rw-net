@@ -102,6 +102,7 @@ const submit = () => {
                                     <input v-model="form.remember" type="checkbox" class="rounded border-gray-300 dark:border-gray-700 text-sky-600 focus:ring-sky-500" />
                                     <span>Ingat saya</span>
                                 </label>
+                                <a href="/lupa-password-perusahaan" class="text-sky-600 dark:text-sky-400 hover:underline">Lupa password?</a>
                             </div>
 
                             <button

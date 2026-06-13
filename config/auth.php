@@ -132,6 +132,38 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
+
+        // Admin SaaS (operator-saas portal) — single tenant, no company_id
+        'admins' => [
+            'provider' => 'admin-saas',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        // Admin Perusahaan (operator-perusahaan portal) — multi-tenant
+        'companies' => [
+            'provider' => 'admin-company',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        // Karyawan (employee portal) — multi-tenant
+        'employees' => [
+            'provider' => 'employee',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        // Pelanggan (customer portal) — multi-tenant
+        'customers' => [
+            'provider' => 'customer',
+            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
     ],
 
     /*
