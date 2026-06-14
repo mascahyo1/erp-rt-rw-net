@@ -12,8 +12,8 @@ Route::post('/login-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionContro
 
 // Lupa Password karyawan
 Route::get('/lupa-password-karyawan', [ForgotPasswordController::class, 'create'])->defaults('portal', 'karyawan')->name('forgot-password.karyawan.form');
-Route::post('/lupa-password-karyawan', [ForgotPasswordController::class, 'store'])->defaults('portal', 'karyawan')->middleware('throttle:30,1')->name('forgot-password.karyawan.send');
-Route::post('/lupa-password-karyawan/reset', [ForgotPasswordController::class, 'update'])->defaults('portal', 'karyawan')->middleware('throttle:30,1')->name('forgot-password.karyawan.reset');
+Route::post('/lupa-password-karyawan', [ForgotPasswordController::class, 'store'])->defaults('portal', 'karyawan')->middleware('throttle:5,1')->name('forgot-password.karyawan.send');
+Route::post('/lupa-password-karyawan/reset', [ForgotPasswordController::class, 'update'])->defaults('portal', 'karyawan')->middleware('throttle:5,1')->name('forgot-password.karyawan.reset');
 
 Route::middleware('auth:employee')->group(function () {
     Route::get('/karyawan/dashboard', function () {

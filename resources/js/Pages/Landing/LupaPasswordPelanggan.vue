@@ -1,10 +1,10 @@
 <script setup>
 import LandingLayout from '@/Layouts/LandingLayout.vue';
-import { Head, useForm, Link } from '@inertiajs/vue3';
+import { Head, useForm, usePage, Link } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 import CompanySearchInput from '@/Components/CompanySearchInput.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 
 defineOptions({ layout: LandingLayout });
 
@@ -14,10 +14,12 @@ const props = defineProps({
     companyId: { type: String, default: null },
 });
 
+const page = usePage();
 const toast = useToast();
 const selectedCompany = ref(null);
 
 const isResetMode = computed(() => !!props.token);
+const siteKey = computed(() => page.props.turnstile_site_key || '');
 
 const form = useForm({
     email: props.email || '',
@@ -25,6 +27,22 @@ const form = useForm({
     password: '',
     password_confirmation: '',
     company_id: props.companyId || '',
+    'cf-turnstile-response': '',
+});
+
+function onTurnstileSuccess(token) {
+    form['cf-turnstile-response'] = token;
+}
+function onTurnstileExpired() {
+    form['cf-turnstile-response'] = '';
+}
+onMounted(() => {
+    window.onTurnstileSuccess = onTurnstileSuccess;
+    window.onTurnstileExpired = onTurnstileExpired;
+});
+onBeforeUnmount(() => {
+    delete window.onTurnstileSuccess;
+    delete window.onTurnstileExpired;
 });
 
 const submit = () => {
@@ -159,6 +177,13 @@ const submit = () => {
                                 <i v-else :class="isResetMode ? 'fas fa-check mr-2' : 'fas fa-paper-plane mr-2'"></i>
                                 {{ form.processing ? 'Memproses...' : (isResetMode ? 'Reset Password' : 'Kirim Link Reset') }}
                             </button>
+
+                            <!-- Cloudflare Turnstile captcha -->
+                            <div v-if="siteKey" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired"></div>
+                            <p v-if="form.errors['cf-turnstile-response']" class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ form.errors['cf-turnstile-response'] }}
+                            </p>
                         </form>
 
                         <div class="mt-6 text-center text-sm">

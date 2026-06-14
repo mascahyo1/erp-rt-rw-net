@@ -97,6 +97,7 @@ class ForgotPasswordController extends Controller
         if ($config['multiTenant']) {
             $rules['company_id'] = ['required', 'string', 'exists:companies,id'];
         }
+        $rules['cf-turnstile-response'] = ['required', new \App\Rules\Turnstile($request->ip())];
         $data = $request->validate($rules);
 
         // Lookup user by email [+ company_id]
@@ -155,6 +156,7 @@ class ForgotPasswordController extends Controller
             // Jadi hanya validasi 'required' + 'string' (no 'email' rule).
             'email' => ['required', 'string'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'cf-turnstile-response' => ['required', new \App\Rules\Turnstile($request->ip())],
         ]);
         if ($config['multiTenant']) {
             $data['company_id'] = $request->input('company_id');
