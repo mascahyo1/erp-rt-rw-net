@@ -139,20 +139,9 @@ const testimonials = [
 // ========================
 // Ripple Effect
 // ========================
-function handleRipple(e) {
-  const btn = e.currentTarget;
-  const circle = document.createElement('span');
-  const diameter = Math.max(btn.clientWidth, btn.clientHeight);
-  const radius = diameter / 2;
-  const rect = btn.getBoundingClientRect();
-  circle.style.width = circle.style.height = `${diameter}px`;
-  circle.style.left = `${e.clientX - rect.left - radius}px`;
-  circle.style.top = `${e.clientY - rect.top - radius}px`;
-  circle.classList.add('ripple');
-  const existing = btn.getElementsByClassName('ripple')[0];
-  if (existing) existing.remove();
-  btn.appendChild(circle);
-}
+// (Dihapus: Vue <style scoped> tidak apply ke span dinamis, menyebabkan
+// element 382x382 masuk normal flow button. Tombol sudah punya hover scale
+// + active scale sebagai feedback, tidak perlu ripple effect.)
 </script>
 
 <template>
@@ -188,7 +177,7 @@ function handleRipple(e) {
               Dibangun khusus untuk bisnis RT/RW Net skala kecil hingga besar.
             </p>
             <div class="reveal mt-10 flex flex-col sm:flex-row gap-3 lg:justify-start justify-center" style="transition-delay: 180ms">
-              <Link href="/login-perusahaan" @click="handleRipple" class="ripple-btn inline-flex items-center justify-center px-6 py-3 bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
+              <Link href="/login-perusahaan" class="inline-flex items-center justify-center px-6 py-3 bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
                 <i class="fas fa-rocket mr-2"></i> Mulai Sekarang
               </Link>
               <Link href="/tentang-kami" class="inline-flex items-center justify-center px-6 py-3 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-gray-700 dark:text-gray-300 font-semibold rounded-xl border border-gray-300 dark:border-gray-700 hover:border-sky-500 dark:hover:border-sky-500 hover:text-sky-600 dark:hover:text-sky-400 transition-colors">
@@ -433,7 +422,7 @@ function handleRipple(e) {
         <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Siap Mengelola Bisnis RT/RW Net Anda?</h2>
         <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Daftar sekarang dan dapatkan free trial 30 hari.</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/login-pelanggan" @click="handleRipple" class="ripple-btn inline-flex items-center justify-center px-8 py-3 bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
+          <Link href="/login-pelanggan" class="inline-flex items-center justify-center px-8 py-3 bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
             <i class="fas fa-user-plus mr-2"></i> Daftar / Login Pelanggan
           </Link>
           <Link href="/hubungi-kami" class="inline-flex items-center justify-center px-8 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-xl border border-gray-300 dark:border-gray-700 hover:border-sky-500 dark:hover:border-sky-500 transition-colors">
@@ -468,20 +457,6 @@ function handleRipple(e) {
 }
 .animate-float-slow { animation: float-slow 4s ease-in-out infinite; }
 .animate-float-slower { animation: float-slower 5.5s ease-in-out infinite; }
-
-/* Ripple effect */
-.ripple-btn { position: relative; overflow: hidden; }
-.ripple {
-  position: absolute;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.4);
-  transform: scale(0);
-  animation: ripple-anim 0.6s linear;
-  pointer-events: none;
-}
-@keyframes ripple-anim {
-  to { transform: scale(4); opacity: 0; }
-}
 
 /* Feature card tilt on hover (subtle 3D) */
 .feature-card {

@@ -54,21 +54,6 @@ function submit() {
         onFinish: () => form.reset('password'),
     });
 }
-
-function handleRipple(e) {
-    const btn = e.currentTarget;
-    const circle = document.createElement('span');
-    const diameter = Math.max(btn.clientWidth, btn.clientHeight);
-    const radius = diameter / 2;
-    const rect = btn.getBoundingClientRect();
-    circle.style.width = circle.style.height = `${diameter}px`;
-    circle.style.left = `${e.clientX - rect.left - radius}px`;
-    circle.style.top = `${e.clientY - rect.top - radius}px`;
-    circle.classList.add('ripple');
-    const existing = btn.getElementsByClassName('ripple')[0];
-    if (existing) existing.remove();
-    btn.appendChild(circle);
-}
 </script>
 
 <template>
@@ -192,9 +177,8 @@ function handleRipple(e) {
 
                             <button
                                 type="submit"
-                                @click="handleRipple"
                                 :disabled="form.processing"
-                                class="ripple-btn relative w-full py-2.5 bg-linear-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+                                class="w-full py-2.5 bg-linear-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <i v-if="form.processing" class="fas fa-spinner fa-spin mr-2"></i>
                                 <i v-else class="fas fa-sign-in-alt mr-2"></i>
@@ -224,19 +208,6 @@ function handleRipple(e) {
 }
 .animate-blob { animation: blob 14s ease-in-out infinite; }
 .animate-blob-slow { animation: blob-slow 18s ease-in-out infinite; }
-
-.ripple-btn .ripple {
-    position: absolute;
-    border-radius: 50%;
-    background-color: rgba(255, 255, 255, 0.4);
-    transform: scale(0);
-    animation: ripple-anim 0.6s linear;
-    pointer-events: none;
-    left: 0; top: 0;
-}
-@keyframes ripple-anim {
-    to { transform: scale(4); opacity: 0; }
-}
 
 .shake { animation: shake 0.4s ease-in-out; }
 @keyframes shake {
