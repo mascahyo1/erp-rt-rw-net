@@ -1,34 +1,79 @@
+<!--
+  Karyawan Dashboard
+  Hero amber-orange + 4 stat cards real.
+-->
 <script setup>
-import { computed } from 'vue';
 import KaryawanLayout from '@/Layouts/KaryawanLayout.vue';
+import DashboardStatCard from '@/Components/DashboardStatCard.vue';
+import DashboardHero from '@/Components/DashboardHero.vue';
 import { Head, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 defineOptions({ layout: KaryawanLayout });
 
-defineProps({
-  stats: Object,
+const props = defineProps({
+    stats: { type: Object, default: () => ({}) },
 });
 
 const page = usePage();
 const userName = computed(() => page.props.auth?.user?.name ?? 'Karyawan');
+
+const formatRupiah = (n) => {
+    const num = Number(n) || 0;
+    if (num >= 1_000_000_000) return `Rp ${(num / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (num >= 1_000_000) return `Rp ${(num / 1_000_000).toFixed(1).replace(/\.0$/, '')}jt`;
+    if (num >= 1_000) return `Rp ${(num / 1_000).toFixed(0)}rb`;
+    return `Rp ${num.toLocaleString('id-ID')}`;
+};
 </script>
+
 <template>
-  <div><Head title="Dashboard | Karyawan" /><slot name="header">Dashboard</slot>
-    <div class="space-y-6">
-      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-8 md:p-10 shadow-lg">
-        <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
-        <div class="relative flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div class="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0"><i class="fas fa-user-tie text-white text-2xl"></i></div>
-          <div class="text-white"><h3 class="text-2xl font-bold mb-1">Selamat datang, {{ userName }}!</h3><p class="text-amber-100 text-sm md:text-base">Pantau tagihan, customer, dan insentif Anda.</p></div>
+    <div>
+        <Head title="Dashboard | Karyawan" />
+        <slot name="header">Dashboard</slot>
+
+        <div class="space-y-6">
+            <DashboardHero
+                :title="`Selamat datang, ${userName}!`"
+                subtitle="Pantau tagihan, customer, dan insentif Anda."
+                icon="fa-user-tie"
+                gradient="amber"
+            />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <DashboardStatCard
+                    icon="fa-users"
+                    label="Customer Ditagih"
+                    :value="stats?.customer_ditagih ?? 0"
+                    color="amber"
+                    sublabel="Customer dengan internet aktif"
+                    href="/karyawan/customer"
+                />
+                <DashboardStatCard
+                    icon="fa-file-invoice"
+                    label="Tagihan Bulan Ini"
+                    :value="stats?.tagihan_bulan_ini ?? 0"
+                    color="sky"
+                    sublabel="Invoice dibuat bulan ini"
+                    href="/karyawan/tagihan"
+                />
+                <DashboardStatCard
+                    icon="fa-coins"
+                    label="Insentif Bulan Ini"
+                    :value="formatRupiah(stats?.insentif_bulan_ini ?? 0)"
+                    color="emerald"
+                    sublabel="Klaim disetujui admin"
+                    href="/karyawan/insentif-saya"
+                />
+                <DashboardStatCard
+                    icon="fa-credit-card"
+                    label="Pembayaran Collection"
+                    :value="stats?.pembayaran_collection ?? 0"
+                    color="violet"
+                    sublabel="Total entri pembayaran"
+                    href="/karyawan/riwayat-pembayaran"
+                />
+            </div>
         </div>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 shadow-sm"><div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-3"><i class="fas fa-users text-amber-600 dark:text-amber-400"></i></div><div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats?.customer_ditagih ?? 0 }}</div><div class="text-sm text-gray-600 dark:text-gray-400">Customer Ditagih</div></div>
-        <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 shadow-sm"><div class="w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center mb-3"><i class="fas fa-file-invoice text-sky-600 dark:text-sky-400"></i></div><div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats?.tagihan_bulan_ini ?? 0 }}</div><div class="text-sm text-gray-600 dark:text-gray-400">Tagihan Bulan Ini</div></div>
-        <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 shadow-sm"><div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mb-3"><i class="fas fa-coins text-emerald-600 dark:text-emerald-400"></i></div><div class="text-2xl font-bold text-gray-900 dark:text-white">&mdash;</div><div class="text-sm text-gray-600 dark:text-gray-400">Insentif Bulan Ini</div></div>
-        <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 shadow-sm"><div class="w-10 h-10 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center mb-3"><i class="fas fa-credit-card text-violet-600 dark:text-violet-400"></i></div><div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats?.pembayaran_collection ?? 0 }}</div><div class="text-sm text-gray-600 dark:text-gray-400">Pembayaran Collection</div></div>
-      </div>
     </div>
-  </div>
 </template>

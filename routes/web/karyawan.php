@@ -22,6 +22,13 @@ Route::middleware('auth:employee')->group(function () {
             'stats' => [
                 'customer_ditagih' => \App\Models\CustInternet::whereHas('customer', fn($q) => $q->where('company_id', $companyId))->where('internet_status', 'active')->count(),
                 'tagihan_bulan_ini' => \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))->whereMonth('created_at', now()->month)->count(),
+                // Insentif yang sudah disetujui admin (review_status='approved') bulan ini
+                'insentif_bulan_ini' => (float) \App\Models\EmpIncentiveLog::where('submitted_by_id', $employee->id)
+                    ->where('submitted_by_type', 'employee')
+                    ->where('review_status', 'approved')
+                    ->whereMonth('date', now()->month)
+                    ->whereYear('date', now()->year)
+                    ->sum('amount'),
                 'pembayaran_collection' => \App\Models\CustInternetPayment::whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $companyId))->count(),
             ],
         ]);
