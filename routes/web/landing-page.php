@@ -49,7 +49,7 @@ Route::get('/login-operator-saas', [AuthenticatedSessionController::class, 'crea
     ->name('operator-saas.login');
 
 Route::post('/login-operator-saas', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:5,1');
 
 Route::post('/logout-operator-saas', [AuthenticatedSessionController::class, 'destroy'])
     ->name('operator-saas.logout');
@@ -58,7 +58,7 @@ Route::get('/login-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionC
     ->name('operator-perusahaan.login');
 
 Route::post('/login-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionController::class, 'store'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:5,1');
 
 Route::post('/logout-perusahaan', [\App\Http\Controllers\Auth\AdminCompanySessionController::class, 'destroy'])
     ->name('operator-perusahaan.logout');
@@ -67,7 +67,7 @@ Route::get('/login-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionContro
     ->name('customer.login');
 
 Route::post('/login-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'store'])
-    ->middleware('throttle:30,1');
+    ->middleware('throttle:5,1');
 
 Route::post('/logout-pelanggan', [\App\Http\Controllers\Auth\CustomerSessionController::class, 'destroy'])
     ->name('customer.logout');

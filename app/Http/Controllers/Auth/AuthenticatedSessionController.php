@@ -28,6 +28,7 @@ class AuthenticatedSessionController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'cf-turnstile-response' => ['required', new \App\Rules\Turnstile($request->ip())],
         ]);
 
         $user = AdminSaas::where('email', $credentials['email'])->first();

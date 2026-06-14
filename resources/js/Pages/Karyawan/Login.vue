@@ -1,8 +1,10 @@
 <script setup>
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 import CompanySearchInput from '@/Components/CompanySearchInput.vue';
-import { ref, computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+
+const page = usePage();
 
 defineOptions({ layout: LandingLayout });
 
@@ -11,6 +13,7 @@ const selectedCompany = ref(null);
 const form = useForm({
     email: '',
     password: '',
+    'cf-turnstile-response': '',
     remember: false,
 });
 
@@ -19,6 +22,24 @@ const emailTouched = ref(false);
 const passwordTouched = ref(false);
 const companyTouched = ref(false);
 const formCard = ref(null);
+
+const siteKey = computed(() => page.props.turnstile_site_key || '');
+
+function onTurnstileSuccess(token) {
+    form['cf-turnstile-response'] = token;
+}
+function onTurnstileExpired() {
+    form['cf-turnstile-response'] = '';
+}
+// Expose callbacks ke window agar Turnstile widget (loaded async) bisa panggil.
+onMounted(() => {
+    window.onTurnstileSuccess = onTurnstileSuccess;
+    window.onTurnstileExpired = onTurnstileExpired;
+});
+onBeforeUnmount(() => {
+    delete window.onTurnstileSuccess;
+    delete window.onTurnstileExpired;
+});
 
 const companyError = computed(() => {
     if (!companyTouched.value) return null;
@@ -184,6 +205,13 @@ function submit() {
                                 <i v-else class="fas fa-sign-in-alt mr-2"></i>
                                 {{ form.processing ? 'Memproses...' : 'Masuk' }}
                             </button>
+
+                            <!-- Cloudflare Turnstile captcha widget -->
+                            <div v-if="siteKey" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired"></div>
+                            <p v-if="form.errors['cf-turnstile-response']" class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ form.errors['cf-turnstile-response'] }}
+                            </p>
                         </form>
 
                         <p class="text-center text-xs text-gray-500 dark:text-gray-400 mt-6">

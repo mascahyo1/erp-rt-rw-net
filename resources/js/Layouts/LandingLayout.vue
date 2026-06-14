@@ -69,6 +69,26 @@ function closeMobileMenu() {
 }
 
 // ========================
+// Cloudflare Turnstile script
+// ========================
+// Load challenges.cloudflare.com script sekali per page load (idempotent).
+// Widget <div class="cf-turnstile"> di halaman login akan auto-render
+// saat script ready. Idempotent guard supaya kalau layout di-mount
+// ulang (mis. navigasi Inertia), script tidak di-load 2x.
+function loadTurnstileScript() {
+  if (document.getElementById('cf-turnstile-script')) return;
+  const s = document.createElement('script');
+  s.id = 'cf-turnstile-script';
+  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+  s.async = true;
+  s.defer = true;
+  document.head.appendChild(s);
+}
+onMounted(() => {
+  loadTurnstileScript();
+});
+
+// ========================
 // Masuk Dropdown
 // ========================
 const dropdownOpen = ref(false);

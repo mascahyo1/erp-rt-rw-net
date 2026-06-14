@@ -1,17 +1,40 @@
 <script setup>
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 import CompanySearchInput from '@/Components/CompanySearchInput.vue';
-import { ref, computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineOptions({ layout: LandingLayout });
+
+const page = usePage();
 
 const activeTab = ref('login');
 const selectedCompany = ref(null);
 
+const siteKey = computed(() => page.props.turnstile_site_key || '');
+
+function onLoginTurnstileSuccess(token) { loginForm['cf-turnstile-response'] = token; }
+function onLoginTurnstileExpired() { loginForm['cf-turnstile-response'] = ''; }
+function onRegisterTurnstileSuccess(token) { registerForm['cf-turnstile-response'] = token; }
+function onRegisterTurnstileExpired() { registerForm['cf-turnstile-response'] = ''; }
+// Expose callbacks ke window agar Turnstile widget (loaded async) bisa panggil.
+onMounted(() => {
+    window.onLoginTurnstileSuccess = onLoginTurnstileSuccess;
+    window.onLoginTurnstileExpired = onLoginTurnstileExpired;
+    window.onRegisterTurnstileSuccess = onRegisterTurnstileSuccess;
+    window.onRegisterTurnstileExpired = onRegisterTurnstileExpired;
+});
+onBeforeUnmount(() => {
+    delete window.onLoginTurnstileSuccess;
+    delete window.onLoginTurnstileExpired;
+    delete window.onRegisterTurnstileSuccess;
+    delete window.onRegisterTurnstileExpired;
+});
+
 const loginForm = useForm({
     email: '',
     password: '',
+    'cf-turnstile-response': '',
     remember: false,
 });
 
@@ -21,6 +44,7 @@ const registerForm = useForm({
     phone: '',
     password: '',
     password_confirmation: '',
+    'cf-turnstile-response': '',
 });
 
 // Touched states
@@ -273,6 +297,13 @@ function switchTab(tab) {
                                 <i v-else class="fas fa-sign-in-alt mr-2"></i>
                                 {{ loginForm.processing ? 'Memproses...' : 'Masuk' }}
                             </button>
+
+                            <!-- Cloudflare Turnstile captcha widget (login) -->
+                            <div v-if="siteKey" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onLoginTurnstileSuccess" data-expired-callback="onLoginTurnstileExpired"></div>
+                            <p v-if="loginForm.errors['cf-turnstile-response']" class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ loginForm.errors['cf-turnstile-response'] }}
+                            </p>
                         </form>
 
                         <form v-else class="space-y-3.5" @submit.prevent="submitRegister" novalidate>
@@ -407,6 +438,13 @@ function switchTab(tab) {
                                 <i v-else class="fas fa-user-plus mr-2"></i>
                                 {{ registerForm.processing ? 'Mendaftar...' : 'Daftar Sekarang' }}
                             </button>
+
+                            <!-- Cloudflare Turnstile captcha widget (register) -->
+                            <div v-if="siteKey" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onRegisterTurnstileSuccess" data-expired-callback="onRegisterTurnstileExpired"></div>
+                            <p v-if="registerForm.errors['cf-turnstile-response']" class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ registerForm.errors['cf-turnstile-response'] }}
+                            </p>
                         </form>
                     </div>
                 </div>

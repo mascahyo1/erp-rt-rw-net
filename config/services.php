@@ -41,6 +41,14 @@ return [
         'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
     ],
 
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+        // Set true di production untuk enforce HTTPS-only callback. Default
+        // false karena testing keys + local dev biasanya HTTP.
+        'verify_ssl' => env('TURNSTILE_VERIFY_SSL', false),
+    ],
+
     'payment' => [
         'default' => env('PAYMENT_GATEWAY_DEFAULT', 'midtrans'),
         'gateways' => ['midtrans', 'tunai', 'transfer'],

@@ -27,6 +27,7 @@ class AdminCompanySessionController extends Controller
             'company_id' => ['required', 'string', 'exists:companies,id'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
+            'cf-turnstile-response' => ['required', new \App\Rules\Turnstile($request->ip())],
         ]);
 
         $credentials = ['email' => $data['email'], 'password' => $data['password']];

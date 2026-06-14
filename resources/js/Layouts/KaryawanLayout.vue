@@ -36,8 +36,24 @@ const themeIcon = computed(() => theme.value === 'light' ? 'fa-sun' : theme.valu
 function applyTheme() { document.documentElement.classList.toggle('dark', isDark.value); }
 function toggleTheme() { if (theme.value === 'light') theme.value = 'dark'; else if (theme.value === 'dark') theme.value = 'system'; else theme.value = 'light'; localStorage.setItem('theme', theme.value); applyTheme(); }
 let mediaQuery;
-onMounted(() => { applyTheme(); mediaQuery = window.matchMedia('(prefers-color-scheme: dark)'); mediaQuery.addEventListener('change', applyTheme); });
+onMounted(() => { applyTheme(); mediaQuery = window.matchMedia('(prefers-color-scheme: dark)'); mediaQuery.addEventListener('change', applyTheme); loadTurnstileScript(); });
 onUnmounted(() => mediaQuery?.removeEventListener('change', applyTheme));
+
+// ========================
+// Cloudflare Turnstile script
+// ========================
+// Load challenges.cloudflare.com script sekali per page load (idempotent).
+// Widget <div class="cf-turnstile"> di halaman login akan auto-render
+// saat script ready.
+function loadTurnstileScript() {
+  if (document.getElementById('cf-turnstile-script')) return;
+  const s = document.createElement('script');
+  s.id = 'cf-turnstile-script';
+  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+  s.async = true;
+  s.defer = true;
+  document.head.appendChild(s);
+}
 </script>
 
 <template>

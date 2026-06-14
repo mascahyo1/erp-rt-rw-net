@@ -7,7 +7,8 @@ use Inertia\Inertia;
 Route::get('/login-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionController::class, 'create'])
     ->name('employee.login');
 
-Route::post('/login-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionController::class, 'store']);
+Route::post('/login-karyawan', [\App\Http\Controllers\Auth\EmployeeSessionController::class, 'store'])
+    ->middleware('throttle:5,1');
 
 // Lupa Password karyawan
 Route::get('/lupa-password-karyawan', [ForgotPasswordController::class, 'create'])->defaults('portal', 'karyawan')->name('forgot-password.karyawan.form');

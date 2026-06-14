@@ -89,6 +89,9 @@ class HandleInertiaRequests extends Middleware
             ],
             'permissions' => $permissions,
             'errors' => $errors,
+            // Turnstile site key — di-share ke semua Vue page supaya
+            // login form bisa render <div class="cf-turnstile" :data-sitekey="...">
+            'turnstile_site_key' => config('services.turnstile.site_key'),
         ];
     }
 }
