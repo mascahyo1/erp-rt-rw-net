@@ -7,10 +7,23 @@ Route::middleware('auth:customer')->group(function () {
     Route::get('/customer/dashboard', function () {
         $customer = auth()->user();
 
+        // Status pembayaran = label dari invoice terbaru.
+        // Jika tidak ada invoice sama sekali → "Belum Ada Tagihan".
+        $latestInvoice = \App\Models\CustInternetInvc::whereHas('custInternet', fn($q) => $q->where('customer_id', $customer->id))
+            ->latest('created_at')
+            ->first();
+        $statusLabel = match (true) {
+            ! $latestInvoice => 'Belum Ada Tagihan',
+            $latestInvoice->payment_status === 'paid' => 'Lunas',
+            $latestInvoice->payment_status === 'overdue' => 'Ada Tunggakan',
+            default => 'Belum Bayar',
+        };
+
         return Inertia::render('Customer/Dashboard', [
             'stats' => [
                 'paket_aktif' => \App\Models\CustInternet::where('customer_id', $customer->id)->where('internet_status', 'active')->count(),
                 'tagihan_bulan_ini' => \App\Models\CustInternetInvc::whereHas('custInternet', fn($q) => $q->where('customer_id', $customer->id))->whereMonth('created_at', now()->month)->count(),
+                'status_pembayaran' => $statusLabel,
                 'riwayat_pembayaran' => \App\Models\CustInternetPayment::whereHas('custInternetInvc.custInternet', fn($q) => $q->where('customer_id', $customer->id))->count(),
             ],
         ]);
