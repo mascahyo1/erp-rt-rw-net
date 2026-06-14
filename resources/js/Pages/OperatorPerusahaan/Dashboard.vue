@@ -1,51 +1,80 @@
+<!--
+  Operator Perusahaan Dashboard
+  Hero sky-blue + 4 stat cards real (semua dari query DB, no dummy).
+-->
 <script setup>
-import { computed } from 'vue';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
+import DashboardStatCard from '@/Components/DashboardStatCard.vue';
+import DashboardHero from '@/Components/DashboardHero.vue';
 import { Head, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 defineOptions({ layout: OperatorPerusahaanLayout });
 
-defineProps({
-  stats: Object,
+const props = defineProps({
+    stats: { type: Object, default: () => ({}) },
 });
 
 const page = usePage();
 const companyName = computed(() => page.props.auth?.user?.company?.name ?? 'Perusahaan');
+
+// Format nominal ke Rupiah singkat (mis. 1500000 → "Rp 1,5jt")
+const formatRupiah = (n) => {
+    const num = Number(n) || 0;
+    if (num >= 1_000_000_000) return `Rp ${(num / 1_000_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (num >= 1_000_000) return `Rp ${(num / 1_000_000).toFixed(1).replace(/\.0$/, '')}jt`;
+    if (num >= 1_000) return `Rp ${(num / 1_000).toFixed(0)}rb`;
+    return `Rp ${num.toLocaleString('id-ID')}`;
+};
 </script>
 
 <template>
-  <div>
-    <Head title="Dashboard | Perusahaan" />
-    <div class="space-y-6">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h2>
+    <div>
+        <Head title="Dashboard | Perusahaan" />
 
-      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 p-8 md:p-10 shadow-lg">
-        <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-16 -left-16 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
-        <div class="relative flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div class="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center shrink-0"><i class="fas fa-building text-white text-2xl"></i></div>
-          <div class="text-white"><h3 class="text-2xl font-bold mb-1">Selamat datang, {{ companyName }}!</h3><p class="text-sky-100 text-sm md:text-base">Dashboard ini menampilkan ringkasan bisnis RT/RW Net Anda.</p></div>
-        </div>
-      </div>
+        <div class="space-y-6">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h2>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-3"><div class="w-10 h-10 rounded-lg bg-sky-100 dark:bg-sky-900/30 flex items-center justify-center"><i class="fas fa-users text-sky-600 dark:text-sky-400"></i></div></div>
-          <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats?.total_customer ?? 0 }}</div><div class="text-sm text-gray-600 dark:text-gray-400">Total Customer</div>
+            <DashboardHero
+                :title="`Selamat datang, ${companyName}!`"
+                subtitle="Dashboard ini menampilkan ringkasan bisnis RT/RW Net Anda."
+                icon="fa-building"
+                gradient="sky"
+            />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <DashboardStatCard
+                    icon="fa-users"
+                    label="Total Customer"
+                    :value="stats?.total_customer ?? 0"
+                    color="sky"
+                    href="/operator-perusahaan/customer"
+                />
+                <DashboardStatCard
+                    icon="fa-file-invoice"
+                    label="Tagihan Bulan Ini"
+                    :value="stats?.tagihan_bulan_ini ?? 0"
+                    color="emerald"
+                    sublabel="Jumlah invoice dibuat"
+                    href="/operator-perusahaan/tagihan"
+                />
+                <DashboardStatCard
+                    icon="fa-hand-holding-usd"
+                    label="Pembayaran Masuk"
+                    :value="formatRupiah(stats?.pembayaran_masuk ?? 0)"
+                    color="amber"
+                    sublabel="Bulan ini · status paid"
+                    href="/operator-perusahaan/riwayat-pembayaran"
+                />
+                <DashboardStatCard
+                    icon="fa-box"
+                    label="Paket Aktif"
+                    :value="stats?.langganan_aktif ?? 0"
+                    color="violet"
+                    sublabel="Customer dengan internet aktif"
+                    href="/operator-perusahaan/langganan-customer"
+                />
+            </div>
         </div>
-        <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-3"><div class="w-10 h-10 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center"><i class="fas fa-file-invoice text-emerald-600 dark:text-emerald-400"></i></div></div>
-          <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats?.tagihan_bulan_ini ?? 0 }}</div><div class="text-sm text-gray-600 dark:text-gray-400">Tagihan Bulan Ini</div>
-        </div>
-        <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-3"><div class="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center"><i class="fas fa-hand-holding-usd text-amber-600 dark:text-amber-400"></i></div></div>
-          <div class="text-2xl font-bold text-gray-900 dark:text-white">Rp 0</div><div class="text-sm text-gray-600 dark:text-gray-400">Pembayaran Masuk</div>
-        </div>
-        <div class="rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div class="flex items-center justify-between mb-3"><div class="w-10 h-10 rounded-lg bg-violet-100 dark:bg-violet-900/30 flex items-center justify-center"><i class="fas fa-box text-violet-600 dark:text-violet-400"></i></div></div>
-          <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats?.langganan_aktif ?? 0 }}</div><div class="text-sm text-gray-600 dark:text-gray-400">Paket Aktif</div>
-        </div>
-      </div>
     </div>
-  </div>
 </template>

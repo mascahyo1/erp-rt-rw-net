@@ -27,10 +27,14 @@ Route::middleware('auth:admin-company')->group(function () {
         return Inertia::render('OperatorPerusahaan/Dashboard', [
             'stats' => [
                 'total_customer' => \App\Models\Customer::where('company_id', $companyId)->count(),
-                'customer_aktif' => \App\Models\Customer::where('company_id', $companyId)->where('is_active', true)->count(),
-                'karyawan_aktif' => \App\Models\Employee::where('company_id', $companyId)->where('is_active', true)->count(),
-                'langganan_aktif' => \App\Models\CustInternet::whereHas('customer', fn($q) => $q->where('company_id', $companyId))->where('internet_status', 'active')->count(),
                 'tagihan_bulan_ini' => \App\Models\CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId))->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->count(),
+                // Total nominal pembayaran yang sudah disetujui (status='paid') bulan ini
+                'pembayaran_masuk' => (float) \App\Models\CustInternetPayment::whereHas('custInternetInvc.custInternet.customer', fn($q) => $q->where('company_id', $companyId))
+                    ->where('status', 'paid')
+                    ->whereMonth('payment_date', now()->month)
+                    ->whereYear('payment_date', now()->year)
+                    ->sum('amount_paid'),
+                'langganan_aktif' => \App\Models\CustInternet::whereHas('customer', fn($q) => $q->where('company_id', $companyId))->where('internet_status', 'active')->count(),
             ],
         ]);
     })->name('operator-perusahaan.dashboard');
