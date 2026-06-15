@@ -223,6 +223,9 @@ Route::middleware('auth:employee')->group(function () {
     // AJAX: Verifikasi manual status Midtrans (fallback saat webhook lambat/gagal)
     Route::middleware('permission:karyawan-riwayat-pembayaran.persetujuan')
         ->post('/karyawan/api/riwayat-pembayaran/{id}/verify-midtrans', [$perusahaanNs.'\PembayaranController', 'verifyMidtrans']);
+    // Bulk: verifikasi banyak payment sekaligus (dari tombol di atas datatable)
+    Route::middleware('permission:karyawan-riwayat-pembayaran.persetujuan')
+        ->post('/karyawan/api/riwayat-pembayaran/bulk-verify-midtrans', [$perusahaanNs.'\PembayaranController', 'bulkVerifyMidtrans']);
     Route::middleware('permission:karyawan-riwayat-pembayaran.export')
         ->get('/karyawan/riwayat-pembayaran/export', [$perusahaanNs.'\PembayaranController', 'export']);
     Route::middleware('permission:karyawan-riwayat-pembayaran.import')

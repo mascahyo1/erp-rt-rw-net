@@ -32,6 +32,7 @@ const showCreateModal = ref(false);
 const showDetailModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const bulkVerifying = ref(false);
 const showReviewModal = ref(false);
 const showExportDropdown = ref(false);
 const showImportModal = ref(false);
@@ -171,6 +172,36 @@ function submitBulkReview() {
 }
 function bulkDelete() { router.post('/operator-perusahaan/riwayat-pembayaran/bulk-delete', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; fetchData(); toast.success('Pembayaran berhasil dihapus.'); } }); }
 function bulkRestore() { router.post('/operator-perusahaan/riwayat-pembayaran/bulk-restore', { ids: selectedIds.value }, { onSuccess: () => { selectedIds.value = []; fetchData(); toast.success('Pembayaran berhasil dipulihkan.'); } }); }
+async function bulkVerifyMidtrans() {
+  if (selectedIds.value.length === 0) { toast.error('Pilih data terlebih dahulu.'); return; }
+  if (selectedMidtransPendingCount.value === 0) { toast.error('Pilih minimal 1 record Midtrans+pending.'); return; }
+  if (!confirm(`Sinkron status Midtrans untuk ${selectedMidtransPendingCount.value} record?\n\nRecord non-Midtrans/pending akan di-skip otomatis.`)) return;
+  bulkVerifying.value = true;
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    const res = await fetch('/operator-perusahaan/api/riwayat-pembayaran/bulk-verify-midtrans', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf },
+      body: JSON.stringify({ ids: selectedIds.value }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.status === 'ok') {
+      const s = data.summary || {};
+      const parts = [`${s.ok || 0} berhasil`];
+      if (s.failed) parts.push(`${s.failed} gagal`);
+      if (s.skipped) parts.push(`${s.skipped} di-skip`);
+      toast.success(`Sinkron selesai: ${parts.join(', ')} (dari ${s.verified || 0} payment Midtrans).`);
+      selectedIds.value = [];
+      fetchData();
+    } else {
+      toast.error(data.error || `Gagal sinkron bulk (HTTP ${res.status}).`);
+    }
+  } catch (err) {
+    toast.error(err.message || 'Gagal sinkron bulk.');
+  } finally {
+    bulkVerifying.value = false;
+  }
+}
 function downloadTemplate() { window.location.href = '/operator-perusahaan/riwayat-pembayaran/template'; }
 function openImport() { importFile.value = null; showImportModal.value = true; }
 function onImportFileChange(e) { importFile.value = e.target.files[0]; importForm.file = e.target.files[0]; }
@@ -245,6 +276,7 @@ const pagination = computed(() => ({ current: props.pembayarans?.current_page ||
 const hasFilter = computed(() => searchInput.value || statusFilter.value || providerFilter.value || paymentMethodFilter.value || createdStartFilter.value || createdEndFilter.value || invoiceFilter.value || terhapusFilter.value !== 'tidak');
 const hasSelected = computed(() => selectedIds.value.length > 0);
 const selectedPendingCount = computed(() => items.value.filter(i => selectedIds.value.includes(i.id) && i.status === 'pending').length);
+const selectedMidtransPendingCount = computed(() => items.value.filter(i => selectedIds.value.includes(i.id) && i.status === 'pending' && i.provider === 'midtrans').length);
 const isAllSelected = computed(() => items.value.length > 0 && items.value.every(i => selectedIds.value.includes(i.id)));
 const paymentMethods = ['tunai', 'transfer_manual'];
 const providers = ['internal', 'external'];
@@ -292,6 +324,7 @@ const providers = ['internal', 'external'];
         <span class="text-sm font-medium text-sky-700 dark:text-sky-300"><i class="fas fa-check-circle mr-1.5"></i> {{ selectedIds.length }} data dipilih</span>
         <div class="flex items-center gap-2">
           <button v-if="can('riwayat-pembayaran.persetujuan') && selectedPendingCount > 0" @click="openBulkReview" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-sky-600 text-white hover:bg-sky-700"><i class="fas fa-clipboard-check mr-1"></i> Review ({{ selectedPendingCount }} pending)</button>
+          <button v-if="can('riwayat-pembayaran.persetujuan') && selectedMidtransPendingCount > 0" @click="bulkVerifyMidtrans()" :disabled="bulkVerifying" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-60 disabled:cursor-not-allowed"><i class="fas fa-sync-alt mr-1"></i> Verifikasi Midtrans ({{ selectedMidtransPendingCount }})</button>
           <button v-if="terhapusFilter === 'ya'" @click="bulkRestore()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"><i class="fas fa-undo-alt mr-1"></i> Pulihkan</button>
           <button v-if="can('riwayat-pembayaran.delete')" @click="bulkDelete()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash-alt mr-1"></i> Hapus</button>
         </div>

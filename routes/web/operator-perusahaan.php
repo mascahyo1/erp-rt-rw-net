@@ -353,6 +353,9 @@ Route::middleware('auth:admin-company')->group(function () {
     Route::middleware('permission:riwayat-pembayaran.persetujuan')->group(function () {
         Route::post('/operator-perusahaan/api/riwayat-pembayaran/{id}/verify-midtrans', [PembayaranController::class, 'verifyMidtrans'])
             ->name('api.operator-perusahaan.pembayaran.verify-midtrans');
+        // Bulk: verifikasi banyak payment sekaligus (dari tombol di atas datatable)
+        Route::post('/operator-perusahaan/api/riwayat-pembayaran/bulk-verify-midtrans', [PembayaranController::class, 'bulkVerifyMidtrans'])
+            ->name('api.operator-perusahaan.pembayaran.bulk-verify-midtrans');
     });
     Route::middleware('permission:riwayat-pembayaran.export')->group(function () {
         Route::get('/operator-perusahaan/riwayat-pembayaran/export', [PembayaranController::class, 'export'])->name('operator-perusahaan.pembayaran.export');

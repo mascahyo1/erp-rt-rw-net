@@ -9,6 +9,7 @@ use App\Models\Company;
 use App\Models\CustInternetInvc;
 use App\Models\CustInternetPayment;
 use App\Services\FileUploadService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -326,7 +327,7 @@ class PembayaranController extends Controller
      * AJAX endpoint: verifikasi manual status Midtrans untuk payment pending.
      * Delegate ke MidtransPaymentController::verifyStatus (3 portal — operator/karyawan/customer).
      */
-    public function verifyMidtrans(Request $request, string $id): \Illuminate\Http\JsonResponse
+    public function verifyMidtrans(Request $request, string $id): JsonResponse
     {
         $companyId = auth()->user()->company_id;
 
@@ -345,6 +346,77 @@ class PembayaranController extends Controller
 
         return app(\App\Http\Controllers\Customer\MidtransPaymentController::class)
             ->verifyStatus($request, $id);
+    }
+
+    /**
+     * AJAX bulk endpoint: verifikasi manual status Midtrans untuk BANYAK payment
+     * sekaligus. Dipakai oleh tombol "Verifikasi Midtrans (N)" di atas datatable
+     * setelah user checklist beberapa row.
+     *
+     * Filter: hanya payment provider=midtrans (other provider di-skip silently)
+     * Return: { ok, failed, skipped, results: [{id, status, message, http}] }
+     */
+    public function bulkVerifyMidtrans(Request $request): JsonResponse
+    {
+        $companyId = auth()->user()->company_id;
+
+        $ids = $request->input('ids', []);
+        if (! is_array($ids) || empty($ids)) {
+            return response()->json(['error' => 'Pilih minimal 1 data untuk diverifikasi.'], 422);
+        }
+
+        // Ambil payment yang eligible: milik company, provider=midtrans
+        $payments = CustInternetPayment::whereHas(
+            'custInternetInvc.custInternet.customer',
+            fn($q) => $q->where('company_id', $companyId)
+        )
+            ->whereIn('id', $ids)
+            ->where('provider', PaymentProvider::MIDTRANS->value)
+            ->get();
+
+        if ($payments->isEmpty()) {
+            return response()->json(['error' => 'Tidak ada payment Midtrans yang valid dari pilihan Anda.'], 404);
+        }
+
+        $midtrans = app(\App\Http\Controllers\Customer\MidtransPaymentController::class);
+        $results = [];
+        $ok = 0;
+        $failed = 0;
+
+        foreach ($payments as $payment) {
+            $resp = $midtrans->verifyStatus($request, $payment->id);
+            $payload = $resp->getData(true); // decode JsonResponse to array
+            $http = $resp->getStatusCode();
+
+            if ($http === 200 && ($payload['status'] ?? null) === 'ok') {
+                $ok++;
+            } else {
+                $failed++;
+            }
+
+            $results[] = [
+                'id' => $payment->id,
+                'code' => $payment->code,
+                'http' => $http,
+                'status' => $payload['status'] ?? 'error',
+                'message' => $payload['message'] ?? ($payload['error'] ?? 'Unknown error'),
+                'changed' => $payload['changed'] ?? false,
+            ];
+        }
+
+        $skipped = count($ids) - $payments->count();
+
+        return response()->json([
+            'status' => 'ok',
+            'summary' => [
+                'total_requested' => count($ids),
+                'verified' => $payments->count(),
+                'ok' => $ok,
+                'failed' => $failed,
+                'skipped' => $skipped, // ID yang bukan midtrans / bukan punya company
+            ],
+            'results' => $results,
+        ]);
     }
 
     public function export(Request $request): BinaryFileResponse
