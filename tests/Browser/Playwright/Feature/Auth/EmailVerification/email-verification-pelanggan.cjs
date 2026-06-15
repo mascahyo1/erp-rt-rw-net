@@ -28,8 +28,8 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const PlaywrightHelper = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/PlaywrightHelper.cjs');
 const LogParser = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/LogParser.cjs');
+const BASE = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/baseUrl.cjs');
 
-const BASE = 'http://erp-rt-rw-net.test';
 const PROJECT_ROOT = 'C:\\laragon\\www\\erp-rt-rw-net';
 const RESULT_DIR = path.join(PROJECT_ROOT, 'tests/Browser/Playwright/result/Auth/EmailVerification');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
@@ -134,7 +134,8 @@ async function testAll() {
         // ===== 4. Isi form =====
         await page.fill('input[placeholder="Nama Anda"]', newName);
         await page.fill('input[placeholder="email@contoh.com"]', newEmail);
-        await page.fill('input[placeholder="0812-3456-7890"]', newPhone);
+        // Phone sekarang pisah: CountryCodeSelect (default +62) + input no_telp (placeholder "812-3456-7890")
+        await page.fill('input[placeholder="812-3456-7890"]', newPhone);
         await page.fill('input[placeholder="Minimal 8 karakter"]', newPassword);
         await page.fill('input[placeholder="Ulangi password"]', newPassword);
 

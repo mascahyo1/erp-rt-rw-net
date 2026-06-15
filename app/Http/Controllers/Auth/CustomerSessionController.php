@@ -81,7 +81,8 @@ class CustomerSessionController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:customers,email'],
-            'phone' => ['required', 'string', 'max:20'],
+            'phone_country_code' => ['required', 'string', 'max:6'],
+            'phone_number' => ['required', 'string', 'max:20'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
             'company_id' => ['required', 'string', 'exists:companies,id'],
             'cf-turnstile-response' => ['required', new \App\Rules\Turnstile($request->ip())],
@@ -90,8 +91,8 @@ class CustomerSessionController extends Controller
         $customer = \App\Models\Customer::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'phone_number' => $data['phone'],
-            'phone_country_code' => '+62',
+            'phone_number' => $data['phone_number'],
+            'phone_country_code' => $data['phone_country_code'],
             'company_id' => $data['company_id'],
             'password' => bcrypt($data['password']),
             'is_active' => true,

@@ -1,6 +1,7 @@
 <script setup>
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 import CompanySearchInput from '@/Components/CompanySearchInput.vue';
+import CountryCodeSelect from '@/Components/CountryCodeSelect.vue';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
@@ -12,6 +13,8 @@ const activeTab = ref('login');
 const selectedCompany = ref(null);
 
 const siteKey = computed(() => page.props.turnstile_site_key || '');
+
+const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
 
 function onLoginTurnstileSuccess(token) { loginForm['cf-turnstile-response'] = token; }
 function onLoginTurnstileExpired() { loginForm['cf-turnstile-response'] = ''; }
@@ -41,7 +44,8 @@ const loginForm = useForm({
 const registerForm = useForm({
     name: '',
     email: '',
-    phone: '',
+    phone_country_code: '+62',
+    phone_number: '',
     password: '',
     password_confirmation: '',
     'cf-turnstile-response': '',
@@ -82,8 +86,9 @@ const regEmailError = computed(() => {
 });
 const regPhoneError = computed(() => {
     if (!rt.phone.value) return null;
-    if (!registerForm.phone) return 'Nomor HP wajib diisi.';
-    if (!/^[0-9+\-\s()]{8,20}$/.test(registerForm.phone)) return 'Nomor HP tidak valid.';
+    if (!registerForm.phone_country_code) return 'Kode negara wajib dipilih.';
+    if (!registerForm.phone_number) return 'Nomor HP wajib diisi.';
+    if (!/^[0-9+\-\s()]{8,20}$/.test(registerForm.phone_number)) return 'Nomor HP tidak valid.';
     return null;
 });
 const regPasswordError = computed(() => {
@@ -358,20 +363,26 @@ function switchTab(tab) {
                                 </div>
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nomor HP</label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <i :class="['fas fa-phone text-sm transition-colors', regPhoneError ? 'text-red-400' : 'text-gray-400']"></i>
+                                    <div class="flex gap-2">
+                                        <select v-model="registerForm.phone_country_code" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors hidden"><option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option></select>
+                                        <div class="w-28 sm:w-32 shrink-0">
+                                            <CountryCodeSelect v-model="registerForm.phone_country_code" accent="emerald" size="sm" />
                                         </div>
-                                        <input
-                                            v-model="registerForm.phone"
-                                            @blur="rt.phone.value = true"
-                                            type="tel"
-                                            placeholder="0812-3456-7890"
-                                            class="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-all duration-200 focus:ring-2 focus:shadow-md"
-                                            :class="regPhoneError
-                                                ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500'
-                                                : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500/30 focus:border-emerald-500'"
-                                        />
+                                        <div class="relative flex-1 min-w-0">
+                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                <i :class="['fas fa-phone text-sm transition-colors', regPhoneError ? 'text-red-400' : 'text-gray-400']"></i>
+                                            </div>
+                                            <input
+                                                v-model="registerForm.phone_number"
+                                                @blur="rt.phone.value = true"
+                                                type="tel"
+                                                placeholder="812-3456-7890"
+                                                class="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-all duration-200 focus:ring-2 focus:shadow-md"
+                                                :class="regPhoneError
+                                                    ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500'
+                                                    : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500/30 focus:border-emerald-500'"
+                                            />
+                                        </div>
                                     </div>
                                     <p v-if="regPhoneError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regPhoneError }}</p>
                                 </div>
