@@ -2,9 +2,37 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+// Baca .env sederhana (cukup untuk PLAYWRIGHT_BASE_URL)
+// Tidak dependensi dotenv — test harus ringan.
+function readEnvVar(key) {
+    try {
+        const envPath = path.join(__dirname, '..', '..', '..', '..', '.env');
+        if (!fs.existsSync(envPath)) return null;
+        const content = fs.readFileSync(envPath, 'utf8');
+        const lines = content.split(/\r?\n/);
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('#') || !trimmed.includes('=')) continue;
+            const [k, ...vParts] = trimmed.split('=');
+            if (k.trim() !== key) continue;
+            let v = vParts.join('=').trim();
+            // Strip quotes (single or double)
+            v = v.replace(/^["']|["']$/g, '');
+            return v || null;
+        }
+    } catch (e) {}
+    return null;
+}
+
+const DEFAULT_BASE_URL = 'http://erp-rt-rw-net.test';
+
 class PlaywrightHelper {
-    constructor(baseUrl = 'http://erp-rt-rw-net.test') {
-        this.baseUrl = baseUrl;
+    constructor(baseUrl) {
+        // Prioritas: constructor arg > env var > default
+        this.baseUrl = baseUrl
+            || process.env.PLAYWRIGHT_BASE_URL
+            || readEnvVar('PLAYWRIGHT_BASE_URL')
+            || DEFAULT_BASE_URL;
         this.browser = null;
         this.context = null;
         this.page = null;

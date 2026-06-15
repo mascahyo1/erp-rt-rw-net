@@ -17,8 +17,8 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const BASE = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/baseUrl.cjs');
 
-const BASE = 'http://erp-rt-rw-net.test';
 const PROJECT_ROOT = 'C:\\laragon\\www\\erp-rt-rw-net';
 const RESULT_DIR = path.join(PROJECT_ROOT, 'tests/Browser/Playwright/result/Karyawan/email-verified-at-karyawan');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });

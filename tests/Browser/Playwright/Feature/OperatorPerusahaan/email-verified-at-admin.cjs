@@ -18,8 +18,8 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
+const BASE = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/baseUrl.cjs');
 
-const BASE = 'http://erp-rt-rw-net.test';
 const PROJECT_ROOT = 'C:\\laragon\\www\\erp-rt-rw-net';
 const RESULT_DIR = path.join(PROJECT_ROOT, 'tests/Browser/Playwright/result/OperatorPerusahaan/email-verified-at-admin');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
@@ -237,7 +237,15 @@ async function testAll() {
             // Klik Update (modal edit punya tombol submit dengan text "Update" - di form)
             // Pakai :visible filter supaya gak ke click button hidden
             await page.locator('button[type="submit"]:has-text("Update"):visible').first().click();
-            await page.waitForTimeout(3000);
+            // Tunggu Inertia selesai process + DB updated + modal close
+            await page.waitForTimeout(2000);
+            // Tunggu sampai modal close (paling reliable)
+            try {
+                await page.waitForSelector('button[type="submit"]:has-text("Update")', { state: 'hidden', timeout: 5000 });
+            } catch (e) {
+                // Modal mungkin masih ada, ignore
+            }
+            await page.waitForTimeout(2000);
             await page.screenshot({ path: path.join(RESULT_DIR, '08-after-update.png'), fullPage: true });
 
             // Verify DB
