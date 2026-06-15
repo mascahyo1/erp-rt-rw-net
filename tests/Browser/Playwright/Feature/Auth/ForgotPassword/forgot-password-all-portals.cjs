@@ -119,7 +119,7 @@ async function testAll() {
 
             // ===== 2. Goto forgot-password form =====
             await page.goto(BASE + phase.url, { waitUntil: 'domcontentloaded' });
-            await page.waitForLoadState('networkidle');
+            // await page.waitForLoadState('networkidle');  // Disabled: Reverb websocket blocks networkidle
             await page.waitForTimeout(1000);
             await page.screenshot({ path: path.join(RESULT_DIR, `${phase.name}-01-form.png`), fullPage: true });
             assert(`[${phase.name}] Form "Lupa Password" renders`, (await page.locator('h1:has-text("Lupa Password")').count()) > 0);
@@ -165,7 +165,7 @@ async function testAll() {
 
             // ===== 5. Visit reset URL =====
             await page.goto(resetUrl, { waitUntil: 'domcontentloaded' });
-            await page.waitForLoadState('networkidle');
+            // await page.waitForLoadState('networkidle');  // Disabled: Reverb websocket blocks networkidle
             await page.waitForTimeout(1500);
             await page.screenshot({ path: path.join(RESULT_DIR, `${phase.name}-04-reset-form.png`), fullPage: true });
             assert(`[${phase.name}] Reset form (password baru) renders`, (await page.locator('h1:has-text("Buat Password Baru")').count()) > 0);

@@ -92,6 +92,15 @@ Route::get('/lupa-password-pelanggan', [ForgotPasswordController::class, 'create
 Route::post('/lupa-password-pelanggan', [ForgotPasswordController::class, 'store'])->defaults('portal', 'pelanggan')->middleware('throttle:5,1')->name('forgot-password.pelanggan.send');
 Route::post('/lupa-password-pelanggan/reset', [ForgotPasswordController::class, 'update'])->defaults('portal', 'pelanggan')->middleware('throttle:5,1')->name('forgot-password.pelanggan.reset');
 
+// Email verification - Pelanggan
+Route::get('/verifikasi-email-pelanggan', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'form'])
+    ->name('customer.verifikasi-email.form');
+Route::post('/kirim-ulang-verifikasi-pelanggan', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'send'])
+    ->middleware('throttle:5,1')
+    ->name('customer.verifikasi-email.send');
+Route::get('/verifikasi-email-pelanggan/konfirmasi', [\App\Http\Controllers\Auth\EmailVerificationController::class, 'confirm'])
+    ->name('customer.verifikasi-email.confirm');
+
 // Public company search endpoint (for login pages)
 Route::get('/api/companies/search', function (\Illuminate\Http\Request $request) {
     $q = trim((string) $request->query('q', ''));

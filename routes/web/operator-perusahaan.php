@@ -51,6 +51,9 @@ Route::middleware('auth:admin-company')->group(function () {
             Route::put('/customer/{customer}', [CustomerController::class, 'update'])->name('customer.update');
             Route::post('/customer/bulk-status', [CustomerController::class, 'bulkToggleStatus'])->name('customer.bulkStatus');
         });
+        Route::middleware('permission:customer.verify-email')->group(function () {
+            Route::post('/customer/bulk-verify-email', [CustomerController::class, 'bulkVerifyEmail'])->name('customer.bulkVerifyEmail');
+        });
         Route::middleware('permission:customer.delete')->group(function () {
             Route::delete('/customer/{customer}', [CustomerController::class, 'destroy'])->name('customer.destroy');
             Route::post('/customer/bulk-delete', [CustomerController::class, 'bulkDelete'])->name('customer.bulkDelete');

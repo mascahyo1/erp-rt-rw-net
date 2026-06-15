@@ -56,6 +56,14 @@ class CustomerSessionController extends Controller
             ]);
         }
 
+        if (! $user->hasVerifiedEmail()) {
+            Auth::guard('customer')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Email belum diverifikasi. Cek inbox Anda untuk link verifikasi, atau kirim ulang di halaman verifikasi.',
+            ]);
+        }
+
         return redirect()->route('customer.dashboard');
     }
 
@@ -87,10 +95,27 @@ class CustomerSessionController extends Controller
             'company_id' => $data['company_id'],
             'password' => bcrypt($data['password']),
             'is_active' => true,
+            'email_verified_at' => null, // WAJIB verifikasi email sebelum login
         ]);
 
-        Auth::guard('customer')->login($customer);
+        // Generate verification token, simpan hashed, kirim email
+        $rawToken = \Illuminate\Support\Str::random(64);
+        \Illuminate\Support\Facades\DB::table('email_verifications')->updateOrInsert(
+            [
+                'email' => $customer->getEmailForVerification(),
+                'company_id' => $customer->company_id,
+            ],
+            [
+                'token' => \Illuminate\Support\Facades\Hash::make($rawToken),
+                'created_at' => now(),
+            ]
+        );
+        $customer->sendCustomEmailVerificationNotification($rawToken);
 
-        return redirect()->route('customer.dashboard');
+        // JANGAN auto-login — arahkan ke halaman "Cek email Anda"
+        return redirect()->route('customer.verifikasi-email.form', [
+            'email' => $customer->email,
+            'company_id' => $customer->company_id,
+        ])->with('status', 'Registrasi berhasil! Cek email Anda untuk verifikasi.');
     }
 }

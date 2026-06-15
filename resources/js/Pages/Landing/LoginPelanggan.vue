@@ -288,6 +288,11 @@ function switchTab(tab) {
                                 </label>
                                 <a href="/lupa-password-pelanggan" class="text-emerald-600 dark:text-emerald-400 hover:underline font-medium">Lupa password?</a>
                             </div>
+                            <div class="text-center -mt-2">
+                                <a href="/verifikasi-email-pelanggan" class="text-xs text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:underline">
+                                    Belum verifikasi email? Kirim ulang link
+                                </a>
+                            </div>
                             <button
                                 type="submit"
                                 :disabled="loginForm.processing"

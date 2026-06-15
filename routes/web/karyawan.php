@@ -120,6 +120,8 @@ Route::middleware('auth:employee')->group(function () {
         ->post('/karyawan/customer', [$perusahaanNs.'\CustomerController', 'store']);
     Route::middleware('permission:karyawan-customer.edit')
         ->put('/karyawan/customer/{customer}', [$perusahaanNs.'\CustomerController', 'update']);
+    Route::middleware('permission:karyawan-customer.verify-email')
+        ->post('/karyawan/customer/bulk-verify-email', [$perusahaanNs.'\CustomerController', 'bulkVerifyEmail']);
     Route::middleware('permission:karyawan-customer.delete')
         ->delete('/karyawan/customer/{customer}', [$perusahaanNs.'\CustomerController', 'destroy']);
     Route::middleware('permission:karyawan-customer.restore')

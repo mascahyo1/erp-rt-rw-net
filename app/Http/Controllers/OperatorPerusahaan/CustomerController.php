@@ -64,6 +64,9 @@ class CustomerController extends Controller
                 'kode' => $customer->code,
                 'nama' => $customer->name,
                 'email' => $customer->email,
+                'email_verified' => $customer->hasVerifiedEmail(),
+                'email_verified_at' => $customer->email_verified_at?->format('Y-m-d H:i'),
+                'email_verified_at_raw' => $customer->email_verified_at?->toISOString(),
                 'kode_negara' => $customer->phone_country_code,
                 'no_telp' => $customer->phone_number,
                 'no_nik' => $customer->no_nik,
@@ -193,10 +196,14 @@ class CustomerController extends Controller
             'no_kk' => ['nullable', 'string', 'max:50'],
             'photo_ktp' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
             'photo_kk' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
-            'photo_profile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'photo_profile' => ['nullable', 'file', 'mimes:jpg,jpeg,webp', 'max:2048'],
             'alamat' => ['nullable', 'string', 'max:500'],
             'status' => ['required', 'in:Aktif,Nonaktif'],
             'password' => ['nullable', 'string', 'min:8'],
+            // Action flag untuk toggle email_verified_at. 'set' = tandai verified
+            // (override manual kalau customer terkendala email), 'reset' = nullify.
+            // 'null'/tidak ada = no-op.
+            'email_verified_at_action' => ['nullable', 'in:set,reset'],
         ], [
             'kode.unique' => 'Kode pelanggan sudah digunakan.',
             'email.unique' => 'Email sudah terdaftar di perusahaan ini.',
@@ -214,6 +221,11 @@ class CustomerController extends Controller
             'address' => $validated['alamat'] ?? null,
             'is_active' => $validated['status'] === 'Aktif',
         ];
+
+        // Apply email_verified_at action kalau ada. Skip kalau null (no-op).
+        if (!empty($validated['email_verified_at_action'])) {
+            $data['email_verified_at'] = $validated['email_verified_at_action'] === 'set' ? now() : null;
+        }
 
         $uploadService = new FileUploadService();
 
@@ -293,6 +305,27 @@ class CustomerController extends Controller
         return back()->with('success', "{$count} pelanggan berhasil {$label}.");
     }
 
+    /**
+     * Bulk set email_verified_at = now() untuk ids yang dipilih.
+     * Hanya update customers yang masih dalam company admin yang sedang login
+     * (multi-tenant safety). Customers yang sudah verified akan ter-override
+     * timestamp-nya — biasanya no-op secara UX.
+     */
+    public function bulkVerifyEmail(Request $request): RedirectResponse
+    {
+        $ids = $request->input('ids', []);
+        if (empty($ids)) {
+            return back()->with('error', 'Tidak ada pelanggan yang dipilih.');
+        }
+
+        $companyId = auth()->user()->company_id;
+        $count = Customer::whereIn('id', $ids)
+            ->where('company_id', $companyId)
+            ->update(['email_verified_at' => now()]);
+
+        return back()->with('success', "{$count} pelanggan ditandai verified.");
+    }
+
     public function bulkRestore(Request $request): RedirectResponse
     {
         $ids = $request->input('ids', []);
@@ -316,7 +349,7 @@ class CustomerController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Daftar Pelanggan');
 
-        $headers = ['Kode', 'Nama', 'Email', 'No. Telepon', 'No. NIK', 'No. KK', 'Alamat', 'Status'];
+        $headers = ['Kode', 'Nama', 'Email', 'Email Verified', 'No. Telepon', 'No. NIK', 'No. KK', 'Alamat', 'Status'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -329,6 +362,7 @@ class CustomerController extends Controller
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $c->code ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $c->name, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $c->email, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $c->email_verified_at ? 'Verified' : 'Belum', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, ($c->phone_country_code ?? '') . $c->phone_number, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $c->no_nik ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $c->no_kk ?? '-', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
@@ -357,14 +391,14 @@ class CustomerController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Import');
 
-        $headers = ['Kode', 'Nama', 'Email', 'Kode Negara', 'No. Telepon', 'No. NIK', 'No. KK', 'Alamat', 'Status (Aktif/Nonaktif)', 'Password'];
+        $headers = ['Kode', 'Nama', 'Email', 'Email Verified (Verified/Belum)', 'Kode Negara', 'No. Telepon', 'No. NIK', 'No. KK', 'Alamat', 'Status (Aktif/Nonaktif)', 'Password'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
             $sheet->getStyle("{$col}1")->getFont()->setBold(true);
         }
 
-        $example = ['CUST-001', 'Nama Pelanggan', 'email@contoh.com', '+62', '8123456789', '1234567890123456', '1234567890123456', 'Jl. Alamat No. 1, RT 01 RW 01', 'Aktif', 'password123'];
+        $example = ['CUST-001', 'Nama Pelanggan', 'email@contoh.com', 'Belum', '+62', '8123456789', '1234567890123456', '1234567890123456', 'Jl. Alamat No. 1, RT 01 RW 01', 'Aktif', 'password123'];
         foreach ($example as $i => $v) {
             $sheet->setCellValueExplicit($this->excelColumn($i + 1) . '2', (string) $v, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
         }
@@ -408,13 +442,14 @@ class CustomerController extends Controller
             $kode = trim($row[0] ?? '');
             $nama = trim($row[1] ?? '');
             $email = trim($row[2] ?? '');
-            $kodeNegara = trim($row[3] ?? '') ?: '+62';
-            $noTelp = trim($row[4] ?? '');
-            $noNik = trim($row[5] ?? '');
-            $noKk = trim($row[6] ?? '');
-            $alamat = trim($row[7] ?? '');
-            $status = strtolower(trim($row[8] ?? 'aktif')) === 'nonaktif' ? false : true;
-            $password = trim($row[9] ?? '');
+            // Kolom index 3 = Email Verified (informational, tidak di-import — always null)
+            $kodeNegara = trim($row[4] ?? '') ?: '+62';
+            $noTelp = trim($row[5] ?? '');
+            $noNik = trim($row[6] ?? '');
+            $noKk = trim($row[7] ?? '');
+            $alamat = trim($row[8] ?? '');
+            $status = strtolower(trim($row[9] ?? 'aktif')) === 'nonaktif' ? false : true;
+            $password = trim($row[10] ?? '');
 
             if (empty($nama) || empty($email)) {
                 $errors[] = "Baris {$line}: Nama dan Email wajib diisi.";
@@ -435,6 +470,7 @@ class CustomerController extends Controller
                 'code' => $kode ?: null,
                 'name' => $nama,
                 'email' => $email,
+                'email_verified_at' => null, // Import = always null, admin/karyawan bisa mark manual
                 'phone_country_code' => $kodeNegara,
                 'phone_number' => $noTelp,
                 'no_nik' => $noNik ?: null,

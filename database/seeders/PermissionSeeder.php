@@ -138,6 +138,7 @@ class PermissionSeeder extends Seeder
             'detail' => 'Lihat detail',
             'delete' => 'Hapus & bulk delete',
             'restore' => 'Pulihkan & bulk restore',
+            'verify-email' => 'Tandai email verified (manual override)',
         ];
 
         $actionLabel = $actionLabels[$action] ?? $action;

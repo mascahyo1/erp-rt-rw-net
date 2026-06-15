@@ -87,6 +87,28 @@ class LogParser {
         const match = url.match(/[?&]company_id=([^&]+)/);
         return match ? decodeURIComponent(match[1]) : null;
     }
+
+    /**
+     * Extract URL verifikasi email dari log content.
+     *
+     * URL pattern: /verifikasi-email-pelanggan/konfirmasi?token=...&email=...&company_id=...
+     * (Untuk flow email verification portal Pelanggan.)
+     */
+    findVerifyUrl() {
+        const log = this.read();
+        const urlPattern = new RegExp(
+            "https?://[^\\s\"'<>]*?/verifikasi-email-pelanggan/konfirmasi\\?[^\\s\"'<>]+",
+            'g'
+        );
+        const matches = log.match(urlPattern);
+        if (!matches || matches.length === 0) return null;
+        return matches[matches.length - 1]
+            .replace(/&amp;/g, '&')
+            .replace(/%3C/g, '<')
+            .replace(/%3E/g, '>')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+    }
 }
 
 module.exports = LogParser;

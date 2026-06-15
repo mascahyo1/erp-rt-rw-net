@@ -82,6 +82,8 @@ enum Permissions: string
     case CustomerRestore = 'customer.restore';
     case CustomerExport  = 'customer.export';
     case CustomerImport  = 'customer.import';
+    // Manual override email_verified_at (safety net kalau customer terkendala email)
+    case CustomerVerifyEmail = 'customer.verify-email';
 
     // Langganan (full CRUD)
     case LanggananList   = 'langganan.list';
@@ -191,6 +193,8 @@ enum Permissions: string
     case KaryawanCustomerRestore = 'karyawan-customer.restore';
     case KaryawanCustomerImport = 'karyawan-customer.import';
     case KaryawanCustomerExport = 'karyawan-customer.export';
+    // Manual override email_verified_at via web karyawan
+    case KaryawanCustomerVerifyEmail = 'karyawan-customer.verify-email';
 
     // Langganan (full CRUD via karyawan)
     case KaryawanLanggananList   = 'karyawan-langganan.list';
@@ -313,6 +317,7 @@ enum Permissions: string
                 self::CustomerRestore->value,
                 self::CustomerExport->value,
                 self::CustomerImport->value,
+                self::CustomerVerifyEmail->value,
                 self::LanggananList->value,
                 self::LanggananCreate->value,
                 self::LanggananEdit->value,
@@ -404,6 +409,7 @@ enum Permissions: string
                 self::KaryawanCustomerRestore->value,
                 self::KaryawanCustomerImport->value,
                 self::KaryawanCustomerExport->value,
+                self::KaryawanCustomerVerifyEmail->value,
                 self::KaryawanLanggananList->value,
                 self::KaryawanLanggananCreate->value,
                 self::KaryawanLanggananEdit->value,
