@@ -17,20 +17,23 @@ const fs = require('fs');
 const { execSync } = require('child_process');
 const PlaywrightHelper = require('../../support/PlaywrightHelper.cjs');
 
-const BASE = 'http://erp-rt-rw-net.test';
+
+const BASE = require('../../support/baseUrl.cjs');
+const PROJECT_BASH = path.resolve(__dirname, '..', '..', '..', '..').replace(/\\/g, '/');
+const PROJECT_WIN = path.resolve(__dirname, '..', '..', '..', '..');
 const SCREENSHOT_DIR = path.join(__dirname, 'screenshots-bulk-verify');
 if (!fs.existsSync(SCREENSHOT_DIR)) fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
 function phpExec(expression) {
     // Tulis expression ke storage/app, require via tinker --execute (psysh-friendly)
     const fname = `_php_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.php`;
-    const fsPath = path.join('C:\\laragon\\www\\erp-rt-rw-net\\storage\\app', fname);
+    const fsPath = path.join(PROJECT_WIN, 'storage', 'app', fname);
     const relPath = `storage/app/${fname}`;
     fs.writeFileSync(fsPath, `<?php\n${expression}\n`);
     try {
         const result = execSync(`php artisan tinker --no-interaction --execute='require "${relPath}";'`, {
             encoding: 'utf8',
-            cwd: 'C:\\laragon\\www\\erp-rt-rw-net',
+            cwd: PROJECT_WIN,
             shell: 'C:\\Program Files\\Git\\bin\\bash.exe',
         });
         return result.trim();
@@ -41,8 +44,8 @@ function phpExec(expression) {
 
 function flushCache() {
     try {
-        execSync('rm -rf /c/laragon/www/erp-rt-rw-net/storage/framework/cache/data/*', { stdio: 'pipe', shell: 'C:\\Program Files\\Git\\bin\\bash.exe' });
-        execSync('cd /c/laragon/www/erp-rt-rw-net && php artisan cache:clear', { stdio: 'pipe', shell: 'C:\\Program Files\\Git\\bin\\bash.exe' });
+        execSync(`rm -rf ${PROJECT_BASH}/storage/framework/cache/data/*`, { stdio: 'pipe', shell: 'C:\\Program Files\\Git\\bin\\bash.exe' });
+        execSync(`cd ${PROJECT_BASH} && php artisan cache:clear`, { stdio: 'pipe', shell: 'C:\\Program Files\\Git\\bin\\bash.exe' });
     } catch (e) { /* ignore */ }
 }
 

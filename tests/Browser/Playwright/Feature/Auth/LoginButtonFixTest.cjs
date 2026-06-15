@@ -1,3 +1,5 @@
+
+const BASE = require('../../support/baseUrl.cjs');
 /**
  * Verifikasi fix bug tombol 382x382 di /login-operator-saas.
  * Skenario: login dengan email valid + password SALAH.
@@ -6,7 +8,6 @@
  */
 const { chromium } = require('playwright');
 
-const BASE = 'http://erp-rt-rw-net.test';
 
 (async () => {
     const browser = await chromium.launch({ headless: false, slowMo: 200 });

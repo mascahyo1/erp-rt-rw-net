@@ -3,9 +3,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class RolePagesInspect {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.outDir = path.join(__dirname, '..', 'result', '_INSPECT');
         this.screenshotCount = 0;
     }
@@ -22,14 +24,14 @@ class RolePagesInspect {
         // Use operator-saas login (no company selector, no 2-step)
         const isSaas = targetUrl.includes('/operator-saas/');
         if (isSaas) {
-            await page.goto(`${this.baseUrl}/login-operator-saas`);
+            await page.goto(`${BASE}/login-operator-saas`);
             await page.waitForLoadState('networkidle');
             await page.fill('input[type="email"]', email);
             await page.fill('input[type="password"]', password);
             await page.click('button[type="submit"]');
             await page.waitForTimeout(5000);
         } else {
-            await page.goto(`${this.baseUrl}/login-perusahaan`);
+            await page.goto(`${BASE}/login-perusahaan`);
             await page.waitForLoadState('networkidle');
             const companyBtn = page.locator('button:has(.fa-building)').first();
             if (await companyBtn.count() > 0) {
@@ -81,7 +83,7 @@ class RolePagesInspect {
 
         // ---- OPERATOR SAAS ROLE-SAAS ----
         console.log('\n=== /operator-saas/role-saas ===');
-        await this.loginAndGo(page, 'superadmin@demo.test', 'password123', '', `${this.baseUrl}/operator-saas/role-saas`);
+        await this.loginAndGo(page, 'superadmin@demo.test', 'password123', '', `${BASE}/operator-saas/role-saas`);
         await this.shot(page, 'saas-role-list');
         await this.inspectModal(page, 'saas-role', 'create');
         await this.inspectModal(page, 'saas-role', 'edit');
@@ -89,7 +91,7 @@ class RolePagesInspect {
 
         // ---- OPERATOR PERUSAHAAN ROLE-PERUSAHAAN ----
         console.log('\n=== /operator-perusahaan/role-perusahaan ===');
-        await this.loginAndGo(page, 'admin@digitalmedia.id', 'password123', 'CV Digital Media Nusantara', `${this.baseUrl}/operator-perusahaan/role-perusahaan`);
+        await this.loginAndGo(page, 'admin@digitalmedia.id', 'password123', 'CV Digital Media Nusantara', `${BASE}/operator-perusahaan/role-perusahaan`);
         await this.shot(page, 'perusahaan-role-list');
         await this.inspectModal(page, 'perusahaan-role', 'create');
         await this.inspectModal(page, 'perusahaan-role', 'edit');
@@ -97,7 +99,7 @@ class RolePagesInspect {
 
         // ---- OPERATOR PERUSAHAAN ROLE-WEB-KARYAWAN ----
         console.log('\n=== /operator-perusahaan/role-web-karyawan ===');
-        await page.goto(`${this.baseUrl}/operator-perusahaan/role-web-karyawan`);
+        await page.goto(`${BASE}/operator-perusahaan/role-web-karyawan`);
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(2000);
         await this.shot(page, 'webkaryawan-role-list');

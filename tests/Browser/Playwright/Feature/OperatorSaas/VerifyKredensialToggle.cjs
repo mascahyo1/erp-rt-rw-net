@@ -4,6 +4,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, '..', 'result', 'OperatorSaas', 'KonfigurasiKredensialToggle');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
@@ -39,7 +41,7 @@ async function main() {
     page.on('pageerror', e => console.log('  ! pageerror:', e.message));
 
     console.log('[1] Login as Operator SaaS');
-    await page.goto('http://erp-rt-rw-net.test/login-operator-saas', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/login-operator-saas', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
     await page.fill('input[type="email"]', 'admin@demo.test');
     await page.fill('input[type="password"]', 'password123');
@@ -47,7 +49,7 @@ async function main() {
     await page.waitForTimeout(5000);
 
     console.log('[2] Goto Konfigurasi');
-    await page.goto('http://erp-rt-rw-net.test/operator-saas/konfigurasi?per_page=10', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/operator-saas/konfigurasi?per_page=10', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
 
     console.log('[3] Open Tambah modal');

@@ -1,3 +1,6 @@
+
+const BASE = require('../../support/baseUrl.cjs');
+const PROJECT_BASH = path.resolve(__dirname, '..', '..', '..', '..').replace(/\\/g, '/');
 /**
  * Verifikasi throttle 5/menit di 4 portal login.
  *
@@ -16,7 +19,6 @@
 const { chromium } = require('playwright');
 const { execSync } = require('child_process');
 
-const BASE = 'http://erp-rt-rw-net.test';
 
 const portals = [
     { name: 'operator-saas', url: '/login-operator-saas', email: 'superadmin@demo.test' },
@@ -27,7 +29,7 @@ const portals = [
 
 function flushCache() {
     try {
-        execSync('cd /c/laragon/www/erp-rt-rw-net && php artisan cache:clear', { stdio: 'pipe' });
+        execSync(`cd ${PROJECT_BASH} && php artisan cache:clear`, { stdio: 'pipe' });
         execSync('sleep 1');
     } catch (e) { /* ignore */ }
 }

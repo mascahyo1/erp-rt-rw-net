@@ -23,18 +23,20 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
-const PlaywrightHelper = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/PlaywrightHelper.cjs');
-const LogParser = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/LogParser.cjs');
+const PlaywrightHelper = require('../../../support/PlaywrightHelper.cjs');
+const LogParser = require('../../../support/LogParser.cjs');
 
-const BASE = 'http://erp-rt-rw-net.test';
-const PROJECT_ROOT = 'C:\\laragon\\www\\erp-rt-rw-net';
-const RESULT_DIR = path.join(PROJECT_ROOT, 'tests/Browser/Playwright/result/Auth/ForgotPassword');
+
+const BASE = require('../../../support/baseUrl.cjs');
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
+const RESULT_DIR = path.join(PROJECT_ROOT, 'tests/Browser/Playwright/Feature/result/Auth/ForgotPassword');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
 // PHP bootstrap helper
+const PROJ_WIN = PROJECT_ROOT.replace(/\\/g, '\\\\');
 const BOOTSTRAP = `<?php
-require 'C:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\vendor\\\\autoload.php';
-$app = require 'C:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\bootstrap\\\\app.php';
+require '${PROJ_WIN}\\\\vendor\\\\autoload.php';
+$app = require '${PROJ_WIN}\\\\bootstrap\\\\app.php';
 $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
 `;
 const tmpScript = path.join(PROJECT_ROOT, '.claude', 'tmp_forgot_pw_test.php');

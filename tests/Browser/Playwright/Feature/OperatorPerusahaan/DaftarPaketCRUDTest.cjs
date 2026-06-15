@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class DaftarPaketCRUDTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -78,7 +80,7 @@ class DaftarPaketCRUDTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.takeScreenshot('00-before-login');
 
@@ -98,7 +100,7 @@ class DaftarPaketCRUDTest {
         const testCode = prefix + Date.now();
         const testName_val = 'Paket ' + prefix + ' ' + Date.now();
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1500);
 
@@ -129,7 +131,7 @@ class DaftarPaketCRUDTest {
         const testName = 'test_01_page_renders';
         console.log(`[TEST] ${testName}`);
 
-        const response = await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        const response = await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('01-page');
@@ -158,7 +160,7 @@ class DaftarPaketCRUDTest {
         const testName = 'test_02_search';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('02-search-before');
@@ -185,7 +187,7 @@ class DaftarPaketCRUDTest {
         const testName = 'test_03_filter_status';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('03-filter-before');
@@ -229,7 +231,7 @@ class DaftarPaketCRUDTest {
         const testName = 'test_04_filter_terhapus';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('04-filter-terhapus-before');
@@ -265,7 +267,7 @@ class DaftarPaketCRUDTest {
         const testName = 'test_05_sort_all_columns';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -388,7 +390,7 @@ class DaftarPaketCRUDTest {
         }
 
         // Now show deleted items via URL parameter
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100&terhapus=ya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100&terhapus=ya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(3000);
         await this.takeScreenshot('08-restore-show-deleted');
@@ -422,7 +424,7 @@ class DaftarPaketCRUDTest {
         const testName = 'test_09_checklist';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('09-checklist-before');
@@ -452,7 +454,7 @@ class DaftarPaketCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         // Create multiple packets for bulk delete
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -500,7 +502,7 @@ class DaftarPaketCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         // First create and delete 3 packets
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -530,7 +532,7 @@ class DaftarPaketCRUDTest {
         }
 
         // Now set filter "Terhapus" to "Ya" via URL parameter
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100&terhapus=ya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100&terhapus=ya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(3000);
         await this.takeScreenshot('11-bulk-restore-show-deleted');
@@ -563,7 +565,7 @@ class DaftarPaketCRUDTest {
         const testName = 'test_12_bulk_aktifkan';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -603,7 +605,7 @@ class DaftarPaketCRUDTest {
         const testName = 'test_13_bulk_nonaktifkan';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 

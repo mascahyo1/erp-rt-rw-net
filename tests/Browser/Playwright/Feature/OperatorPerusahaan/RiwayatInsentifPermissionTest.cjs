@@ -2,6 +2,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 // These constants match what setup-rbac-users.php creates
 const RBAC_TEST_USERS = {
     listOnly: 'rbac.list@rtrwnet.id',
@@ -16,7 +18,7 @@ const RBAC_TEST_USERS = {
 
 class RiwayatInsentifPermissionTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -44,7 +46,7 @@ class RiwayatInsentifPermissionTest {
     }
 
     async login(email, password = 'password123') {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
 
@@ -88,7 +90,7 @@ class RiwayatInsentifPermissionTest {
             const sidebarRiwIn = await this.page.locator('text=/Riwayat Insentif/i').count();
             console.log('Sidebar shows Riwayat Insentif:', sidebarRiwIn > 0);
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('01-list-create/01-table');
@@ -121,7 +123,7 @@ class RiwayatInsentifPermissionTest {
 
             await this.login(RBAC_TEST_USERS.listEdit);
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('02-list-edit/01-table');
@@ -156,7 +158,7 @@ class RiwayatInsentifPermissionTest {
 
             await this.login(RBAC_TEST_USERS.listDetail);
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('03-list-detail/01-table');
@@ -193,7 +195,7 @@ class RiwayatInsentifPermissionTest {
 
             await this.login(RBAC_TEST_USERS.listDelete);
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('04-list-delete/01-table');
@@ -225,7 +227,7 @@ class RiwayatInsentifPermissionTest {
 
             await this.login(RBAC_TEST_USERS.listPersetujuan);
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('05-list-persetujuan/01-table');
@@ -266,7 +268,7 @@ class RiwayatInsentifPermissionTest {
             const sidebarListOnly = await this.page.locator('text=/Riwayat Insentif/i').count();
             console.log('Sidebar shows Riwayat Insentif with list-only:', sidebarListOnly > 0);
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('06-list-only/02-table');
@@ -291,7 +293,7 @@ class RiwayatInsentifPermissionTest {
 
             await this.login(RBAC_TEST_USERS.full);
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('07-full/01-table');
@@ -318,7 +320,7 @@ class RiwayatInsentifPermissionTest {
             // Create a zero-permission user - use admin@digitalmedia.id without RBAC
             await this.login('admin@digitalmedia.id', 'password123');
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('08-no-perm/01-page');

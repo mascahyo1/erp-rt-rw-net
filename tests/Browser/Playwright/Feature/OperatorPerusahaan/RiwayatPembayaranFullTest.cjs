@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class RiwayatPembayaranFullTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -32,7 +34,7 @@ class RiwayatPembayaranFullTest {
     }
 
     async login(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
 
@@ -113,7 +115,7 @@ class RiwayatPembayaranFullTest {
 
     async test_01_light_mode_main_page() {
         await this.safeTest('TEST 01: Light Mode - Main Page', async () => {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-pembayaran`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-pembayaran`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('01-light-main-page');
@@ -314,7 +316,7 @@ class RiwayatPembayaranFullTest {
             this.page = await this.context.newPage();
 
             await this.login('admin@digitalmedia.id', 'password123');
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-pembayaran`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-pembayaran`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('10-responsive-desktop-1280');
@@ -331,7 +333,7 @@ class RiwayatPembayaranFullTest {
             this.page = await this.context.newPage();
 
             await this.login('admin@digitalmedia.id', 'password123');
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-pembayaran`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-pembayaran`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('11-responsive-tablet-768');
@@ -348,7 +350,7 @@ class RiwayatPembayaranFullTest {
             this.page = await this.context.newPage();
 
             await this.login('admin@digitalmedia.id', 'password123');
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-pembayaran`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-pembayaran`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('12-import-export');

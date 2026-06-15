@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class DaftarPaketResponsiveTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -77,7 +79,7 @@ class DaftarPaketResponsiveTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
 
         await this.page.fill('input[type="email"]', email);
@@ -110,7 +112,7 @@ class DaftarPaketResponsiveTest {
             await this.page.emulateMedia({ colorScheme: colorScheme });
 
             // Navigate to page
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=25`);
+            await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=25`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 

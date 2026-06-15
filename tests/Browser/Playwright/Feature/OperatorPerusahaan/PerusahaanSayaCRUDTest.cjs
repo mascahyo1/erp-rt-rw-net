@@ -2,6 +2,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 /**
  * PerusahaanSaya CRUD + Logo E2E Test (Playwright + AJAX).
  *
@@ -10,7 +12,7 @@ const path = require('path');
  */
 class PerusahaanSayaCRUDTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -44,7 +46,7 @@ class PerusahaanSayaCRUDTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
         const companyBtn = this.page.locator('button:has(.fa-building)').first();
@@ -62,7 +64,7 @@ class PerusahaanSayaCRUDTest {
 
     async loginAsSuperAdmin() {
         // Login sebagai SaaS admin untuk create test company
-        await this.page.goto(`${this.baseUrl}/login-operator-saas`);
+        await this.page.goto(`${BASE}/login-operator-saas`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
         await this.page.fill('input[type="email"]', 'superadmin@demo.test');
@@ -78,7 +80,7 @@ class PerusahaanSayaCRUDTest {
     async createTestCompany() {
         console.log(`\n  SETUP: Create test company "${this.createdCompanyName}"`);
         // Login as SaaS super admin
-        await this.page.goto(`${this.baseUrl}/login-operator-saas`);
+        await this.page.goto(`${BASE}/login-operator-saas`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
         await this.page.fill('input[type="email"]', 'superadmin@demo.test');
@@ -114,7 +116,7 @@ class PerusahaanSayaCRUDTest {
         console.log(`  SETUP: Company created id=${this.createdCompanyId}`);
 
         // Logout SaaS
-        await this.page.goto(`${this.baseUrl}/logout-operator-saas`);
+        await this.page.goto(`${BASE}/logout-operator-saas`);
         await this.page.waitForTimeout(2000);
     }
 
@@ -127,7 +129,7 @@ class PerusahaanSayaCRUDTest {
         console.log(`\n  CLEANUP: Delete test company "${this.createdCompanyName}" id=${this.createdCompanyId}`);
         try {
             // Login as SaaS super admin
-            await this.page.goto(`${this.baseUrl}/login-operator-saas`);
+            await this.page.goto(`${BASE}/login-operator-saas`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1000);
             await this.page.fill('input[type="email"]', 'superadmin@demo.test');
@@ -161,7 +163,7 @@ class PerusahaanSayaCRUDTest {
         console.log('========================');
 
         await this.loginAsAdminPerusahaan('rbac.full@rtrwnet.id', 'password');
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(5000);
         await this.takeScreenshot('01-page-loaded');
@@ -206,7 +208,7 @@ class PerusahaanSayaCRUDTest {
         console.log('\nTEST 03: Edit Button Visible');
         console.log('=============================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         const editBtn = await this.page.locator('button:has-text("Edit Perusahaan")').count();
         this.assert(editBtn > 0, 'Edit button not found');
@@ -223,7 +225,7 @@ class PerusahaanSayaCRUDTest {
         console.log('\nTEST 04: Edit Success (field change + toast)');
         console.log('==============================================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -292,7 +294,7 @@ class PerusahaanSayaCRUDTest {
         console.log('\nTEST 05: Validation Error (empty name)');
         console.log('======================================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -353,7 +355,7 @@ class PerusahaanSayaCRUDTest {
         console.log('\nTEST 06: Upload Logo Light (JPG)');
         console.log('================================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -410,7 +412,7 @@ class PerusahaanSayaCRUDTest {
         console.log('\nTEST 07: Upload Logo Dark (SVG)');
         console.log('=================================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -464,7 +466,7 @@ class PerusahaanSayaCRUDTest {
         console.log('\nTEST 08: File Size Validation');
         console.log('=============================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -516,7 +518,7 @@ class PerusahaanSayaCRUDTest {
         console.log('\nTEST 09: Dark/Light Mode');
         console.log('=========================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 

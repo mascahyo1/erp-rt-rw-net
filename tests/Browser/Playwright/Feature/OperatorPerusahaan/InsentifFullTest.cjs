@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class InsentifFullTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -32,7 +34,7 @@ class InsentifFullTest {
     }
 
     async login(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
 
@@ -71,7 +73,7 @@ class InsentifFullTest {
             console.log('\nTEST 01: Light Mode - Main Page');
             console.log('========================================');
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('01-light-main-page');
@@ -290,7 +292,7 @@ class InsentifFullTest {
 
             await this.login('admin@digitalmedia.id', 'password123');
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('13-mobile-light');
@@ -331,7 +333,7 @@ class InsentifFullTest {
 
             await this.login('admin@digitalmedia.id', 'password123');
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('15-tablet-light');
@@ -358,7 +360,7 @@ class InsentifFullTest {
 
             await this.login('admin@digitalmedia.id', 'password123');
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 

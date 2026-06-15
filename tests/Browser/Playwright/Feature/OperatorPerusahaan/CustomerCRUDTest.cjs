@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class CustomerCRUDTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -82,7 +84,7 @@ class CustomerCRUDTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.takeScreenshot('00-before-login');
 
@@ -104,7 +106,7 @@ class CustomerCRUDTest {
         const testEmail = `test${Date.now()}@test.com`;
         const uniquePhone = '8123' + String(Date.now()).slice(-7);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1500);
 
@@ -142,7 +144,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            const response = await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+            const response = await this.page.goto(`${BASE}/operator-perusahaan/customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('01-page');
@@ -178,7 +180,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('02-search-before');
@@ -212,7 +214,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('03-filter-before');
@@ -256,7 +258,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('04-filter-terhapus-before');
@@ -297,7 +299,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 
@@ -368,7 +370,7 @@ class CustomerCRUDTest {
             await this.takeScreenshot('07-delete-before');
 
             // Search for the customer
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(customer.name)}`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(customer.name)}`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('07-delete-search-result');
@@ -414,7 +416,7 @@ class CustomerCRUDTest {
             }
 
             // Delete it via search
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(customer.name)}`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(customer.name)}`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 
@@ -428,13 +430,13 @@ class CustomerCRUDTest {
             }
 
             // Now show deleted items
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&terhapus=ya`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&terhapus=ya`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(3000);
             await this.takeScreenshot('08-restore-show-deleted');
 
             // Search for deleted customer
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&terhapus=ya&search=${encodeURIComponent(customer.name)}`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&terhapus=ya&search=${encodeURIComponent(customer.name)}`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('08-restore-search-deleted');
@@ -465,7 +467,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('09-checklist-before');
@@ -498,7 +500,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 
@@ -550,7 +552,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 
@@ -562,7 +564,7 @@ class CustomerCRUDTest {
                 await this.page.waitForTimeout(1000);
 
                 // Delete it
-                await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(customer.name)}`);
+                await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(customer.name)}`);
                 await this.page.waitForLoadState('networkidle');
                 await this.page.waitForTimeout(1500);
 
@@ -577,7 +579,7 @@ class CustomerCRUDTest {
             }
 
             // Show deleted items
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&terhapus=ya`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&terhapus=ya`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(3000);
             await this.takeScreenshot('11-bulk-restore-show-deleted');
@@ -615,7 +617,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 
@@ -659,7 +661,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 
@@ -697,7 +699,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('14-export-all-before');
@@ -736,7 +738,7 @@ class CustomerCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 
@@ -796,7 +798,7 @@ class CustomerCRUDTest {
             const imgFile = await this.createTestImage();
             console.log(`  Created test image: ${imgFile}`);
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
 
@@ -887,7 +889,7 @@ class CustomerCRUDTest {
             await this.page.waitForTimeout(2000);
 
             // Search for the customer and open detail
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 
@@ -909,7 +911,7 @@ class CustomerCRUDTest {
             if (!detailBtn) {
                 // Try with partial name
                 const shortName = testName_val.substring(0, 15);
-                await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(shortName)}`);
+                await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(shortName)}`);
                 await this.page.waitForLoadState('networkidle');
                 await this.page.waitForTimeout(3000);
             }
@@ -990,7 +992,7 @@ class CustomerCRUDTest {
             const imgFile1 = await this.createTestImage(200, 200, '#e74c3c'); // red
             const imgFile2 = await this.createTestImage(200, 200, '#27ae60'); // green
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
 
@@ -1025,7 +1027,7 @@ class CustomerCRUDTest {
             await this.takeScreenshot('17-replace-created');
 
             // Open detail to get the photo URL
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(testName_val)}`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&search=${encodeURIComponent(testName_val)}`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 

@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class LanggananCRUDTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -85,7 +87,7 @@ class LanggananCRUDTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.takeScreenshot('00-before-login');
 
@@ -105,7 +107,7 @@ class LanggananCRUDTest {
         const uniqueAcc = 'ACC' + Date.now().toString().slice(-8);
         const uniqueRouter = 'SN' + Date.now().toString().slice(-6);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1500);
 
@@ -164,7 +166,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            const response = await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            const response = await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('01-page');
@@ -203,7 +205,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('02-search-before');
@@ -236,7 +238,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('03-filter-before');
@@ -268,7 +270,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('04-terhapus-before');
@@ -300,7 +302,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('05-sort-before');
@@ -352,7 +354,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('07-edit-before');
@@ -396,7 +398,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('08-delete-before');
@@ -434,7 +436,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?terhapus=ya`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?terhapus=ya`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('09-restore-before');
@@ -465,7 +467,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('10-checklist-before');
@@ -495,7 +497,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
 
@@ -532,7 +534,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?terhapus=ya&per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?terhapus=ya&per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
 
@@ -569,7 +571,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
 
@@ -606,7 +608,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
 
@@ -643,7 +645,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('15-export-before');
@@ -685,7 +687,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('16-import-before');
@@ -719,7 +721,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
 
@@ -750,7 +752,7 @@ class LanggananCRUDTest {
             // Create data first
             await this.createTestLangganan('EXPORT');
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('18-export-all-before');
@@ -783,7 +785,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('19-filter-paket-before');
@@ -845,7 +847,7 @@ class LanggananCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('20-email-hp-before');

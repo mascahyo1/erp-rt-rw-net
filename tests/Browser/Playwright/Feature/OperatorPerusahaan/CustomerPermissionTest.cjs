@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class CustomerPermissionTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -97,7 +99,7 @@ class CustomerPermissionTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.takeScreenshot('00-login-' + email.split('@')[0]);
 
@@ -117,7 +119,7 @@ class CustomerPermissionTest {
         const testName = 'customer.list HAS';
         console.log(`[TEST] ${testName}`);
 
-        const response = await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+        const response = await this.page.goto(`${BASE}/operator-perusahaan/customer`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('01-list-has');
@@ -137,7 +139,7 @@ class CustomerPermissionTest {
         const testName = 'customer.list NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        const response = await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+        const response = await this.page.goto(`${BASE}/operator-perusahaan/customer`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('01-list-not-has');
@@ -158,7 +160,7 @@ class CustomerPermissionTest {
         const testName = 'customer.create HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('02-create-has');
@@ -186,7 +188,7 @@ class CustomerPermissionTest {
         const testName = 'customer.create NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('02-create-not-has');
@@ -207,7 +209,7 @@ class CustomerPermissionTest {
         const testName = 'customer.edit HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('03-edit-has');
@@ -235,7 +237,7 @@ class CustomerPermissionTest {
         const testName = 'customer.edit NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('03-edit-not-has');
@@ -262,7 +264,7 @@ class CustomerPermissionTest {
         const testName = 'customer.detail HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(3000);
         await this.takeScreenshot('04-detail-has');
@@ -300,7 +302,7 @@ class CustomerPermissionTest {
         const testName = 'customer.detail NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('04-detail-not-has');
@@ -321,7 +323,7 @@ class CustomerPermissionTest {
         const testName = 'customer.delete HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('05-delete-has');
@@ -350,7 +352,7 @@ class CustomerPermissionTest {
         const testName = 'customer.delete NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('05-delete-not-has');
@@ -384,7 +386,7 @@ class CustomerPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&terhapus=ya`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&terhapus=ya`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('06-restore-has');
@@ -416,7 +418,7 @@ class CustomerPermissionTest {
         const testName = 'customer.restore NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=100&terhapus=ya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=100&terhapus=ya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('06-restore-not-has');
@@ -450,7 +452,7 @@ class CustomerPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('07-export-has');
@@ -481,7 +483,7 @@ class CustomerPermissionTest {
         const testName = 'customer.export NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('07-export-not-has');
@@ -503,7 +505,7 @@ class CustomerPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('08-import-has');
@@ -532,7 +534,7 @@ class CustomerPermissionTest {
         const testName = 'customer.import NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer`);
+        await this.page.goto(`${BASE}/operator-perusahaan/customer`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('08-import-not-has');

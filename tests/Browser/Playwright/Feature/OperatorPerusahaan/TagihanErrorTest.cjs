@@ -1,14 +1,16 @@
+
+const BASE = require('../../support/baseUrl.cjs');
 const { chromium } = require('playwright');
 
 class TagihanErrorTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.page = null;
     }
 
     async login(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
 
@@ -55,7 +57,7 @@ class TagihanErrorTest {
             });
 
             console.log('Navigating to Tagihan page...');
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan`);
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(3000);
 

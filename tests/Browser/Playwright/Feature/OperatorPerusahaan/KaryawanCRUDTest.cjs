@@ -1,9 +1,11 @@
-const PlaywrightHelper = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/PlaywrightHelper.cjs');
+const PlaywrightHelper = require('../../support/PlaywrightHelper.cjs');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class KaryawanCRUDTest {
     constructor() {
         this.helper = new PlaywrightHelper();
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.testResults = { passed: 0, failed: 0, errors: [] };
     }
 
@@ -15,7 +17,7 @@ class KaryawanCRUDTest {
         try {
             await this.helper.launch();
 
-            await this.helper.page.goto(`${this.baseUrl}/login-perusahaan`);
+            await this.helper.page.goto(`${BASE}/login-perusahaan`);
             await this.helper.page.waitForLoadState('networkidle');
             await this.helper.fill('input[type="email"]', 'admin-perusahaan@rtrwnet.id');
             await this.helper.fill('input[type="password"]', 'password123');
@@ -63,7 +65,7 @@ class KaryawanCRUDTest {
     async ensureLoggedIn() {
         const url = this.helper.getCurrentUrl();
         if (url.includes('login')) {
-            await this.helper.page.goto(`${this.baseUrl}/login-perusahaan`);
+            await this.helper.page.goto(`${BASE}/login-perusahaan`);
             await this.helper.page.waitForLoadState('networkidle');
             await this.helper.fill('input[type="email"]', 'admin-perusahaan@rtrwnet.id');
             await this.helper.fill('input[type="password"]', 'password123');
@@ -75,7 +77,7 @@ class KaryawanCRUDTest {
     async test_01_page_renders() {
         await this.safeTest('test_01_page_renders', async () => {
             await this.ensureLoggedIn();
-            await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/karyawan`);
+            await this.helper.page.goto(`${BASE}/operator-perusahaan/karyawan`);
             await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('OperatorPerusahaan/Karyawan/TestCRUD/01-page');
 
@@ -88,7 +90,7 @@ class KaryawanCRUDTest {
 
     async test_02_search() {
         await this.safeTest('test_02_search', async () => {
-            await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/karyawan?per_page=100`);
+            await this.helper.page.goto(`${BASE}/operator-perusahaan/karyawan?per_page=100`);
             await this.helper.page.waitForTimeout(3000);
 
             const searchInput = await this.helper.page.$('input[placeholder="Cari..."]');
@@ -103,7 +105,7 @@ class KaryawanCRUDTest {
 
     async test_03_filter_status() {
         await this.safeTest('test_03_filter_status', async () => {
-            await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/karyawan?per_page=100`);
+            await this.helper.page.goto(`${BASE}/operator-perusahaan/karyawan?per_page=100`);
             await this.helper.page.waitForTimeout(3000);
 
             const selects = await this.helper.page.$$('select');
@@ -117,7 +119,7 @@ class KaryawanCRUDTest {
 
     async test_04_sort() {
         await this.safeTest('test_04_sort', async () => {
-            await this.helper.page.goto(`${this.baseUrl}/operator-perusahaan/karyawan?per_page=100`);
+            await this.helper.page.goto(`${BASE}/operator-perusahaan/karyawan?per_page=100`);
             await this.helper.page.waitForTimeout(3000);
 
             const headers = await this.helper.page.$$('th');

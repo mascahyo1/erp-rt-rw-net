@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class CustomerResponsiveTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -73,7 +75,7 @@ class CustomerResponsiveTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
 
         await this.page.fill('input[type="email"]', email);
@@ -93,7 +95,7 @@ class CustomerResponsiveTest {
             await this.page.setViewportSize({ width: viewport.width, height: viewport.height });
             await this.page.emulateMedia({ colorScheme: colorScheme });
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/customer?per_page=25`);
+            await this.page.goto(`${BASE}/operator-perusahaan/customer?per_page=25`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
 

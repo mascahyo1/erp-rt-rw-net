@@ -1,13 +1,16 @@
 // Quick single-context debug
 const { chromium } = require('playwright');
 const fs = require('fs');
+const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 (async () => {
     const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
     const ctx = await browser.newContext({ viewport: { width: 1366, height: 850 } });
     const page = await ctx.newPage();
 
-    await page.goto('http://erp-rt-rw-net.test/login-perusahaan');
+    await page.goto(BASE + '/login-perusahaan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500);
 
@@ -27,10 +30,10 @@ const fs = require('fs');
     await page.waitForTimeout(8000);
     console.log('after login:', page.url());
 
-    await page.goto('http://erp-rt-rw-net.test/operator-perusahaan/admin-role-perusahaan');
+    await page.goto(BASE + '/operator-perusahaan/admin-role-perusahaan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
-    await page.screenshot({ path: 'C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/Feature/result/_dbg2-list.png' });
+    await page.screenshot({ path: path.join(__dirname, '..', 'result', '_dbg2-list.png') });
 
     // Check page content
     const bodyText = await page.textContent('body');

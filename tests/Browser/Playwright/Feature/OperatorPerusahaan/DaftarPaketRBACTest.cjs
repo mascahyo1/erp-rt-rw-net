@@ -3,9 +3,11 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class DaftarPaketRBACTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -35,7 +37,7 @@ class DaftarPaketRBACTest {
     async runArtisan(command) {
         try {
             const result = execSync(`php artisan ${command}`, {
-                cwd: 'C:/laragon/www/erp-rt-rw-net',
+                cwd: path.resolve(__dirname, '..', '..', '..', '..'),
                 encoding: 'utf8',
                 timeout: 30000
             });
@@ -136,7 +138,7 @@ class DaftarPaketRBACTest {
         this.context = await this.browser.newContext({ viewport: { width: 1280, height: 720 } });
         this.page = await this.context.newPage();
 
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.takeScreenshot(`login-${email.replace('@rtrwnet.id','')}`);
 
@@ -198,7 +200,7 @@ class DaftarPaketRBACTest {
 
         try {
             await this.login('rbac.full@rtrwnet.id', 'password');
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+            await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(3000);
             await this.takeScreenshot('all-perms-page');
@@ -235,7 +237,7 @@ class DaftarPaketRBACTest {
 
         try {
             await this.login('rbac.list@rtrwnet.id', 'password');
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+            await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(3000);
             await this.takeScreenshot('list-only-page');
@@ -272,7 +274,7 @@ class DaftarPaketRBACTest {
 
         try {
             await this.login('rbac.no@rtrwnet.id', 'password');
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+            await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(3000);
             await this.takeScreenshot('no-perms-page');

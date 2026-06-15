@@ -4,10 +4,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, '..', 'result', 'OperatorPerusahaan', 'KonfigurasiPerusahaanCRUD');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
-const BASE = 'http://erp-rt-rw-net.test';
 const LOG = (...a) => console.log(...a);
 const shot = async (page, name) => {
     const p = path.join(RESULT_DIR, name);

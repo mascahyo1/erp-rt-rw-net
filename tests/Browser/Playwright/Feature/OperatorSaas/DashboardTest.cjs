@@ -1,10 +1,11 @@
+
+const BASE = require('../../support/baseUrl.cjs');
 /**
  * E2E Test: Operator SaaS Dashboard
  * Test render + 6 stat cards + dark mode + responsive.
  */
 const { chromium } = require('playwright');
 
-const BASE = 'http://erp-rt-rw-net.test';
 const EMAIL = 'superadmin@demo.test';
 const PASSWORD = 'password123';
 

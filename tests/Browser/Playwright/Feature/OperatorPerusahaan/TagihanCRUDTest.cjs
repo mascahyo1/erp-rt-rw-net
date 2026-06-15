@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class TagihanCRUDTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -77,7 +79,7 @@ class TagihanCRUDTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.takeScreenshot('00-before-login');
 
@@ -98,7 +100,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(3000);
             await this.takeScreenshot('01-page');
 
@@ -136,7 +138,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('02-search-before');
 
@@ -171,7 +173,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('03-filter-before');
 
@@ -203,7 +205,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('04-filter-terhapus-before');
 
@@ -235,7 +237,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100&terhapus=tidak`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100&terhapus=tidak`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(2000);
 
             const sortableColumns = [
@@ -273,7 +275,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('06-create-before');
 
@@ -322,7 +324,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(1500);
 
             const editBtn = await this.page.$('button[title="Edit"]');
@@ -365,7 +367,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('08-delete-before');
 
@@ -403,7 +405,7 @@ class TagihanCRUDTest {
 
         try {
             // Show deleted
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100&terhapus=ya`, { waitUntil: 'domcontentloaded' });
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100&terhapus=ya`, { waitUntil: 'domcontentloaded' });
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('09-restore-show-deleted');
 
@@ -433,7 +435,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100`);
             await this.page.waitForLoadState('domcontentloaded');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('10-checklist-before');
@@ -467,7 +469,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100`);
             await this.page.waitForLoadState('domcontentloaded');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('11-bulk-delete-before');
@@ -505,7 +507,7 @@ class TagihanCRUDTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100&terhapus=ya`);
+            await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100&terhapus=ya`);
             await this.page.waitForLoadState('domcontentloaded');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('12-bulk-restore-show-deleted');

@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class LanggananPermissionTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -92,7 +94,7 @@ class LanggananPermissionTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.takeScreenshot('00-login');
 
@@ -113,7 +115,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('01-list-has');
@@ -141,7 +143,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('02-create-has');
@@ -164,7 +166,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('03-edit-has');
@@ -187,7 +189,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('04-delete-has');
@@ -211,7 +213,7 @@ class LanggananPermissionTest {
 
         try {
             // Restore button only visible when filter "Terhapus" = "Ya" AND there are deleted items
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?terhapus=ya`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?terhapus=ya`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('05-restore-has');
@@ -245,7 +247,7 @@ class LanggananPermissionTest {
 
         try {
             // Export button only visible when items are selected
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('06-export-before');
@@ -279,7 +281,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('07-import-has');
@@ -302,7 +304,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            const response = await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            const response = await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('08-list-not');
@@ -328,7 +330,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('09-create-not');
@@ -351,7 +353,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('10-edit-not');
@@ -374,7 +376,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?per_page=100`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?per_page=100`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('11-delete-not');
@@ -397,7 +399,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer?terhapus=ya`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer?terhapus=ya`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('12-restore-not');
@@ -420,7 +422,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('13-export-not');
@@ -443,7 +445,7 @@ class LanggananPermissionTest {
         console.log(`[TEST] ${testName}`);
 
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/langganan-customer`);
+            await this.page.goto(`${BASE}/operator-perusahaan/langganan-customer`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             await this.takeScreenshot('14-import-not');

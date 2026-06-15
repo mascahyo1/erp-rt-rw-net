@@ -3,9 +3,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class RolePagesPermissionTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.outDir = path.join(__dirname, '..', 'result', 'OperatorPerusahaan', 'RolePages', 'PermissionChecklist');
         this.testResults = { passed: 0, failed: 0, errors: [] };
     }
@@ -22,7 +24,7 @@ class RolePagesPermissionTest {
     }
 
     async loginOperatorPerusahaan(page) {
-        await page.goto(`${this.baseUrl}/login-perusahaan`);
+        await page.goto(`${BASE}/login-perusahaan`);
         await page.waitForLoadState('networkidle');
         const companyBtn = page.locator('button:has(.fa-building)').first();
         if (await companyBtn.count() > 0) {
@@ -41,7 +43,7 @@ class RolePagesPermissionTest {
     }
 
     async loginOperatorSaas(page) {
-        await page.goto(`${this.baseUrl}/login-operator-saas`);
+        await page.goto(`${BASE}/login-operator-saas`);
         await page.waitForLoadState('networkidle');
         await page.fill('input[type="email"]', 'superadmin@demo.test');
         await page.fill('input[type="password"]', 'password123');
@@ -161,15 +163,15 @@ class RolePagesPermissionTest {
         try {
             // Test 1: Role Perusahaan
             await this.loginOperatorPerusahaan(page);
-            await this.testPage(page, 'role-perusahaan', `${this.baseUrl}/operator-perusahaan/role-perusahaan`);
+            await this.testPage(page, 'role-perusahaan', `${BASE}/operator-perusahaan/role-perusahaan`);
 
             // Test 2: Role Web Karyawan
-            await this.testPage(page, 'role-web-karyawan', `${this.baseUrl}/operator-perusahaan/role-web-karyawan`);
+            await this.testPage(page, 'role-web-karyawan', `${BASE}/operator-perusahaan/role-web-karyawan`);
 
             // Logout & re-login as operator saas
             await page.context().clearCookies();
             await this.loginOperatorSaas(page);
-            await this.testPage(page, 'role-saas', `${this.baseUrl}/operator-saas/role-saas`);
+            await this.testPage(page, 'role-saas', `${BASE}/operator-saas/role-saas`);
         } catch (e) {
             console.log(`\n[FATAL] ${e.message}`);
             await this.shot(page, 'fatal');

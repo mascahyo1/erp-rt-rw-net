@@ -3,9 +3,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class AdminRolePagesInspect {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.outDir = path.join(__dirname, '..', 'result', 'OperatorPerusahaan', 'AdminRolePages', 'Inspect');
         this.testResults = { passed: 0, failed: 0, errors: [] };
         this.downloadsDir = path.join(__dirname, '..', '..', '..', '..', 'storage', 'app', 'temp', 'admin-role-downloads');
@@ -25,7 +27,7 @@ class AdminRolePagesInspect {
     }
 
     async login(page) {
-        await page.goto(`${this.baseUrl}/login-perusahaan`, { waitUntil: 'domcontentloaded' });
+        await page.goto(`${BASE}/login-perusahaan`, { waitUntil: 'domcontentloaded' });
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(1500);
         const companyBtn = page.locator('button:has(.fa-building)').first();
@@ -162,8 +164,8 @@ class AdminRolePagesInspect {
                     await this.login(page);
 
                     const tag = `${vp.name}-${theme}`;
-                    await this.inspectPage(page, `perusahaan-${tag}`, `${this.baseUrl}/operator-perusahaan/admin-role-perusahaan`);
-                    await this.inspectPage(page, `webkaryawan-${tag}`, `${this.baseUrl}/operator-perusahaan/admin-role-web-karyawan`);
+                    await this.inspectPage(page, `perusahaan-${tag}`, `${BASE}/operator-perusahaan/admin-role-perusahaan`);
+                    await this.inspectPage(page, `webkaryawan-${tag}`, `${BASE}/operator-perusahaan/admin-role-web-karyawan`);
                 } catch (e) {
                     console.log(`[FATAL ${vp.name} ${theme}] ${e.message}`);
                 } finally {

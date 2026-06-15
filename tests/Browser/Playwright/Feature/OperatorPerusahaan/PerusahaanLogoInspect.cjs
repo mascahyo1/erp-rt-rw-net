@@ -4,9 +4,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class PerusahaanLogoInspect {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.outDir = path.join(__dirname, '..', 'result', 'PerusahaanLogo');
         this.testResults = { passed: 0, failed: 0, errors: [] };
         this.downloadsDir = path.join(__dirname, '..', '..', '..', '..', 'storage', 'app', 'temp', 'logo-downloads');
@@ -36,7 +38,7 @@ class PerusahaanLogoInspect {
     }
 
     async loginAsAdminPerusahaan(page) {
-        await page.goto(`${this.baseUrl}/login-perusahaan`);
+        await page.goto(`${BASE}/login-perusahaan`);
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(1500);
         const companyBtn = page.locator('button:has(.fa-building)').first();
@@ -56,7 +58,7 @@ class PerusahaanLogoInspect {
     }
 
     async loginAsOperatorSaas(page) {
-        await page.goto(`${this.baseUrl}/login-operator-saas`);
+        await page.goto(`${BASE}/login-operator-saas`);
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(1500);
         await page.fill('input[type="email"]', 'superadmin@demo.test');
@@ -137,7 +139,7 @@ class PerusahaanLogoInspect {
     async inspectRiwayatPdf(page) {
         console.log(`\n--- Riwayat Pembayaran PDF ---`);
         await this.clearDownloads();
-        await page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-pembayaran?per_page=100`);
+        await page.goto(`${BASE}/operator-perusahaan/riwayat-pembayaran?per_page=100`);
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(2000);
         await this.shot(page, 'riwayat-pembayaran-list');
@@ -150,7 +152,7 @@ class PerusahaanLogoInspect {
             // Find PDF link in detail page or directly go to PDF URL
             const paymentId = href.match(/riwayat-pembayaran\/([a-f0-9-]+)/)?.[1];
             if (paymentId) {
-                const pdfUrl = `${this.baseUrl}/operator-perusahaan/riwayat-pembayaran/${paymentId}/pdf`;
+                const pdfUrl = `${BASE}/operator-perusahaan/riwayat-pembayaran/${paymentId}/pdf`;
                 [downloaded] = await Promise.all([
                     page.waitForEvent('download', { timeout: 15000 }).catch(() => null),
                     page.goto(pdfUrl)
@@ -179,7 +181,7 @@ class PerusahaanLogoInspect {
     async inspectTagihanPdf(page) {
         console.log(`\n--- Tagihan Invoice PDF ---`);
         await this.clearDownloads();
-        await page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100`);
+        await page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100`);
         await page.waitForLoadState('networkidle');
         await page.waitForTimeout(2000);
         await this.shot(page, 'tagihan-list');
@@ -191,7 +193,7 @@ class PerusahaanLogoInspect {
             const href = await firstDetailLink.getAttribute('href');
             const tagihanId = href.match(/tagihan\/([a-f0-9-]+)/)?.[1];
             if (tagihanId) {
-                const pdfUrl = `${this.baseUrl}/operator-perusahaan/tagihan/${tagihanId}/export-pdf`;
+                const pdfUrl = `${BASE}/operator-perusahaan/tagihan/${tagihanId}/export-pdf`;
                 [downloaded] = await Promise.all([
                     page.waitForEvent('download', { timeout: 15000 }).catch(() => null),
                     page.goto(pdfUrl)
@@ -246,10 +248,10 @@ class PerusahaanLogoInspect {
                 try {
                     // Test SaaS Perusahaan
                     await this.loginAsOperatorSaas(page);
-                    await this.inspectListAndModals(page, `saas-perusahaan-${tag}`, `${this.baseUrl}/operator-saas/perusahaan`);
+                    await this.inspectListAndModals(page, `saas-perusahaan-${tag}`, `${BASE}/operator-saas/perusahaan`);
 
                     // Test Perusahaan Saya
-                    await this.inspectListAndModals(page, `perusahaan-saya-${tag}`, `${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+                    await this.inspectListAndModals(page, `perusahaan-saya-${tag}`, `${BASE}/operator-perusahaan/perusahaan-saya`);
 
                     // Test downstream PDF (only on desktop dark to save time)
                     if (vp.name === 'desktop' && theme === 'light') {

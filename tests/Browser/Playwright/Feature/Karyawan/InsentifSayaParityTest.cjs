@@ -6,10 +6,11 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
+
+const BASE = require('../../support/baseUrl.cjs');
 const { execSync } = require('child_process');
 
-const BASE = 'http://erp-rt-rw-net.test';
-const PROJECT_ROOT = 'C:\\laragon\\www\\erp-rt-rw-net';
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 const RESULT_DIR = path.join(__dirname, 'Day8KaryawanInsentifSaya');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
@@ -20,9 +21,10 @@ const CRED = {
 
 const COMPANY_NAME = 'Net Sejahtera';
 
+const PROJ_WIN = PROJECT_ROOT.replace(/\\/g, '\\\\');
 const BOOTSTRAP_PHP = `<?php
-require 'C:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\vendor\\\\autoload.php';
-$app = require 'C:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\bootstrap\\\\app.php';
+require '${PROJ_WIN}\\\\vendor\\\\autoload.php';
+$app = require '${PROJ_WIN}\\\\bootstrap\\\\app.php';
 $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
 `;
 const tmpScript = path.join(PROJECT_ROOT, '.claude', 'tmp_insentif_rbac.php');

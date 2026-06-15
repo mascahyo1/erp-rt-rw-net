@@ -1,7 +1,8 @@
+
+const BASE = require('../../support/baseUrl.cjs');
 // Test new data-testid selectors for CountryCodeSelect (Katalon-friendly)
 const { chromium } = require('playwright');
 
-const BASE = 'http://erp-rt-rw-net.test';
 
 let pass = 0;
 let fail = 0;

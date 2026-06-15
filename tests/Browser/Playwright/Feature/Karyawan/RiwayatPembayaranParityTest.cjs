@@ -6,7 +6,8 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 
-const BASE = 'http://erp-rt-rw-net.test';
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, 'Day7KaryawanRiwayatPembayaran');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
@@ -498,13 +499,13 @@ async function parityTest() {
     // Detach Karyawan B from the company-scoped "Default" role (multi-tenant has 1 per company).
     // Empty role has no perms so Karyawan B will be blocked from riwayat-pembayaran.
     const { execSync } = require('child_process');
-    const PROJECT_ROOT = 'C:\\laragon\\www\\erp-rt-rw-net';
+    const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
     const tmpScript = path.join(PROJECT_ROOT, '.claude', 'tmp_rbac.php');
     const PROJ_WIN = PROJECT_ROOT.replace(/\\/g, '\\\\');
     // Bootstrap prelude — required so App\Models\* resolve
     const BOOTSTRAP_PHP = `<?php
-require 'C:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\vendor\\\\autoload.php';
-$app = require 'C:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\bootstrap\\\\app.php';
+require '${PROJ_WIN}\\\\vendor\\\\autoload.php';
+$app = require '${PROJ_WIN}\\\\bootstrap\\\\app.php';
 $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
 `;
 

@@ -1,10 +1,11 @@
+
+const BASE = require('../../support/baseUrl.cjs');
 /**
  * E2E Test: Pelanggan Dashboard
  * Test render + breadcrumb + hero + 4 stat cards (semua real) + dark mode + responsive.
  */
 const { chromium } = require('playwright');
 
-const BASE = 'http://erp-rt-rw-net.test';
 const EMAIL = 'test+1781247641870@example.com';
 const PASSWORD = 'password123';
 

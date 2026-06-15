@@ -3,6 +3,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, '..', 'result', 'PerusahaanSaya');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
@@ -13,7 +15,7 @@ async function main() {
     const page = await ctx.newPage();
 
     console.log('[1/4] Login sebagai admin@netsejahtera.com (PT Net Sejahtera Abadi)');
-    await page.goto('http://erp-rt-rw-net.test/login-perusahaan', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/login-perusahaan', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     await page.locator('button:has(.fa-building)').first().click();
     await page.waitForTimeout(1500);
@@ -30,7 +32,7 @@ async function main() {
     await page.screenshot({ path: path.join(RESULT_DIR, 'verify-01-login.png') });
 
     console.log('\n[2/4] Navigate to Tagihan list — verify 3-status badges');
-    await page.goto('http://erp-rt-rw-net.test/operator-perusahaan/tagihan?per_page=100');
+    await page.goto(BASE + '/operator-perusahaan/tagihan?per_page=100');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(3000);
     await page.screenshot({ path: path.join(RESULT_DIR, 'verify-02-tagihan-list.png'), fullPage: false });

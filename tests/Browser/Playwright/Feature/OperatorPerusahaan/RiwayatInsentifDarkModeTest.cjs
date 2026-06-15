@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class RiwayatInsentifDarkModeTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -32,7 +34,7 @@ class RiwayatInsentifDarkModeTest {
     }
 
     async login(email, password = 'password123') {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
 
@@ -71,7 +73,7 @@ class RiwayatInsentifDarkModeTest {
             console.log('\nTEST 01: Toggle Dark Mode - Main Page');
             console.log('========================================');
 
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-insentif`);
+            await this.page.goto(`${BASE}/operator-perusahaan/riwayat-insentif`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             await this.takeScreenshot('01-light-main-page');

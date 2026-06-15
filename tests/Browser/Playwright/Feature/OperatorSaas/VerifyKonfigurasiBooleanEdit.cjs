@@ -5,6 +5,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, '..', 'result', 'OperatorSaas', 'KonfigurasiBooleanEdit');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
@@ -39,7 +41,7 @@ async function main() {
     page.on('console', m => { if (m.type() === 'error') console.log('  ! console.error:', m.text()); });
 
     console.log('[1] Login as Operator SaaS');
-    await page.goto('http://erp-rt-rw-net.test/login-operator-saas', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/login-operator-saas', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(2000);
     await page.fill('input[type="email"]', 'admin@demo.test');
     await page.fill('input[type="password"]', 'password123');
@@ -47,7 +49,7 @@ async function main() {
     await page.waitForTimeout(5000);
 
     console.log('[2] Goto Konfigurasi + filter Boolean');
-    await page.goto('http://erp-rt-rw-net.test/operator-saas/konfigurasi?per_page=10&type=boolean', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/operator-saas/konfigurasi?per_page=10&type=boolean', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500);
     await shot(page, '01-list-boolean.png');

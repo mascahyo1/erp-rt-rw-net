@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class KaryawanPermissionTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -93,7 +95,7 @@ class KaryawanPermissionTest {
 
     async loginAsAdminPerusahaan(email, password) {
         try {
-            await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+            await this.page.goto(`${BASE}/login-perusahaan`);
             await this.page.waitForLoadState('networkidle');
             await this.takeScreenshot('00-before-login');
 
@@ -121,7 +123,7 @@ class KaryawanPermissionTest {
     }
 
     async goToKaryawanPage() {
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/karyawan`);
+        await this.page.goto(`${BASE}/operator-perusahaan/karyawan`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
     }
@@ -199,7 +201,7 @@ class KaryawanPermissionTest {
         try {
             await this.goToKaryawanPage();
             // restore button only shows on terhapus=ya filter
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/karyawan?terhapus=ya`);
+            await this.page.goto(`${BASE}/operator-perusahaan/karyawan?terhapus=ya`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(1500);
             const btn = await this.page.$('button:has-text("Pulihkan")');
@@ -253,7 +255,7 @@ class KaryawanPermissionTest {
     async test_permission_karyawan_list_not_has() {
         const testName = 'karyawan.list NOT HAS (with rbac.no)';
         try {
-            await this.page.goto(`${this.baseUrl}/operator-perusahaan/karyawan`);
+            await this.page.goto(`${BASE}/operator-perusahaan/karyawan`);
             await this.page.waitForLoadState('networkidle');
             await this.page.waitForTimeout(2000);
             const bodyText = await this.page.textContent('body');

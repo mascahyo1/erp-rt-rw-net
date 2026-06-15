@@ -1,3 +1,6 @@
+
+const BASE = require('../../support/baseUrl.cjs');
+const PROJECT_BASH = path.resolve(__dirname, '..', '..', '..', '..').replace(/\\/g, '/');
 /**
  * Verifikasi Turnstile + throttle di endpoint REGISTER + LUPA PASSWORD.
  *
@@ -19,7 +22,6 @@
 const { chromium } = require('playwright');
 const { execSync } = require('child_process');
 
-const BASE = 'http://erp-rt-rw-net.test';
 
 const forgotEndpoints = [
     { name: 'operator-saas', url: '/lupa-password-operator-saas' },
@@ -31,8 +33,8 @@ const forgotEndpoints = [
 function flushCache() {
     try {
         // cache:clear + hapus isi folder cache (rate limiter pakai file driver)
-        execSync('rm -rf /c/laragon/www/erp-rt-rw-net/storage/framework/cache/data/*', { stdio: 'pipe' });
-        execSync('cd /c/laragon/www/erp-rt-rw-net && php artisan cache:clear', { stdio: 'pipe' });
+        execSync(`rm -rf ${PROJECT_BASH}/storage/framework/cache/data/*`, { stdio: 'pipe' });
+        execSync(`cd ${PROJECT_BASH} && php artisan cache:clear`, { stdio: 'pipe' });
         execSync('sleep 1');
     } catch (e) { /* ignore */ }
 }

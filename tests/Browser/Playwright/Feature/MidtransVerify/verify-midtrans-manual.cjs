@@ -8,7 +8,8 @@ const path = require('path');
 const fs = require('fs');
 const PlaywrightHelper = require('../../support/PlaywrightHelper.cjs');
 
-const BASE = 'http://erp-rt-rw-net.test';
+
+const BASE = require('../../support/baseUrl.cjs');
 const SCREENSHOT_DIR = path.join(__dirname, 'screenshots');
 if (!fs.existsSync(SCREENSHOT_DIR)) fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 

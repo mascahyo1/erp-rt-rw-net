@@ -1,9 +1,11 @@
-const PlaywrightHelper = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/PlaywrightHelper.cjs');
+const PlaywrightHelper = require('../../support/PlaywrightHelper.cjs');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class CustomerViewTest {
     constructor() {
         this.helper = new PlaywrightHelper();
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.testResults = { passed: 0, failed: 0, errors: [] };
     }
 
@@ -15,7 +17,7 @@ class CustomerViewTest {
         try {
             await this.helper.launch();
 
-            await this.helper.page.goto(`${this.baseUrl}/login-karyawan`);
+            await this.helper.page.goto(`${BASE}/login-karyawan`);
             await this.helper.page.waitForLoadState('networkidle');
             await this.helper.fill('input[type="email"]', 'karyawan@rtrwnet.id');
             await this.helper.fill('input[type="password"]', 'password123');
@@ -62,7 +64,7 @@ class CustomerViewTest {
 
     async test_01_page_renders() {
         await this.safeTest('test_01_page_renders', async () => {
-            await this.helper.page.goto(`${this.baseUrl}/karyawan/customer`);
+            await this.helper.page.goto(`${BASE}/karyawan/customer`);
             await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('Karyawan/Customer/TestView/01-page');
 

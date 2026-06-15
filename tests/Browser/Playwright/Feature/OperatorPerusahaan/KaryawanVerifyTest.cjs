@@ -3,9 +3,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class KaryawanVerifyTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.screenshotDir = path.join(__dirname, '..', 'result', 'OperatorPerusahaan', 'Karyawan', 'VerifyTest');
         this.screenshotCount = 0;
         this.downloadsDir = path.join(__dirname, '..', '..', '..', '..', 'storage', 'app', 'temp', 'verify-downloads');
@@ -44,7 +46,7 @@ class KaryawanVerifyTest {
 
             // 1) LOGIN with correct flow (click company dropdown button → search → select)
             console.log('\n[1] Login flow');
-            await page.goto(`${this.baseUrl}/login-perusahaan`);
+            await page.goto(`${BASE}/login-perusahaan`);
             await page.waitForLoadState('networkidle');
             await this.shot(page, 'login-page');
 
@@ -79,7 +81,7 @@ class KaryawanVerifyTest {
 
             // 2) KARYAWAN PAGE
             console.log('\n[2] Halaman Karyawan (datatable)');
-            await page.goto(`${this.baseUrl}/operator-perusahaan/karyawan`);
+            await page.goto(`${BASE}/operator-perusahaan/karyawan`);
             await page.waitForLoadState('networkidle');
             await page.waitForTimeout(2000);
             await this.shot(page, 'karyawan-page-list');

@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class PdfDownloadLogoTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -33,7 +35,7 @@ class PdfDownloadLogoTest {
     }
 
     async login(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(1000);
 
@@ -59,7 +61,7 @@ class PdfDownloadLogoTest {
         console.log('\nSETUP: Ensure company has logo for PDF tests');
         console.log('===========================================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/perusahaan-saya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/perusahaan-saya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
 
@@ -100,7 +102,7 @@ class PdfDownloadLogoTest {
         console.log('\nTEST 01: Tagihan PDF endpoint');
         console.log('==============================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
+        await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('01-tagihan-list');
 
@@ -137,7 +139,7 @@ class PdfDownloadLogoTest {
 
         if (!fs.existsSync(this.downloadDir)) fs.mkdirSync(this.downloadDir, { recursive: true });
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
+        await this.page.goto(`${BASE}/operator-perusahaan/tagihan?per_page=100`, { waitUntil: 'domcontentloaded' });
         await this.page.waitForTimeout(2000);
 
         // Locate detail row action - try to find a tagihan with a pdf action
@@ -189,7 +191,7 @@ class PdfDownloadLogoTest {
         console.log('\nTEST 03: Riwayat Pembayaran PDF endpoint');
         console.log('==========================================');
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-pembayaran?per_page=100`, { waitUntil: 'domcontentloaded' });
+        await this.page.goto(`${BASE}/operator-perusahaan/riwayat-pembayaran?per_page=100`, { waitUntil: 'domcontentloaded' });
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('03-pembayaran-list');
 
@@ -222,7 +224,7 @@ class PdfDownloadLogoTest {
 
         if (!fs.existsSync(this.downloadDir)) fs.mkdirSync(this.downloadDir, { recursive: true });
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/riwayat-pembayaran?per_page=100`, { waitUntil: 'domcontentloaded' });
+        await this.page.goto(`${BASE}/operator-perusahaan/riwayat-pembayaran?per_page=100`, { waitUntil: 'domcontentloaded' });
         await this.page.waitForTimeout(2000);
 
         const pdfAction = this.page.locator('a:has-text("PDF"), button:has-text("PDF")').first();

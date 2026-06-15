@@ -2,9 +2,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class DaftarPaketPermissionTest {
     constructor() {
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.browser = null;
         this.context = null;
         this.page = null;
@@ -97,7 +99,7 @@ class DaftarPaketPermissionTest {
     }
 
     async loginAsAdminPerusahaan(email, password) {
-        await this.page.goto(`${this.baseUrl}/login-perusahaan`);
+        await this.page.goto(`${BASE}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
         await this.takeScreenshot('00-login-' + email.split('@')[0]);
 
@@ -117,7 +119,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.list HAS';
         console.log(`[TEST] ${testName}`);
 
-        const response = await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        const response = await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('01-list-has');
@@ -137,7 +139,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.list NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        const response = await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        const response = await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('01-list-not-has');
@@ -158,7 +160,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.create HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('02-create-has');
@@ -186,7 +188,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.create NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('02-create-not-has');
@@ -207,7 +209,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.edit HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('03-edit-has');
@@ -235,7 +237,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.edit NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('03-edit-not-has');
@@ -265,7 +267,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.detail HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(3000);
         await this.takeScreenshot('04-detail-has');
@@ -318,7 +320,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.detail NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('04-detail-not-has');
@@ -339,7 +341,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.delete HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('05-delete-has');
@@ -368,7 +370,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.delete NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('05-delete-not-has');
@@ -401,7 +403,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.restore HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100&terhapus=ya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100&terhapus=ya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('06-restore-has');
@@ -429,7 +431,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.restore NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket?per_page=100&terhapus=ya`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket?per_page=100&terhapus=ya`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('06-restore-not-has');
@@ -462,7 +464,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.export HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('07-export-has');
@@ -481,7 +483,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.export NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('07-export-not-has');
@@ -502,7 +504,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.import HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('08-import-has');
@@ -532,7 +534,7 @@ class DaftarPaketPermissionTest {
         const testName = 'paket.import NOT HAS';
         console.log(`[TEST] ${testName}`);
 
-        await this.page.goto(`${this.baseUrl}/operator-perusahaan/daftar-paket`);
+        await this.page.goto(`${BASE}/operator-perusahaan/daftar-paket`);
         await this.page.waitForLoadState('networkidle');
         await this.page.waitForTimeout(2000);
         await this.takeScreenshot('08-import-not-has');

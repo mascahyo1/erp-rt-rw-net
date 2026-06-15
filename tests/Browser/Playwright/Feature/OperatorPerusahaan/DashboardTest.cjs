@@ -1,10 +1,11 @@
+
+const BASE = require('../../support/baseUrl.cjs');
 /**
  * E2E Test: Operator Perusahaan Dashboard
  * Test render + hero + 4 stat cards (semua real) + dark mode + responsive.
  */
 const { chromium } = require('playwright');
 
-const BASE = 'http://erp-rt-rw-net.test';
 const EMAIL = 'admin@netsejahtera.com';
 const PASSWORD = 'password123';
 

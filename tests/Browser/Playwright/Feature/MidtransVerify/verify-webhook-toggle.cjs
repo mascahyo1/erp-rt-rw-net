@@ -10,14 +10,16 @@ const crypto = require('crypto');
 const { execSync } = require('child_process');
 const PlaywrightHelper = require('../../support/PlaywrightHelper.cjs');
 
-const BASE = 'http://erp-rt-rw-net.test';
+
+const BASE = require('../../support/baseUrl.cjs');
+const PROJECT_BASH = path.resolve(__dirname, '..', '..', '..', '..').replace(/\\/g, '/');
 const SCREENSHOT_DIR = path.join(__dirname, 'screenshots-webhook');
 if (!fs.existsSync(SCREENSHOT_DIR)) fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
 // Tinker helper — execute PHP one-liner, return stdout
 function phpExec(expression) {
     const escaped = expression.replace(/"/g, '\\"');
-    const result = execSync(`cd /c/laragon/www/erp-rt-rw-net && php artisan tinker --no-interaction --execute="${escaped}"`, {
+    const result = execSync(`cd ${PROJECT_BASH} && php artisan tinker --no-interaction --execute="${escaped}"`, {
         encoding: 'utf8',
         shell: 'C:\\Program Files\\Git\\bin\\bash.exe',
     });

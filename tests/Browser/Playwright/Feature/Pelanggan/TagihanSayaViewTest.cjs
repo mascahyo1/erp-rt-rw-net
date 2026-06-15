@@ -1,9 +1,11 @@
-const PlaywrightHelper = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/PlaywrightHelper.cjs');
+const PlaywrightHelper = require('../../support/PlaywrightHelper.cjs');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 class TagihanSayaViewTest {
     constructor() {
         this.helper = new PlaywrightHelper();
-        this.baseUrl = 'http://erp-rt-rw-net.test';
+        // baseUrl di-migrate ke BASE const (di-inject di bawah)
         this.testResults = { passed: 0, failed: 0, errors: [] };
     }
 
@@ -15,7 +17,7 @@ class TagihanSayaViewTest {
         try {
             await this.helper.launch();
 
-            await this.helper.page.goto(`${this.baseUrl}/login-pelanggan`);
+            await this.helper.page.goto(`${BASE}/login-pelanggan`);
             await this.helper.page.waitForLoadState('networkidle');
             await this.helper.fill('input[type="email"]', 'pelanggan@rtrwnet.id');
             await this.helper.fill('input[type="password"]', 'password123');
@@ -64,7 +66,7 @@ class TagihanSayaViewTest {
 
     async test_01_page_renders() {
         await this.safeTest('test_01_page_renders', async () => {
-            await this.helper.page.goto(`${this.baseUrl}/customer/tagihan-saya`);
+            await this.helper.page.goto(`${BASE}/customer/tagihan-saya`);
             await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('Pelanggan/TagihanSaya/TestView/01-page');
 
@@ -77,7 +79,7 @@ class TagihanSayaViewTest {
 
     async test_02_list_displays() {
         await this.safeTest('test_02_list_displays', async () => {
-            await this.helper.page.goto(`${this.baseUrl}/customer/tagihan-saya`);
+            await this.helper.page.goto(`${BASE}/customer/tagihan-saya`);
             await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('Pelanggan/TagihanSaya/TestView/02-list');
         });
@@ -85,7 +87,7 @@ class TagihanSayaViewTest {
 
     async test_03_navigate_to_detail() {
         await this.safeTest('test_03_navigate_to_detail', async () => {
-            await this.helper.page.goto(`${this.baseUrl}/customer/tagihan-saya`);
+            await this.helper.page.goto(`${BASE}/customer/tagihan-saya`);
             await this.helper.page.waitForTimeout(3000);
             await this.helper.screenshot('Pelanggan/TagihanSaya/TestView/03-detail-list');
         });

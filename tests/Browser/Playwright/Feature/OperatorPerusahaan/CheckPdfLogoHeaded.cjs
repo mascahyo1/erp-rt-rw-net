@@ -4,6 +4,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, '..', 'result', 'PerusahaanSaya');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
@@ -15,7 +17,7 @@ async function main() {
     const page = await ctx.newPage();
 
     console.log('[1/6] Login sebagai admin@netsejahtera.com (PT Net Sejahtera Abadi)');
-    await page.goto('http://erp-rt-rw-net.test/login-perusahaan', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/login-perusahaan', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     await page.locator('button:has(.fa-building)').first().click();
     await page.waitForTimeout(1500);
@@ -45,7 +47,7 @@ async function main() {
     await page.screenshot({ path: path.join(RESULT_DIR, '01-after-login.png') });
 
     console.log('\n[2/6] Navigate to Tagihan page');
-    await page.goto('http://erp-rt-rw-net.test/operator-perusahaan/tagihan?per_page=10');
+    await page.goto(BASE + '/operator-perusahaan/tagihan?per_page=10');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
     const tagRows = await page.locator('table tbody tr').count();
@@ -88,7 +90,7 @@ async function main() {
     }
 
     console.log('\n[4/6] Navigate to Riwayat Pembayaran page');
-    await page.goto('http://erp-rt-rw-net.test/operator-perusahaan/riwayat-pembayaran?per_page=10');
+    await page.goto(BASE + '/operator-perusahaan/riwayat-pembayaran?per_page=10');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
     const riwayRows = await page.locator('table tbody tr').count();

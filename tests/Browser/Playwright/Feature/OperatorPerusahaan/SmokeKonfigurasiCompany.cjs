@@ -3,6 +3,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, '..', 'result', 'OperatorPerusahaan', 'KonfigurasiCompanySmoke');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
@@ -20,7 +22,7 @@ async function main() {
     page.on('console', m => { if (m.type() === 'error') errors.push('console.error: ' + m.text()); });
 
     console.log('[1] Login');
-    await page.goto('http://erp-rt-rw-net.test/login-perusahaan', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/login-perusahaan', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     await page.locator('button:has(.fa-building)').first().click();
     await page.waitForTimeout(1200);
@@ -35,7 +37,7 @@ async function main() {
     await page.waitForTimeout(6000);
 
     console.log('[2] Goto Konfigurasi Perusahaan');
-    await page.goto('http://erp-rt-rw-net.test/operator-perusahaan/konfigurasi-perusahaan?per_page=10', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/operator-perusahaan/konfigurasi-perusahaan?per_page=10', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1500);
 

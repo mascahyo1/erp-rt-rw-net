@@ -4,6 +4,8 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, '..', 'result', 'TagihanDetailModal');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
@@ -20,7 +22,7 @@ async function main() {
     const page = await ctx.newPage();
 
     console.log('[1/7] Login sebagai admin@netsejahtera.com');
-    await page.goto('http://erp-rt-rw-net.test/login-perusahaan', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/login-perusahaan', { waitUntil: 'domcontentloaded' });
     await page.waitForTimeout(1500);
     await page.locator('button:has(.fa-building)').first().click();
     await page.waitForTimeout(1200);
@@ -37,7 +39,7 @@ async function main() {
     console.log('  → URL after login:', page.url());
 
     console.log('\n[2/7] Navigate to Tagihan');
-    await page.goto('http://erp-rt-rw-net.test/operator-perusahaan/tagihan?per_page=10', { waitUntil: 'domcontentloaded' });
+    await page.goto(BASE + '/operator-perusahaan/tagihan?per_page=10', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
     const rows = await page.locator('table tbody tr').count();

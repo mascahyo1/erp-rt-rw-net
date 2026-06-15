@@ -11,10 +11,11 @@ const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
 
+
+const BASE = require('../../support/baseUrl.cjs');
 const RESULT_DIR = path.join(__dirname, '..', 'result', 'OperatorSaas', 'ProfilSayaPhoneFix');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
-const BASE = 'http://erp-rt-rw-net.test';
 
 let pass = 0;
 let fail = 0;
