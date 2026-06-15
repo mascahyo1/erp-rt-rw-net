@@ -26,18 +26,22 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
-const PlaywrightHelper = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/PlaywrightHelper.cjs');
-const LogParser = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/LogParser.cjs');
-const BASE = require('C:/laragon/www/erp-rt-rw-net/tests/Browser/Playwright/support/baseUrl.cjs');
+const PlaywrightHelper = require('../../../support/PlaywrightHelper.cjs');
+const LogParser = require('../../../support/LogParser.cjs');
+const BASE = require('../../../support/baseUrl.cjs');
 
-const PROJECT_ROOT = 'C:\\laragon\\www\\erp-rt-rw-net';
+// Path dinamis berdasarkan lokasi file test ini di filesystem.
+// __dirname = tests/Browser/Playwright/Feature/Auth/EmailVerification/
+// Naik 6 level = project root (erp-rt-rw-net/).
+const PROJECT_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..', '..');
 const RESULT_DIR = path.join(PROJECT_ROOT, 'tests/Browser/Playwright/result/Auth/EmailVerification');
 if (!fs.existsSync(RESULT_DIR)) fs.mkdirSync(RESULT_DIR, { recursive: true });
 
-// PHP bootstrap helper
+// PHP bootstrap helper — path pakai PROJECT_ROOT (dinamis dari __dirname)
+// Supaya test bisa jalan dari clone manapun (Laragon, Linux, CI, dll).
 const BOOTSTRAP = `<?php
-require 'C:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\vendor\\\\autoload.php';
-$app = require 'C:\\\\laragon\\\\www\\\\erp-rt-rw-net\\\\bootstrap\\\\app.php';
+require '${PROJECT_ROOT.replace(/\\/g, '\\\\')}\\\\vendor\\\\autoload.php';
+$app = require '${PROJECT_ROOT.replace(/\\/g, '\\\\')}\\\\bootstrap\\\\app.php';
 $app->make(Illuminate\\Contracts\\Console\\Kernel::class)->bootstrap();
 `;
 const tmpScript = path.join(PROJECT_ROOT, '.claude', 'tmp_email_verif_test.php');

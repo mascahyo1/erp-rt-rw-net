@@ -14,8 +14,6 @@ const selectedCompany = ref(null);
 
 const siteKey = computed(() => page.props.turnstile_site_key || '');
 
-const kodeNegaraList = ['+62', '+60', '+65', '+66', '+84', '+1', '+44', '+81', '+86'];
-
 function onLoginTurnstileSuccess(token) { loginForm['cf-turnstile-response'] = token; }
 function onLoginTurnstileExpired() { loginForm['cf-turnstile-response'] = ''; }
 function onRegisterTurnstileSuccess(token) { registerForm['cf-turnstile-response'] = token; }
@@ -341,51 +339,48 @@ function switchTab(tab) {
                                 </div>
                                 <p v-if="regNameError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regNameError }}</p>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
-                                    <div class="relative">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i :class="['fas fa-envelope text-sm transition-colors', regEmailError ? 'text-red-400' : 'text-gray-400']"></i>
+                                    </div>
+                                    <input
+                                        v-model="registerForm.email"
+                                        @blur="rt.email.value = true"
+                                        type="email"
+                                        placeholder="email@contoh.com"
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-all duration-200 focus:ring-2 focus:shadow-md"
+                                        :class="regEmailError
+                                            ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500'
+                                            : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500/30 focus:border-emerald-500'"
+                                    />
+                                </div>
+                                <p v-if="regEmailError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regEmailError }}</p>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nomor HP</label>
+                                <div class="grid grid-cols-[5.5rem_1fr] sm:grid-cols-[7rem_1fr] gap-2">
+                                    <div>
+                                        <CountryCodeSelect v-model="registerForm.phone_country_code" accent="emerald" size="sm" />
+                                    </div>
+                                    <div class="relative min-w-0">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <i :class="['fas fa-envelope text-sm transition-colors', regEmailError ? 'text-red-400' : 'text-gray-400']"></i>
+                                            <i :class="['fas fa-phone text-sm transition-colors', regPhoneError ? 'text-red-400' : 'text-gray-400']"></i>
                                         </div>
                                         <input
-                                            v-model="registerForm.email"
-                                            @blur="rt.email.value = true"
-                                            type="email"
-                                            placeholder="email@contoh.com"
+                                            v-model="registerForm.phone_number"
+                                            @blur="rt.phone.value = true"
+                                            type="tel"
+                                            placeholder="812-3456-7890"
                                             class="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-all duration-200 focus:ring-2 focus:shadow-md"
-                                            :class="regEmailError
+                                            :class="regPhoneError
                                                 ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500'
                                                 : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500/30 focus:border-emerald-500'"
                                         />
                                     </div>
-                                    <p v-if="regEmailError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regEmailError }}</p>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nomor HP</label>
-                                    <div class="flex gap-2">
-                                        <select v-model="registerForm.phone_country_code" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors hidden"><option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option></select>
-                                        <div class="w-28 sm:w-32 shrink-0">
-                                            <CountryCodeSelect v-model="registerForm.phone_country_code" accent="emerald" size="sm" />
-                                        </div>
-                                        <div class="relative flex-1 min-w-0">
-                                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <i :class="['fas fa-phone text-sm transition-colors', regPhoneError ? 'text-red-400' : 'text-gray-400']"></i>
-                                            </div>
-                                            <input
-                                                v-model="registerForm.phone_number"
-                                                @blur="rt.phone.value = true"
-                                                type="tel"
-                                                placeholder="812-3456-7890"
-                                                class="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-all duration-200 focus:ring-2 focus:shadow-md"
-                                                :class="regPhoneError
-                                                    ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500'
-                                                    : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500/30 focus:border-emerald-500'"
-                                            />
-                                        </div>
-                                    </div>
-                                    <p v-if="regPhoneError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regPhoneError }}</p>
-                                </div>
+                                <p v-if="regPhoneError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regPhoneError }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
