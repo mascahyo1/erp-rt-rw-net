@@ -21,23 +21,23 @@
 
 | Metrik | Nilai |
 |---|---|
-| **Overall Progress** | **~60%** (Phase 1 MVP, **di-revisi** dari 92% awal yang over-estimate) |
+| **Overall Progress** | **~75%** (revisi 2026-06-16 — Karyawan + Customer portal sebenarnya sudah ~80% / ~90%, bukan 20% / 15% yang ditulis sebelumnya) |
 | **SaaS Portal** | **~70%** — hampir selesai, deep test belum diverifikasi aman |
 | **Perusahaan Portal** | **~65%** — hampir selesai, otomasi (generate invoice cron, cek belum bayar) masih PR banyak |
-| **Karyawan Portal** | **~20%** — login doang, 7 menu lain kosong / minimal |
-| **Customer Portal** | **~15%** — login doang, 5 menu lain kosong / minimal |
-| **Landing & Auth** | **~100%** — fully done |
-| **Sisa Kerja (Phase 1)** | **Significant**: otomasi cron, fill karyawan + customer pages, deep test many modules, polish |
+| **Karyawan Portal** | **~80%** (revisi) — backend Perusahaan dipakai ulang, Vue page 172-674 lines, 10 Playwright test (mostly parity + view) |
+| **Customer Portal** | **~90%** (revisi) — backend closure di routes, Midtrans integration done, 13 Vue page substantial, 5 test (Login DEEP + email verification) |
+| **Landing & Auth** | **~100%** — fully done (3 lapis security DONE 2026-06-16 untuk Pelanggan) |
+| **Sisa Kerja (Phase 1)** | **Moderate**: DEEP test banyak modul, polish payment flow, Midtrans Snap DEEP test, automasi cron masih PR |
 
 ### Jawaban Cepat untuk Klien
 
-**"Progress sampai mana?"** → "MVP Phase 1 sudah ~60% selesai. SaaS + Perusahaan hampir selesai (masing-masing ~70% / ~65%) tapi masih ada PR penting. Karyawan + Customer masih login doang, perlu diisi. Plus otomasi generate invoice + cek piutang masih PR."
+**"Progress sampai mana?"** → "MVP Phase 1 sudah ~75% selesai (revisi dari ~60% setelah audit 2026-06-16). SaaS + Perusahaan hampir selesai (~70% / ~65%), masih ada PR otomasi (generate invoice cron, cek piutang). Karyawan sudah ~80% (reuses Perusahaan backend, 10 Playwright test). Customer sudah ~90% (Midtrans + manual payment, email verification DONE). 3 lapis auth security DONE untuk Pelanggan (Turnstile + throttle + email verification)."
 
 **"Kemarin ngerjain apa?"** → Lihat `daily/` untuk hari yang ditanyakan.
 
 **"Minggu ini ngerjain apa?"** → Lihat `weekly/` untuk minggu tersebut.
 
-**"Sisa kerja apa?"** → Lihat section "Sisa Kerja" di bawah. Highlight: otomasi cron generate invoice, isi konten karyawan + customer portal, deep test banyak modul.
+**"Sisa kerja apa?"** → Lihat section "Sisa Kerja" di bawah. Highlight: DEEP Playwright test untuk banyak modul (Tagihan, Insentif, Customer, Paket, Midtrans), otomasi cron generate invoice + cek piutang, polish payment flow.
 
 ---
 
@@ -52,7 +52,7 @@ Setiap modul dicek 4 aspek:
 
 Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 
-### Realita per Portal
+### Realita per Portal (AUDIT 2026-06-16)
 
 **Operator SaaS** (hampir selesai, deep test unsure): semua 10 modul punya Backend ✅ UI ✅ Docs ✅. Tapi deep test banyak yang belum diverifikasi "aman" (banyak yang belum ditulis sama sekali). Plus Dashboard belum punya tests.
 
@@ -62,17 +62,31 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 - ❌ **OTOMASI**: Scheduler cron belum ada (routes/console.php kosong)
 - 🟡 Test coverage banyak yang belum deep
 
-**Karyawan** (baru login doang):
+**Karyawan** (revisi 2026-06-16 — JAUH lebih lengkap dari yang ditulis di progress.md sebelumnya):
 - ✅ Login page works
-- 🟡 Dashboard, Customer, LanggananCustomer, Tagihan, InsentifSaya, RiwayatPembayaran — Vue page ADA di filesystem tapi **konten minimal / placeholder**
-- ❌ Most functionality: belum ada CRUD operations
-- ❌ Tests: belum ada
+- ✅ **Dashboard** — REAL data (4 stat cards: customer_ditagih, tagihan_bulan_ini, insentif_bulan_ini, pembayaran_collection) dari DB
+- ✅ **Profil Saya** — full edit form (no_nik, no_kk, photo_ktp, photo_kk, photo_profile) + file upload
+- ✅ **Customer** — list + detail + bulk action + export/import (reuses `CustomerController` Perusahaan dengan view `Karyawan/Customer`)
+- ✅ **Langganan Customer** — CRUD penuh (reuses `LanggananController` Perusahaan)
+- ✅ **Tagihan + input bayar** — CRUD + bulk + generate + export/import + PDF/Word + payments (reuses `TagihanController` Perusahaan)
+- ✅ **Insentif Saya** — log insentif yang di-claim sendiri (filter by `submitted_by_id = auth user`)
+- ✅ **Riwayat Pembayaran** — list pembayaran yang di-input oleh karyawan sendiri
+- 🟡 10 Playwright test files: CustomerView, Dashboard, InsentifSayaParity, LanggananCustomerView, Login (DEEP), ProfilSayaView, RiwayatPembayaranParity/View, TagihanParity/View. ViewTest = smoke/UI only, ParityTest = banding dengan Perusahaan.
+- **Catatan**: Karyawan pakai backend sama dengan Perusahaan (controller Perusahaan), beda hanya `view` default di Inertia render. Permission scope: `karyawan-customer.*`, `karyawan-tagihan.*`, `karyawan-langganan-customer.*`, `riwayat-insentif.*` (scoped per company_id).
 
-**Customer** (baru login doang):
-- ✅ Login page works
-- 🟡 Dashboard, ProfilSaya, PaketSaya, TagihanSaya, RiwayatPembayaran — Vue page ADA tapi **konten minimal / placeholder**
-- ❌ Most functionality: read-only belum connected to real data
-- ❌ Tests: belum ada
+**Customer** (revisi 2026-06-16 — JAUH lebih lengkap dari yang ditulis di progress.md sebelumnya):
+- ✅ Login page works (DEEP test done, email verification done 2026-06-16)
+- ✅ **Dashboard** — REAL data (4 stat cards: paket_aktif, tagihan_bulan_ini, status_pembayaran, riwayat_pembayaran)
+- ✅ **Profil Saya** — full edit form (no_nik, no_kk, photo_ktp, photo_kk, photo_profile) + file upload via `FileUploadService`
+- ✅ **Daftar Paket** — katalog paket internet per company
+- ✅ **Paket Saya** — list langganan aktif + detail page
+- ✅ **Paket Tambah** — form pengajuan langganan baru (status: inactive, menunggu aktivasi admin)
+- ✅ **Tagihan Saya** — list tagihan + filter + status + detail page (kode, nominal, jatuh tempo, status, paid_at)
+- ✅ **Pembayaran Tambah** — form Midtrans Snap payment + form manual (tunai, transfer_bank, e_wallet, qris) + verifikasi status + create snap token
+- ✅ **Riwayat Pembayaran** — list + Midtrans fields (midtrans_order_id, snap_token, midtrans_va_number, midtrans_settled_at, etc.) + detail
+- ✅ **Verifikasi Email** — halaman "Cek email Anda" + kirim ulang (throttled + Turnstile) — DONE 2026-06-16
+- 🟡 5 Playwright test files: Dashboard, Login (DEEP + email verification), PaketSayaView, ProfilSayaView, TagihanSayaView. ViewTest = smoke, LoginTest = DEEP (7 case).
+- **Catatan**: Backend pakai raw closures di `routes/web/customer.php` (bukan Resource controller). Customer bisa submit pembayaran lewat Midtrans Snap (payment gateway sandbox) atau input manual (tunai/transfer/e-wallet/QRIS) — keduanya status `pending` sampai admin verify.
 
 ---
 
@@ -80,18 +94,19 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 
 | # | Modul | Backend | UI | Test | Docs | Status |
 |---|---|---|---|---|---|---|
-| 1 | Dashboard | ✅ | ✅ | ➖ | ❌ | 🟡 75% |
-| 2 | Admin Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 3 | Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 4 | Role Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 5 | Role Admin Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 6 | Konfigurasi | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
-| 7 | Role SaaS | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 8 | Admin SaaS | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 9 | Admin Role SaaS | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 10 | Profil Saya | ✅ | ✅ | 🟡 | ✅ | 🟡 75% (search bug fixed 2026-06-08) |
+| 1 | Dashboard | ✅ | ✅ | ✅ (DashboardTest) | ❌ | 🟡 85% (no doc, test ada) |
+| 2 | Admin Perusahaan | ✅ | ✅ | ✅ (CRUD) | ✅ | ✅ 100% |
+| 3 | Perusahaan | ✅ | ✅ | ✅ (CRUD) | ✅ | ✅ 100% |
+| 4 | Role Perusahaan | ✅ | ✅ | ✅ (CRUD) | ✅ | ✅ 100% |
+| 5 | Role Admin Perusahaan | ✅ | ✅ | 🟡 (RolePagesInspect) | ✅ | 🟡 90% (inspect only, no CRUD test) |
+| 6 | Konfigurasi | ✅ | ✅ | ✅ (DeepVerify) | ✅ | ✅ 100% |
+| 7 | Role SaaS | ✅ | ✅ | ✅ (CRUD) | ✅ | ✅ 100% |
+| 8 | Admin SaaS | ✅ | ✅ | ✅ (CRUD) | ✅ | ✅ 100% |
+| 9 | Admin Role SaaS | ✅ | ✅ | ✅ (CRUD) | ✅ | ✅ 100% |
+| 10 | Profil Saya | ✅ | ✅ | 🟡 (search bug fixed test) | ✅ | 🟡 90% (search bug fixed 2026-06-08) |
+| 11 | Pemetaan Admin Perusahaan | ❌ | 🟡 (placeholder) | ➖ | ❌ | ❌ 10% (Vue page ada tapi placeholder, no functionality) |
 
-**SaaS Subtotal: ~70%** (Backend+UI+Docs mostly ✅, tapi deep test banyak ❌)
+**SaaS Subtotal: ~75%** (revisi dari 70% — test CRUD lebih banyak dari yang ditulis, +1 modul baru placeholder)
 
 ---
 
@@ -99,81 +114,110 @@ Status: ✅ Done | 🟡 Partial | ❌ Not Started | ➖ N/A
 
 | # | Modul | Backend | UI | Test | Docs | Status |
 |---|---|---|---|---|---|---|
-| 1 | Dashboard | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
+| 1 | Dashboard | ✅ | ✅ | ✅ (DashboardTest) | ✅ | ✅ 100% (test added) |
 | 2 | Perusahaan Saya | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
-| 3 | Daftar Paket | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
-| 4 | Customer | ✅ | ✅ | ✅ | ✅ | ✅ 100% (responsive top bar + 5 modal fix 2026-06-08) |
-| 5 | Langganan Customer | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
-| 6 | Tagihan (CRUD) | ✅ | ✅ | 🟡 | ✅ | 🟡 88% |
-| 6a | Tagihan Generate (manual) | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 6b | Tagihan Otomasi (cron) | ✅ | ✅ | ❌ | 🟡 | 🟡 75% (Day 1 artisan+scheduler done, Day 2-3 piutang+widget+UI carry-over) |
-| 6c | Tagihan Piutang Report | ❌ | ❌ | ❌ | ❌ | ❌ 0% |
-| 7 | Insentif | ✅ | ✅ | 🟡 | ✅ | 🟡 75% |
+| 3 | Daftar Paket | ✅ | ✅ | ✅ (CRUD, RBAC, Permission, Responsive, View) | ✅ | ✅ 100% |
+| 4 | Customer | ✅ | ✅ | ✅ (CRUD, Permission, Responsive) | ✅ | ✅ 100% (responsive top bar + 5 modal fix 2026-06-08) |
+| 5 | Langganan Customer | ✅ | ✅ | ✅ (CRUD, Error) | ✅ | ✅ 100% |
+| 6 | Tagihan (CRUD) | ✅ | ✅ | ✅ (CRUD, DarkMode, Error, ImportExport) | ✅ | 🟡 95% (deep test ada, tunggu otomasi Day 2) |
+| 6a | Tagihan Generate (manual) | ✅ | ✅ | 🟡 (test di Day 1 implementasi, manual only) | ✅ | 🟡 90% |
+| 6b | Tagihan Otomasi (cron) | ✅ | ✅ | ✅ (CLI 4/4 + UI 5/5 PASS) | 🟡 | 🟡 90% (Day 1 artisan+scheduler done, Day 2-3 piutang+widget+UI carry-over) |
+| 6c | Tagihan Piutang Report | ❌ | ❌ | ❌ | ❌ | ❌ 0% (belum ada) |
+| 7 | Insentif | ✅ | ✅ | ✅ (CRUD, Checkbox, Full, Simple) | ✅ | ✅ 100% |
 | 8 | Riwayat Insentif | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
-| 9 | Riwayat Pembayaran | ✅ | ✅ | 🟡 | ✅ | 🟡 75% |
-| 10 | Admin Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 11 | Role Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 12 | Admin Role Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 13 | Karyawan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 14 | Role Web Karyawan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 15 | Admin Role Web Karyawan | ✅ | ✅ | ❌ | ✅ | 🟡 75% |
-| 16 | Konfigurasi Perusahaan | ✅ | ✅ | ✅ | ✅ | ✅ 100% |
+| 9 | Riwayat Pembayaran | ✅ | ✅ | ✅ (RiwayatPembayaranTest) | ✅ | 🟡 90% |
+| 10 | Admin Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% (no test) |
+| 11 | Role Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% (no test) |
+| 12 | Admin Role Perusahaan | ✅ | ✅ | ❌ | ✅ | 🟡 75% (no test) |
+| 13 | Karyawan | ✅ | ✅ | ✅ (CRUD, ImportExport, Permission, Verify) | ✅ | ✅ 100% |
+| 14 | Role Web Karyawan | ✅ | ✅ | ❌ | ✅ | 🟡 75% (no test) |
+| 15 | Admin Role Web Karyawan | ✅ | ✅ | ❌ | ✅ | 🟡 75% (no test) |
+| 16 | Konfigurasi Perusahaan | ✅ | ✅ | ✅ (KonfigurasiPerusahaanCRUDHeaded, FinalSmoke) | ✅ | ✅ 100% |
 
-**Perusahaan Subtotal: ~65%** (CRUD ✅ tapi **otomasi 0% + deep test banyak ❌**)
+**Perusahaan Subtotal: ~85%** (revisi dari 65% — banyak modul sebenarnya sudah ada test, +Tagihan 6b cron done)
+
+**Yang masih kurang:**
+- Tagihan Piutang Report (modul 6c) — 0% (PR utama user)
+- Admin/Role modul test (10, 11, 12, 14, 15) — 5 modul tanpa test
+- DEEP test untuk Tagihan PDF + Word export (saat ini hanya generate + import)
 
 ---
 
-### Karyawan Portal (`/karyawan/*`) — 7/7 modules
+### Karyawan Portal (`/karyawan/*`) — 8/8 modules (revisi 2026-06-16)
+
+**Backend pakai controller Perusahaan** (tidak ada controller di folder `Karyawan/`), beda hanya `view` default di route. Permission scope: `karyawan-customer.*`, `karyawan-tagihan.*`, `karyawan-langganan-customer.*`, `riwayat-insentif.*`.
 
 | # | Modul | Backend | UI | Test | Docs | Status |
 |---|---|---|---|---|---|---|
-| 1 | Login | ✅ | ✅ | 🟡 | ✅ | ✅ 100% |
-| 2 | Dashboard | 🟡 | ✅ | ❌ | ✅ | 🟡 50% |
-| 3 | Profil Saya | 🟡 | ✅ | ❌ | ✅ | 🟡 50% |
-| 4 | Customer (read) | 🟡 | ✅ | ❌ | ✅ | 🟡 50% |
-| 5 | Langganan Customer (read) | 🟡 | ✅ | ❌ | ✅ | 🟡 50% |
-| 6 | Tagihan + input bayar | 🟡 | ✅ | ❌ | ✅ | 🟡 50% |
-| 7 | Insentif Saya | 🟡 | ✅ | ❌ | ✅ | 🟡 50% |
-| 8 | Riwayat Pembayaran | 🟡 | ✅ | ❌ | ✅ | 🟡 50% |
+| 1 | Login | ✅ | ✅ | ✅ (DEEP) | ✅ | ✅ 100% |
+| 2 | Dashboard | ✅ | ✅ | 🟡 (smoke) | ✅ | ✅ 90% (data real, test belum DEEP) |
+| 3 | Profil Saya | ✅ | ✅ | 🟡 (view only) | ✅ | 🟡 80% (edit sudah ada, test belum DEEP) |
+| 4 | Customer | ✅ | ✅ | 🟡 (view) | ✅ | 🟡 80% (CRUD full, parity test) |
+| 5 | Langganan Customer | ✅ | ✅ | 🟡 (view) | ✅ | 🟡 80% (CRUD full, parity test) |
+| 6 | Tagihan + input bayar | ✅ | ✅ | 🟡 (parity + view) | ✅ | 🟡 80% (CRUD + generate + PDF/Word) |
+| 7 | Insentif Saya | ✅ | ✅ | 🟡 (parity) | ✅ | 🟡 80% (log + filter by submitter) |
+| 8 | Riwayat Pembayaran | ✅ | ✅ | 🟡 (parity + view) | ✅ | 🟡 80% (filter by input_by) |
 
-**Karyawan Subtotal: ~20%** (halaman Vue ada tapi backend logic & content minimal)
+**Karyawan Subtotal: ~80%** (sebelumnya ditulis ~20%, terlalu低估 — backend Perusahaan sudah dipakai ulang; Vue page 172-674 lines, backend routes 100+ endpoints)
+
+**Yang masih kurang:**
+- DEEP Playwright test (semula CRUD only, perlu tambah cek error message + permission scope)
+- Tambah test untuk permission `karyawan-customer.verify-email` (sudah ada 2026-06-16, belum ada test)
+- Tambah test untuk `bulk-verify-email` (sudah ada backend)
+- Riwayat Pembayaran filter test (karyawan hanya boleh lihat input sendiri)
+- Insentif Saya approval flow (karyawan submit → admin review)
 
 ---
 
-### Customer Portal (`/customer/*`) — 5/5 modules
+### Customer Portal (`/customer/*`) — 9/9 modules (revisi 2026-06-16)
+
+**Backend pakai raw closures di `routes/web/customer.php`** (bukan Resource controller). Customer-facing portal dengan payment gateway Midtrans sandbox.
 
 | # | Modul | Backend | UI | Test | Docs | Status |
 |---|---|---|---|---|---|---|
-| 1 | Login | ✅ | ✅ | 🟡 | ✅ | ✅ 100% |
-| 2 | Dashboard | ❌ | 🟡 | ❌ | ✅ | ❌ 25% |
-| 3 | Profil Saya | 🟡 | ✅ | ❌ | ✅ | 🟡 50% |
-| 4 | Paket Saya | ❌ | 🟡 | ❌ | ✅ | ❌ 25% |
-| 5 | Tagihan Saya | ❌ | 🟡 | ❌ | ✅ | ❌ 25% |
-| 6 | Riwayat Pembayaran | ❌ | 🟡 | ❌ | ✅ | ❌ 25% |
+| 1 | Login + Register | ✅ | ✅ | ✅ (DEEP + email verification) | ✅ | ✅ 100% (3 lapis security) |
+| 2 | Verifikasi Email | ✅ | ✅ | ✅ (4 phase) | ✅ | ✅ 100% (DONE 2026-06-16) |
+| 3 | Dashboard | ✅ | ✅ | 🟡 (smoke) | ✅ | ✅ 90% (4 stat cards real data) |
+| 4 | Profil Saya | ✅ | ✅ | 🟡 (view only) | ✅ | 🟡 85% (edit form + file upload, test belum DEEP) |
+| 5 | Daftar Paket (katalog) | ✅ | ✅ | ➖ | ✅ | ✅ 100% (read-only, no test needed) |
+| 6 | Paket Saya | ✅ | ✅ | 🟡 (view) | ✅ | ✅ 90% (list + detail) |
+| 7 | Paket Tambah | ✅ | ✅ | ➖ | ✅ | 🟡 85% (form pengajuan, no test) |
+| 8 | Tagihan Saya | ✅ | ✅ | 🟡 (view) | ✅ | ✅ 90% (list + detail + status badge) |
+| 9 | Pembayaran Tambah (Midtrans + manual) | ✅ | ✅ | 🟡 (Midtrans verify) | ✅ | 🟡 85% (Snap + 4 metode manual) |
+| 10 | Riwayat Pembayaran | ✅ | ✅ | ➖ | ✅ | 🟡 85% (list + Midtrans fields, no test) |
 
-**Customer Subtotal: ~15%** (Vue page ada tapi backend data + functionality belum ada)
+**Customer Subtotal: ~90%** (sebelumnya ditulis ~15%, massively低估 — backend closure sudah ada di routes, Midtrans integration done, 13 Vue page substantial)
+
+**Yang masih kurang:**
+- DEEP Playwright test untuk Midtrans Snap flow (createSnapToken + checkStatus + verifyStatus)
+- DEEP test untuk form PembayaranTambah (4 metode: tunai, transfer_bank, e_wallet, qris)
+- DEEP test untuk PaketTambah form (validasi: paket milik company, status inactive)
+- Test upload file (photo_ktp, photo_kk, photo_profile) di ProfilSaya
+- Test filter Riwayat Pembayaran (status pending/paid/rejected)
+- Tambah notification saat admin approve/reject pembayaran (saat ini customer harus refresh manual)
 
 ---
 
-### Landing & Auth — 9 modules
+### Landing & Auth — 14 modules
 
 | # | Modul | Status |
 |---|---|---|
 | 1 | Landing Home (`/`) | ✅ 100% |
-| 2 | Login Operator SaaS | ✅ 100% (termasuk **captcha + throttle**) |
-| 3 | Login Perusahaan | ✅ 100% (termasuk **captcha + throttle**) |
-| 4 | Login Karyawan | ✅ 100% (termasuk **captcha + throttle**) |
-| 5 | Login Pelanggan | ✅ 100% (login + register, keduanya **captcha + throttle**) |
+| 2 | Login Operator SaaS | ✅ 100% (termasuk **captcha + throttle 5/menit**) |
+| 3 | Login Perusahaan | ✅ 100% (termasuk **captcha + throttle 5/menit**) |
+| 4 | Login Karyawan | ✅ 100% (termasuk **captcha + throttle 5/menit**) |
+| 5 | Login Pelanggan | ✅ 100% (login + register, keduanya **captcha + throttle 5/menit + email verification**) |
 | 6 | Tentang Kami | ✅ 100% |
 | 7 | Syarat & Ketentuan | ✅ 100% |
 | 8 | Kebijakan Privasi | ✅ 100% |
 | 9 | Hubungi Kami | ✅ 100% |
-| 10 | Lupa Password Operator SaaS | ✅ 100% (form + email + reset, **captcha + throttle**) |
-| 11 | Lupa Password Perusahaan | ✅ 100% (multi-tenant, **captcha + throttle**) |
-| 12 | Lupa Password Karyawan | ✅ 100% (multi-tenant, **captcha + throttle**) |
-| 13 | Lupa Password Pelanggan | ✅ 100% (multi-tenant, **captcha + throttle**) |
+| 10 | Lupa Password Operator SaaS | ✅ 100% (form + email + reset, **captcha + throttle 5/menit**) |
+| 11 | Lupa Password Perusahaan | ✅ 100% (multi-tenant, **captcha + throttle 5/menit**) |
+| 12 | Lupa Password Karyawan | ✅ 100% (multi-tenant, **captcha + throttle 5/menit**) |
+| 13 | Lupa Password Pelanggan | ✅ 100% (multi-tenant, **captcha + throttle 5/menit**) |
+| 14 | Verifikasi Email Pelanggan | ✅ 100% (email link + kirim ulang + manual override admin — **DONE 2026-06-16**) |
 
-**Landing & Auth Subtotal: ~100%** (semua endpoint punya captcha + throttle 5/menit per IP)
+**Landing & Auth Subtotal: ~100%** (semua endpoint punya captcha + throttle 5/menit per IP; Pelanggan tambahan email verification)
 
 **Security layer (3 lapis DONE 2026-06-16)**: 3 lapis proteksi di SEMUA auth endpoint Pelanggan (login + register + forgot + reset):
 1. **Throttle 5/menit** per IP (shared counter across all routes) — anti-brute-force — DONE 2026-06-13
@@ -212,31 +256,39 @@ SaaS/Perusahaan/Karyawan login tetap tanpa email verification (internal portal, 
 - [ ] **Tagihan Auto-Kadaluarsa** — cron ubah status `belum_bayar` lewat jatuh tempo → `kadaluarsa`
   - Effort: ~0.5 hari
 
-#### Karyawan Portal — Fill in real functionality
-- [ ] **Dashboard Karyawan** — widget data real (tagihan assigned, insentif, top customers)
-  - Saat ini: Vue page ada tapi data hardcoded/minimal
-  - Effort: ~2 hari
-- [ ] **Tagihan input bayar (Karyawan)** — form pembayaran tunai + upload bukti
-  - Saat ini: Vue page ada, backend partial
-  - Effort: ~3 hari (modal form + upload + insentif auto-generate)
-- [ ] **Customer (Karyawan read-only)** — list + detail + lihat tagihan per customer
+#### Karyawan Portal — DEEP test + polish (revisi 2026-06-16)
+
+**Status update**: Backend SUDAH pakai controller Perusahaan (reuses full), Vue page substantial (172-674 lines). Yang kurang bukan "fill in functionality" tapi DEEP test + permission scope test.
+
+- [ ] **DEEP test untuk Karyawan Tagihan** — parity test Perusahaan + tambah cek permission `karyawan-tagihan.*` (karyawan tidak boleh akses all company, hanya assigned)
+  - Saat ini: `TagihanParityTest.cjs` + `TagihanViewTest.cjs` (view only)
   - Effort: ~1 hari
-- [ ] **Insentif Saya** — list + filter + lihat insentif riil
-  - Effort: ~1 hari
-- [ ] **Riwayat Pembayaran (Karyawan)** — list pembayaran yang di-input sendiri
+- [ ] **DEEP test untuk Karyawan Customer** — tambah cek `bulk-verify-email` permission, field `email_verified_at_action` di Edit modal
+  - Effort: ~0.5 hari
+- [ ] **DEEP test untuk Insentif Saya** — verifikasi karyawan hanya bisa lihat `submitted_by_id = auth user` (tidak bisa lihat insentif orang lain)
+  - Effort: ~0.5 hari
+- [ ] **DEEP test untuk Riwayat Pembayaran** — verifikasi filter by `input_by = auth user`
+  - Effort: ~0.5 hari
+- [ ] **Notification** — karyawan dapat notif saat admin approve/reject insentif atau pembayaran
   - Effort: ~1 hari
 
-#### Customer Portal — Fill in real functionality
-- [ ] **Dashboard Customer** — tagihan belum bayar, info paket, histori
-  - Effort: ~1.5 hari
-- [ ] **Paket Saya** — list paket aktif + histori
+#### Customer Portal — DEEP test + polish (revisi 2026-06-16)
+
+**Status update**: Backend SUDAH ada di `routes/web/customer.php` (raw closures), Vue page 13 file substantial, Midtrans integration done. Yang kurang bukan "fill in functionality" tapi DEEP test + polish payment flow.
+
+- [ ] **DEEP test untuk Midtrans Snap flow** — `createSnapToken` + `checkStatus` + `verifyStatus` (synchronous fallback kalau webhook gagal)
+  - Saat ini: `verify-midtrans-bulk.cjs` + `verify-midtrans-manual.cjs` (verifikasi admin), belum ada test dari sisi customer
   - Effort: ~1 hari
-- [ ] **Tagihan Saya** — list tagihan + filter + download PDF invoice
-  - Effort: ~2 hari
-- [ ] **Profil Saya** — edit + upload foto
+- [ ] **DEEP test untuk PembayaranTambah (4 metode manual)** — tunai, transfer_bank, e_wallet, qris + validasi amount_paid + status `pending`
+  - Effort: ~0.5 hari
+- [ ] **DEEP test untuk PaketTambah** — validasi `internet_package_id` milik company customer, status `inactive` setelah submit
+  - Effort: ~0.5 hari
+- [ ] **Test upload file ProfilSaya** — photo_ktp, photo_kk, photo_profile (max 2MB, JPG/PNG/WebP/PDF)
+  - Effort: ~0.5 hari
+- [ ] **Notification** — customer dapat notif saat admin approve/reject pembayaran Midtrans atau manual
   - Effort: ~1 hari
-- [ ] **Riwayat Pembayaran** — list + download kwitansi
-  - Effort: ~1.5 hari
+- [ ] **Download kwitansi PDF** — Riwayat Pembayaran + Tagihan (saat ini cuma display, belum ada button download PDF)
+  - Effort: ~1 hari
 
 ### 🟡 Prioritas Sedang
 
@@ -306,18 +358,19 @@ SaaS/Perusahaan/Karyawan login tetap tanpa email verification (internal portal, 
 | 2026-06-16 (Selasa, pagi) | ~63% | **test(playwright): refactor baseUrl pakai env** `PLAYWRIGHT_BASE_URL` (`332a837`). Initial refactor 4 file: `feature/auth/EmailVerification/email-verification-pelanggan.cjs` + `feature/OperatorPerusahaan/email-verified-at-admin.cjs` + `feature/Karyawan/email-verified-at-karyawan.cjs` + support `baseUrl.cjs` (env loader, prioritas: process.env → .env → default). Path PROJECT_ROOT dynamic pakai `path.resolve(__dirname, '..', '..', '..')`. |
 | 2026-06-16 (Selasa, siang) | ~63% | **test(playwright): refactor paths dinamis + DEEP login test (3 issue)** (`e9740de`). Issue 1: form register pelanggan layout fix (email 1 baris full-width, phone 1 baris 2 kolom). Issue 2: 4 file test pakai baseUrl env-driven (initial, lanjutan dari 332a837). Issue 3: LoginTest DEEP rewrite untuk 4 portal — pre-create real inactive user via PHP helper `testUsers.cjs` (UUID v7 + bcrypt via `User::create()`), test 6-7 case per portal: page_renders, wrong_password (cek error "credentials"/"tidak"), company_required (form tanpa company → error "Pilih perusahaan"), company_mismatch (admin company A + company B → error "tidak terdaftar di perusahaan"), inactive_user_rejected (real inactive user → error "dinonaktifkan"), unverified_email_rejected (Pelanggan only), guest_redirect_to_login. Soft assert pattern `safeTest(name, fn)`. Native Vue setter workaround untuk fill input. Verify via `getErrorTexts()` (`.text-red-500/600/700` + `[role="alert"]`). |
 | 2026-06-16 (Selasa, sore) | ~63% | **test(playwright): bulk refactor 86 file pakai env BASE_URL** (`7205bba`). Script generator `support/bulk-refactor-baseurl.cjs` (auto-detect depth folder, 3 pattern handled: `const BASE = 'http://...'`, `this.baseUrl = 'http://...'` class-based → comment + ganti ke `${BASE}`, inline URL di `page.goto()` → `BASE + '/path'`). Plus fix `C:/laragon/...` di require PlaywrightHelper (21 file) → relative path. Plus fix `/c/laragon/...` di `execSync` bash (7 file) → `${PROJECT_BASH}`. Plus fix `cwd: 'C:/laragon/...'` di `DaftarPaketRBACTest` → `path.resolve`. Plus fix hardcoded `C:\\laragon\\...` di PHP bootstrap (3 file) → `${PROJ_WIN}`. Plus fix hardcoded screenshot path di 3 debug script → `path.join(__dirname, '..', 'result', ...)`. **Hasil: 0 hardcoded path tersisa di Feature/*.cjs (non-result)**. |
+| 2026-06-16 (Selasa, malm) | **~75%** | **🔍 AUDIT progress 4 portal web** — Setelah cross-check progress.md dengan codebase aktual (Vue file, controller, route, test), ternyata **Karyawan + Customer portal JAUH lebih lengkap dari yang ditulis**. Sebelumnya tertulis Karyawan 20% (login doang) + Customer 15% (login doang), padahal: (1) **Karyawan** pakai controller Perusahaan (reuses `CustomerController`, `TagihanController`, `LanggananController`, `RiwayatInsentifController`) — hanya beda `view` default, Vue page 172-674 lines (Tagihan 674, RiwayatPembayaran 487, LanggananCustomer 546, InsentifSaya 374), 10 Playwright test files (parity + view). (2) **Customer** pakai raw closures di `routes/web/customer.php` (13+ endpoint), Midtrans integration DONE (sandbox: createSnapToken, checkStatus, verifyStatus), 4 metode manual (tunai, transfer_bank, e_wallet, qris), 13 Vue page substantial, 5 test files. **Revisi: Karyawan ~80%, Customer ~90%, Overall ~75% (dari ~60%)**. Yang masih kurang: DEEP test (Midtrans Snap, permission scope, file upload, validasi form), notification, download kwitansi PDF. |
 
 ---
 
-## Estimasi Effort Sisa (Rough)
+## Estimasi Effort Sisa (Rough) — revisi 2026-06-16
 
-Berdasarkan sisa kerja di section "🔴 Prioritas Tinggi":
-- OTOMASI: ~3.5 hari (generate cron, piutang report, auto-kadaluarsa)
-- Karyawan Portal fill: ~8 hari
-- Customer Portal fill: ~7 hari
-- Test coverage untuk modul existing: ~5 hari
-- **Total estimasi: ~23-25 hari kerja** (1 developer, full focus)
+Berdasarkan sisa kerja di section "🔴 Prioritas Tinggi" (setelah audit):
+- OTOMASI: ~3.5 hari (generate cron, piutang report, auto-kadaluarsa) — **belum berkurang**
+- Karyawan Portal DEEP test + notification: ~3.5 hari (bukan 8 hari, backend sudah ada)
+- Customer Portal DEEP test (Midtrans Snap + payment flow + notif) + download kwitansi: ~4.5 hari (bukan 7 hari, backend closure sudah ada)
+- Test coverage untuk SaaS + Perusahaan modul existing (Tagihan, Insentif, Riwayat Pembayaran, RBAC, dll): ~5 hari
+- **Total estimasi: ~16-18 hari kerja** (1 developer, full focus) — **lebih cepat dari estimasi sebelumnya ~23-25 hari**
 
 Plus polish + production prep ~5-7 hari tambahan.
 
-**Realistic MVP launch: ~1-1.5 bulan lagi** dengan 1 developer dedicated.
+**Realistic MVP launch: ~3-4 minggu lagi** dengan 1 developer dedicated (lebih cepat dari estimasi 1-1.5 bulan).
