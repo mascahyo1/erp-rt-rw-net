@@ -3,6 +3,7 @@
 > **Last update:** 2026-06-16 (Selasa) — Auth Security Layer 3 DONE (email verification pelanggan) + Playwright infra refactor (env-driven BASE_URL di 87 file)
 > **Source of truth:** File ini adalah satu-satunya sumber kebenaran status modul & progress %.  
 > **Update rule:** Setiap habis commit, file ini + `daily/` + `weekly/` di-update manual.  
+> **Catatan:** Diskusi pre-implementation (belum ngoding) ditulis di folder terpisah `briefing/diskusi/` — lihat [2026-06-17 diskusi `is_testing` flag + Midtrans 3-opsi](../diskusi/2026-06-17-is-testing-flag-dan-midtrans-3-opsi.md) untuk context terbaru.
 > **Calculation basis:** Per-portal weighted average, dengan checklist (Backend / UI / Test / Docs) per modul.  
 > **Catatan user (2026-06-07):** Estimasi awal terlalu optimis. Revisi di bawah ini lebih jujur.
 >
