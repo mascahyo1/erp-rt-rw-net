@@ -36,6 +36,7 @@ const menuItems = computed(() => {
   if (perms.value.includes('insentif.list')) items.push({ label: 'Insentif', href: '/operator-perusahaan/insentif', icon: 'fa-coins' });
   if (perms.value.includes('riwayat-insentif.list')) items.push({ label: 'Riwayat Insentif', href: '/operator-perusahaan/riwayat-insentif', icon: 'fa-receipt' });
   if (perms.value.includes('riwayat-pembayaran.list')) items.push({ label: 'Riwayat Pembayaran', href: '/operator-perusahaan/riwayat-pembayaran', icon: 'fa-history' });
+  if (perms.value.includes('gangguan.list')) items.push({ label: 'Gangguan', href: '/operator-perusahaan/gangguan', icon: 'fa-triangle-exclamation' });
   if (perms.value.includes('admin-perusahaan.list')) items.push({ label: 'Admin Perusahaan', href: '/operator-perusahaan/admin-perusahaan', icon: 'fa-user-tie' });
   if (perms.value.includes('role-perusahaan-op.list')) items.push({ label: 'Role Perusahaan', href: '/operator-perusahaan/role-perusahaan', icon: 'fa-tags' });
   if (perms.value.includes('admin-role-perusahaan-op.list')) items.push({ label: 'Admin Role Perusahaan', href: '/operator-perusahaan/admin-role-perusahaan', icon: 'fa-user-gear' });

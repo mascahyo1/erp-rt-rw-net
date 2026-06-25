@@ -18,6 +18,7 @@ const menuItems = [
   { label: 'Paket Saya', href: '/customer/paket-saya', icon: 'fa-box' },
   { label: 'Tagihan Saya', href: '/customer/tagihan-saya', icon: 'fa-file-invoice' },
   { label: 'Riwayat Pembayaran', href: '/customer/riwayat-pembayaran', icon: 'fa-history' },
+  { label: 'Lapor Gangguan', href: '/customer/gangguan', icon: 'fa-triangle-exclamation' },
 ];
 
 const currentPath = computed(() => page.url);

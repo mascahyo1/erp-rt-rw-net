@@ -5,6 +5,7 @@ use App\Http\Controllers\OperatorPerusahaan\AdminPerusahaanController;
 use App\Http\Controllers\OperatorPerusahaan\AdminRolePerusahaanController;
 use App\Http\Controllers\OperatorPerusahaan\AdminRoleWebKaryawanController;
 use App\Http\Controllers\OperatorPerusahaan\CustomerController;
+use App\Http\Controllers\OperatorPerusahaan\GangguanController;
 use App\Http\Controllers\OperatorPerusahaan\InsentifController;
 use App\Http\Controllers\OperatorPerusahaan\KaryawanController;
 use App\Http\Controllers\OperatorPerusahaan\KonfigurasiPerusahaanController;
@@ -434,4 +435,34 @@ Route::middleware('auth:admin-company')->group(function () {
     Route::get('/operator-perusahaan/api/search/invoices', [SearchController::class, 'invoices'])->name('operator-perusahaan.api.search.invoices');
     Route::get('/operator-perusahaan/api/search/incentives', [SearchController::class, 'incentives'])->name('operator-perusahaan.api.search.incentives');
     Route::get('/operator-perusahaan/api/search/employees', [SearchController::class, 'employees'])->name('operator-perusahaan.api.search.employees');
+
+    // ============================================================
+    // GANGGUAN (Support Ticket) — Admin Perusahaan
+    // ============================================================
+    Route::middleware('permission:gangguan.list')->group(function () {
+        Route::get('/operator-perusahaan/gangguan', [GangguanController::class, 'index'])->name('operator-perusahaan.gangguan.index');
+    });
+    Route::middleware('permission:gangguan.create')->group(function () {
+        Route::post('/operator-perusahaan/gangguan', [GangguanController::class, 'store'])->name('operator-perusahaan.gangguan.store');
+    });
+    Route::middleware('permission:gangguan.edit')->group(function () {
+        Route::put('/operator-perusahaan/gangguan/{gangguan}', [GangguanController::class, 'update'])->name('operator-perusahaan.gangguan.update');
+    });
+    Route::middleware('permission:gangguan.verify')->group(function () {
+        Route::post('/operator-perusahaan/gangguan/{gangguan}/verify', [GangguanController::class, 'verify'])->name('operator-perusahaan.gangguan.verify');
+    });
+    Route::middleware('permission:gangguan.delete')->group(function () {
+        Route::delete('/operator-perusahaan/gangguan/{gangguan}', [GangguanController::class, 'destroy'])->name('operator-perusahaan.gangguan.destroy');
+    });
+    Route::middleware('permission:gangguan.restore')->group(function () {
+        Route::patch('/operator-perusahaan/gangguan/{id}/restore', [GangguanController::class, 'restore'])->name('operator-perusahaan.gangguan.restore');
+    });
+    // Import / Export Excel
+    Route::middleware('permission:gangguan.export')->group(function () {
+        Route::get('/operator-perusahaan/gangguan/export', [GangguanController::class, 'export'])->name('operator-perusahaan.gangguan.export');
+        Route::get('/operator-perusahaan/gangguan/template', [GangguanController::class, 'downloadTemplate'])->name('operator-perusahaan.gangguan.template');
+    });
+    Route::middleware('permission:gangguan.import')->group(function () {
+        Route::post('/operator-perusahaan/gangguan/import', [GangguanController::class, 'import'])->name('operator-perusahaan.gangguan.import');
+    });
 });

@@ -238,4 +238,21 @@ Route::middleware('auth:employee')->group(function () {
         ->get('/karyawan/riwayat-pembayaran/{id}/pdf', [$perusahaanNs.'\PembayaranController', 'downloadPdf']);
     Route::middleware('permission:karyawan-riwayat-pembayaran.export')
         ->get('/karyawan/riwayat-pembayaran/{id}/word', [$perusahaanNs.'\PembayaranController', 'downloadWord']);
+
+    // ============================================================
+    // GANGGUAN (Support Ticket) — Karyawan
+    // ============================================================
+    Route::middleware('permission:karyawan-gangguan.list')
+        ->get('/karyawan/gangguan', [$perusahaanNs.'\GangguanController', 'index'])->defaults('view', 'Karyawan/Gangguan');
+    Route::middleware('permission:karyawan-gangguan.create')
+        ->post('/karyawan/gangguan', [$perusahaanNs.'\GangguanController', 'store']);
+    Route::middleware('permission:karyawan-gangguan.edit')
+        ->put('/karyawan/gangguan/{gangguan}', [$perusahaanNs.'\GangguanController', 'update']);
+    Route::middleware('permission:karyawan-gangguan.resolve')
+        ->post('/karyawan/gangguan/{gangguan}/resolve', [$perusahaanNs.'\GangguanController', 'resolve']);
+    Route::middleware('permission:karyawan-gangguan.delete')
+        ->delete('/karyawan/gangguan/{gangguan}', [$perusahaanNs.'\GangguanController', 'destroy']);
+    Route::middleware('permission:karyawan-gangguan.restore')
+        ->patch('/karyawan/gangguan/{id}/restore', [$perusahaanNs.'\GangguanController', 'restore']);
+    // TODO Phase 5: import/export Excel — add when implemented
 });

@@ -23,6 +23,7 @@ const menuItems = computed(() => {
   if (perms.includes('karyawan-tagihan.list')) items.push({ label: 'Tagihan', href: '/karyawan/tagihan', icon: 'fa-file-invoice' });
   if (perms.includes('karyawan-insentif.list')) items.push({ label: 'Insentif Saya', href: '/karyawan/insentif-saya', icon: 'fa-coins' });
   if (perms.includes('karyawan-riwayat-pembayaran.list')) items.push({ label: 'Riwayat Pembayaran', href: '/karyawan/riwayat-pembayaran', icon: 'fa-history' });
+  if (perms.includes('karyawan-gangguan.list')) items.push({ label: 'Tiket Gangguan', href: '/karyawan/gangguan', icon: 'fa-triangle-exclamation' });
   return items;
 });
 

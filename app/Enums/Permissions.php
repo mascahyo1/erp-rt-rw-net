@@ -138,6 +138,17 @@ enum Permissions: string
     case RiwayatPembayaranExport      = 'riwayat-pembayaran.export';
     case RiwayatPembayaranImport      = 'riwayat-pembayaran.import';
 
+    // Gangguan / Support Ticket (admin perusahaan: full CRUD + verify + import/export)
+    case GangguanList     = 'gangguan.list';
+    case GangguanCreate   = 'gangguan.create';
+    case GangguanEdit     = 'gangguan.edit';
+    case GangguanDetail   = 'gangguan.detail';
+    case GangguanDelete   = 'gangguan.delete';
+    case GangguanRestore  = 'gangguan.restore';
+    case GangguanVerify   = 'gangguan.verify';
+    case GangguanExport   = 'gangguan.export';
+    case GangguanImport   = 'gangguan.import';
+
     // Karyawan (full CRUD)
     case KaryawanList   = 'karyawan.list';
     case KaryawanCreate = 'karyawan.create';
@@ -235,6 +246,17 @@ enum Permissions: string
     case KaryawanRiwayatPembayaranPersetujuan = 'karyawan-riwayat-pembayaran.persetujuan';
     case KaryawanRiwayatPembayaranExport = 'karyawan-riwayat-pembayaran.export';
     case KaryawanRiwayatPembayaranImport = 'karyawan-riwayat-pembayaran.import';
+
+    // Gangguan (karyawan: full CRUD + resolve + import/export — tanpa verify, itu admin perusahaan)
+    case KaryawanGangguanList     = 'karyawan-gangguan.list';
+    case KaryawanGangguanCreate   = 'karyawan-gangguan.create';
+    case KaryawanGangguanEdit     = 'karyawan-gangguan.edit';
+    case KaryawanGangguanDetail   = 'karyawan-gangguan.detail';
+    case KaryawanGangguanDelete   = 'karyawan-gangguan.delete';
+    case KaryawanGangguanRestore  = 'karyawan-gangguan.restore';
+    case KaryawanGangguanResolve  = 'karyawan-gangguan.resolve';
+    case KaryawanGangguanExport   = 'karyawan-gangguan.export';
+    case KaryawanGangguanImport   = 'karyawan-gangguan.import';
 
     // Paket (read-only via karyawan, no CRUD)
     case KaryawanPaketList   = 'karyawan-paket.list';
@@ -361,6 +383,15 @@ enum Permissions: string
                 self::RiwayatPembayaranPersetujuan->value,
                 self::RiwayatPembayaranExport->value,
                 self::RiwayatPembayaranImport->value,
+                self::GangguanList->value,
+                self::GangguanCreate->value,
+                self::GangguanEdit->value,
+                self::GangguanDetail->value,
+                self::GangguanDelete->value,
+                self::GangguanRestore->value,
+                self::GangguanVerify->value,
+                self::GangguanExport->value,
+                self::GangguanImport->value,
                 self::KaryawanList->value,
                 self::KaryawanCreate->value,
                 self::KaryawanEdit->value,
@@ -448,6 +479,15 @@ enum Permissions: string
                 self::KaryawanRiwayatPembayaranPersetujuan->value,
                 self::KaryawanRiwayatPembayaranExport->value,
                 self::KaryawanRiwayatPembayaranImport->value,
+                self::KaryawanGangguanList->value,
+                self::KaryawanGangguanCreate->value,
+                self::KaryawanGangguanEdit->value,
+                self::KaryawanGangguanDetail->value,
+                self::KaryawanGangguanDelete->value,
+                self::KaryawanGangguanRestore->value,
+                self::KaryawanGangguanResolve->value,
+                self::KaryawanGangguanExport->value,
+                self::KaryawanGangguanImport->value,
                 self::KaryawanPaketList->value,
                 self::KaryawanPaketDetail->value,
             ],

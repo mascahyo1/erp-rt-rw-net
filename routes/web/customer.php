@@ -446,4 +446,17 @@ Route::middleware('auth:customer')->group(function () {
     // POST variant: verifikasi manual (sinkron status) — dipakai untuk fallback saat webhook gagal
     Route::post('/customer/pembayaran-tambah/{paymentId}/verify-midtrans', [\App\Http\Controllers\Customer\MidtransPaymentController::class, 'verifyStatus'])
         ->name('customer.midtrans.verify-status');
+
+    // ============================================================
+    // GANGGUAN (Support Ticket) — Customer
+    // ============================================================
+    // Customer: lihat tiket sendiri + buat baru + delete (kalau masih open) + restore
+    Route::get('/customer/gangguan', [\App\Http\Controllers\Customer\GangguanController::class, 'index'])
+        ->name('customer.gangguan.index');
+    Route::post('/customer/gangguan', [\App\Http\Controllers\Customer\GangguanController::class, 'store'])
+        ->name('customer.gangguan.store');
+    Route::delete('/customer/gangguan/{gangguan}', [\App\Http\Controllers\Customer\GangguanController::class, 'destroy'])
+        ->name('customer.gangguan.destroy');
+    Route::patch('/customer/gangguan/{id}/restore', [\App\Http\Controllers\Customer\GangguanController::class, 'restore'])
+        ->name('customer.gangguan.restore');
 });
