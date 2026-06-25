@@ -34,8 +34,8 @@ const showDetailModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedItem = ref(null);
 
-const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '', file_bukti_issue: null });
-const editForm = useForm({ main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', status_pengerjaan: '', issue_dimulai_dari: '', file_bukti_issue_diselesaikan: null });
+const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '', issue_diselesaikan_pada: '', file_bukti_issue: null });
+const editForm = useForm({ main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', status_pengerjaan: '', issue_dimulai_dari: '', issue_diselesaikan_pada: '', file_bukti_issue_diselesaikan: null });
 const resolveForm = useForm({ file_bukti_issue_diselesaikan: null });
 const createFormFile = ref(null);
 const editFormFile = ref(null);
@@ -136,6 +136,7 @@ async function submitCreate() {
   additionalPics.value.forEach(p => fd.append('additional_pic_employee_ids[]', p.employee_id));
   fd.append('catatan', createForm.catatan);
   fd.append('issue_dimulai_dari', createForm.issue_dimulai_dari);
+  if (createForm.issue_diselesaikan_pada) fd.append('issue_diselesaikan_pada', createForm.issue_diselesaikan_pada);
   if (createFormFile.value) fd.append('file_bukti_issue', createFormFile.value);
   try {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -152,6 +153,7 @@ function openEdit(item) {
   editForm.catatan = item.catatan;
   editForm.status_pengerjaan = item.status_pengerjaan;
   editForm.issue_dimulai_dari = item.issue_dimulai_dari ? item.issue_dimulai_dari.substring(0, 16) : '';
+  editForm.issue_diselesaikan_pada = item.issue_diselesaikan_pada ? item.issue_diselesaikan_pada.substring(0, 16) : '';
   editFormFile.value = null;
   additionalPics.value = (item.additional_pics || []).map(p => ({ employee_id: p.employee_id, employee_name: p.employee_name }));
   selectedItem.value = item;
@@ -165,6 +167,7 @@ async function submitEdit() {
   fd.append('catatan', editForm.catatan || '');
   fd.append('status_pengerjaan', editForm.status_pengerjaan || '');
   if (editForm.issue_dimulai_dari) fd.append('issue_dimulai_dari', editForm.issue_dimulai_dari);
+  if (editForm.issue_diselesaikan_pada) fd.append('issue_diselesaikan_pada', editForm.issue_diselesaikan_pada);
   if (editFormFile.value) fd.append('file_bukti_issue_diselesaikan', editFormFile.value);
   try {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -229,11 +232,8 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
           </select>
         </div>
         <div class="min-w-[160px]">
-          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Penanggung Jawab</label>
-          <select v-model="assignedFilter" @change="applyFilters" class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none">
-            <option value="">Semua</option>
-            <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
-          </select>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">PIC Utama</label>
+          <SearchableSelectAjax data-testid="filter-pic-utama" v-model="assignedFilter" url="/karyawan/api/search/employees" placeholder="— Semua —" display-key="name" @update:modelValue="applyFilters" />
         </div>
         <button @click="applyFilters" class="px-4 py-2 bg-amber-600 text-white text-sm rounded-lg hover:bg-amber-700"><i class="fas fa-filter mr-1"></i>Filter</button>
         <button @click="resetFilters" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">Reset</button>
@@ -310,6 +310,7 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
     <Teleport to="body"><Transition name="modal"><div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-create" @submit.prevent="submitCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-plus text-emerald-500 mr-2"></i>Buat Tiket Gangguan</h3><button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/karyawan/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" /></span></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" /></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Selesai Gangguan <span class="text-xs text-gray-400">(opsional, jika sudah fix)</span></label><input data-testid="input-issue-diselesaikan" v-model="createForm.issue_diselesaikan_pada" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" /></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Utama <span class="text-xs text-gray-400">(opsional)</span></label><span data-testid="btn-select-main-pic"><SearchableSelectAjax data-testid="select-main-pic" v-model="createForm.main_pic_employee_id" url="/karyawan/api/search/employees" placeholder="— Pilih PIC Utama —" display-key="name" /></span></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Tambahan <span class="text-xs text-gray-400">(opsional, bisa lebih dari 1)</span></label>
         <div v-if="additionalPics.length > 0" class="flex flex-wrap items-center gap-2 mb-2">
@@ -331,6 +332,7 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
         <SearchableSelectAjax data-testid="select-additional-pic" url="/karyawan/api/search/employees" placeholder="— Tambah PIC Tambahan —" display-key="name" @update:modelValue="(v) => { if (v) { const emp = employees.find(e => e.id === v); if (emp) addAdditionalPic(emp.id, emp.name); }}" />
       </div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan</label><input data-testid="input-issue-dimulai" v-model="editForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" /></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Selesai Gangguan</label><input data-testid="input-issue-diselesaikan" v-model="editForm.issue_diselesaikan_pada" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" /></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Pengerjaan</label><select data-testid="select-status-pengerjaan" v-model="editForm.status_pengerjaan" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"><option v-for="s in statusPengerjaanOptions" :key="s" :value="s">{{ s }}</option></select></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan</label><textarea data-testid="textarea-catatan" v-model="editForm.catatan" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue Selesai (opsional)</label><input data-testid="input-file-bukti-selesai" @change="e => editFormFile = e.target.files[0]" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-amber-50 file:text-amber-700 dark:file:bg-amber-900/30 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/50" /></div>
@@ -347,7 +349,8 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
       <div class="grid grid-cols-2 gap-4">
         <div><label class="text-xs text-gray-500 dark:text-gray-400">Kode</label><p class="font-mono font-medium text-gray-900 dark:text-white">{{ selectedItem.code }}</p></div>
         <div><label class="text-xs text-gray-500 dark:text-gray-400">Customer</label><p class="text-sm text-gray-900 dark:text-white">{{ selectedItem.customer_name }}</p></div>
-        <div><label class="text-xs text-gray-500 dark:text-gray-400">Penanggung Jawab</label><p class="text-sm text-gray-900 dark:text-white">{{ selectedItem.assigned_to_name || '—' }}</p></div>
+        <div><label class="text-xs text-gray-500 dark:text-gray-400">PIC Utama</label><p class="text-sm font-medium text-gray-900 dark:text-white" data-testid="detail-main-pic">{{ selectedItem.main_pic_name || '—' }}</p></div>
+        <div v-if="selectedItem.additional_pics && selectedItem.additional_pics.length > 0" class="col-span-2"><label class="text-xs text-gray-500 dark:text-gray-400">PIC Tambahan ({{ selectedItem.additional_pics.length }})</label><div class="flex flex-wrap gap-1.5 mt-1"><span v-for="pic in selectedItem.additional_pics" :key="pic.id" data-testid="detail-additional-pic" class="inline-flex items-center px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded text-xs font-medium">{{ pic.employee_name }}</span></div></div>
         <div><label class="text-xs text-gray-500 dark:text-gray-400">Pengerjaan</label><p><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', statusPengerjaanBadge(selectedItem.status_pengerjaan)]">{{ selectedItem.status_pengerjaan_label }}</span></p></div>
         <div><label class="text-xs text-gray-500 dark:text-gray-400">Verifikasi</label><p><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', statusVerifikasiBadge(selectedItem.status_verifikasi)]">{{ selectedItem.status_verifikasi_label }}</span></p></div>
         <div><label class="text-xs text-gray-500 dark:text-gray-400">Tgl Mulai</label><p class="text-sm text-gray-900 dark:text-white">{{ formatDate(selectedItem.issue_dimulai_dari) }}</p></div>

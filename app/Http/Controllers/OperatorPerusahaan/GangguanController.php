@@ -33,7 +33,6 @@ class GangguanController extends Controller
         $query = Gangguan::query()->with([
             'custInternet.customer',
             'custInternet.internetPackage',
-            'assignedToEmployee',
             'pics.employee',
             'createdBy',
             'updatedBy',
@@ -53,7 +52,9 @@ class GangguanController extends Controller
         }
         if ($sp = $request->input('status_pengerjaan')) $query->where('status_pengerjaan', $sp);
         if ($sv = $request->input('status_verifikasi')) $query->where('status_verifikasi', $sv);
-        if ($assigned = $request->input('assigned_to_employee_id')) $query->where('assigned_to_employee_id', $assigned);
+        if ($assigned = $request->input('main_pic_employee_id')) {
+            $query->whereHas('pics', fn($q) => $q->where('employee_id', $assigned));
+        }
         if ($custInet = $request->input('cust_internet_id')) $query->where('cust_internet_id', $custInet);
         if ($createdStart = $request->input('created_start')) $query->whereDate('created_at', '>=', $createdStart);
         if ($createdEnd = $request->input('created_end')) $query->whereDate('created_at', '<=', $createdEnd);
@@ -85,7 +86,7 @@ class GangguanController extends Controller
             'gangguans' => $items,
             'custInternets' => $custInternets,
             'employees' => $employees,
-            'filters' => $request->only(['search', 'status_pengerjaan', 'status_verifikasi', 'assigned_to_employee_id', 'cust_internet_id', 'created_start', 'created_end', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
+            'filters' => $request->only(['search', 'status_pengerjaan', 'status_verifikasi', 'main_pic_employee_id', 'cust_internet_id', 'created_start', 'created_end', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
             'statusPengerjaanOptions' => SupportTicketPengerjaanStatus::values(),
             'statusVerifikasiOptions' => SupportTicketVerifikasiStatus::values(),
         ]);
@@ -115,8 +116,6 @@ class GangguanController extends Controller
             'status_verifikasi' => SupportTicketVerifikasiStatus::PENDING->value,
             'issue_dimulai_dari' => $validated['issue_dimulai_dari'],
         ];
-        // Legacy column: kalau ada main_pic_employee_id, set juga untuk backward compat
-        if (!empty($validated['main_pic_employee_id'])) $data['assigned_to_employee_id'] = $validated['main_pic_employee_id'];
 
         $uploader = new FileUploadService();
         if ($request->hasFile('file_bukti_issue')) {
@@ -134,11 +133,8 @@ class GangguanController extends Controller
             ]);
         }
         foreach ($validated['additional_pic_employee_ids'] ?? [] as $empId) {
-            SupportTicketPic::create([
-                'support_ticket_id' => $gangguan->id,
-                'employee_id' => $empId,
-                'is_main_pic' => false,
-            ]);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->main_pic_name ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, ($g->additional_pics ? count($g->additional_pics) : 0) > 0 ? implode(', ', array_column($g->additional_pics, 'employee_name')) : '-', DataType::TYPE_STRING);
         }
 
         return back()->with('success', 'Tiket gangguan berhasil dibuat.');
@@ -157,6 +153,7 @@ class GangguanController extends Controller
             'catatan' => ['nullable', 'string', 'max:2000'],
             'status_pengerjaan' => ['nullable', 'string', 'in:open,in_progress,resolved'],
             'issue_dimulai_dari' => ['nullable', 'date'],
+            'issue_diselesaikan_pada' => ['nullable', 'date', 'required_if:status_pengerjaan,resolved'],
             'file_bukti_issue' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
             'file_bukti_issue_diselesaikan' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
             'alasan_verifikasi' => ['nullable', 'string', 'max:1000'],
@@ -164,16 +161,12 @@ class GangguanController extends Controller
         ]);
 
         $data = [];
-        foreach (['catatan', 'status_pengerjaan', 'alasan_verifikasi', 'status_verifikasi', 'issue_dimulai_dari'] as $k) {
+        foreach (['catatan', 'status_pengerjaan', 'alasan_verifikasi', 'status_verifikasi', 'issue_dimulai_dari', 'issue_diselesaikan_pada'] as $k) {
             if (array_key_exists($k, $validated) && $validated[$k] !== null) $data[$k] = $validated[$k];
         }
-        if (!empty($data['status_pengerjaan']) && $data['status_pengerjaan'] === SupportTicketPengerjaanStatus::RESOLVED->value && !$gangguan->issue_diselesaikan_pada) {
+        // Kalau status_pengerjaan=resolved tapi issue_diselesaikan_pada belum di-set, auto-fill dengan now()
+        if (!empty($data['status_pengerjaan']) && $data['status_pengerjaan'] === SupportTicketPengerjaanStatus::RESOLVED->value && empty($data['issue_diselesaikan_pada']) && !$gangguan->issue_diselesaikan_pada) {
             $data['issue_diselesaikan_pada'] = now();
-        }
-
-        // Sync main_pic ke assigned_to_employee_id (legacy)
-        if (array_key_exists('main_pic_employee_id', $validated) && $validated['main_pic_employee_id'] !== null) {
-            $data['assigned_to_employee_id'] = $validated['main_pic_employee_id'];
         }
 
         $uploader = new FileUploadService();
@@ -364,7 +357,7 @@ class GangguanController extends Controller
         $companyId = auth()->user()->company_id;
 
         $query = Gangguan::query()
-            ->with(['custInternet.customer', 'custInternet.internetPackage', 'assignedToEmployee', 'createdBy'])
+            ->with(['custInternet.customer', 'custInternet.internetPackage', 'pics.employee', 'createdBy'])
             ->whereHas('custInternet.customer', fn($q) => $q->where('company_id', $companyId));
 
         if ($request->input('terhapus') === 'ya') $query->onlyTrashed();
@@ -394,7 +387,8 @@ class GangguanController extends Controller
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->code, DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->custInternet?->account_number ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->custInternet?->customer?->name ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->assignedToEmployee?->name ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->main_pic_name ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, count($g->additional_pics ?? []) > 0 ? implode(', ', array_column($g->additional_pics, 'employee_name')) : '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->catatan, DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->status_pengerjaan?->label() ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->status_verifikasi?->label() ?? '-', DataType::TYPE_STRING);
@@ -482,7 +476,6 @@ class GangguanController extends Controller
             Gangguan::create([
                 'code' => 'TKT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
                 'cust_internet_id' => $ci->id,
-                'assigned_to_employee_id' => $employee?->id,
                 'catatan' => $catatan,
                 'status_pengerjaan' => SupportTicketPengerjaanStatus::OPEN->value,
                 'status_verifikasi' => SupportTicketVerifikasiStatus::PENDING->value,
@@ -520,14 +513,12 @@ class GangguanController extends Controller
             'cust_internet_label' => $g->custInternet?->account_number . ' — ' . ($g->custInternet?->customer?->name ?? '-') . ' — ' . ($g->custInternet?->internetPackage?->name ?? '-'),
             'customer_name' => $g->custInternet?->customer?->name,
             'customer_code' => $g->custInternet?->customer?->code,
-            'assigned_to_employee_id' => $g->assigned_to_employee_id,
-            'assigned_to_name' => $g->assignedToEmployee?->name,
             'main_pic' => $mainPic ? [
                 'id' => $mainPic->id,
                 'employee_id' => $mainPic->employee_id,
                 'employee_name' => $mainPic->employee?->name,
             ] : null,
-            'main_pic_name' => $mainPic?->employee?->name ?? $g->assignedToEmployee?->name,
+            'main_pic_name' => $mainPic?->employee?->name,
             'additional_pics' => $additionalPics->map(fn($p) => [
                 'id' => $p->id,
                 'employee_id' => $p->employee_id,

@@ -29,7 +29,6 @@ class GangguanController extends Controller
         $query = Gangguan::query()->with([
             'custInternet.customer',
             'custInternet.internetPackage',
-            'assignedToEmployee',
             'pics.employee',
             'createdBy',
             'updatedBy',
@@ -107,7 +106,7 @@ class GangguanController extends Controller
             'status_verifikasi' => SupportTicketVerifikasiStatus::PENDING->value,
             'issue_dimulai_dari' => $validated['issue_dimulai_dari'],
         ];
-        if (!empty($validated['main_pic_employee_id'])) $data['assigned_to_employee_id'] = $validated['main_pic_employee_id'];
+        // main_pic_employee_id sudah di-handle lewat support_ticket_pics
 
         $uploader = new FileUploadService();
         if ($request->hasFile('file_bukti_issue')) {
@@ -171,14 +170,12 @@ class GangguanController extends Controller
             'code' => $g->code,
             'cust_internet_id' => $g->cust_internet_id,
             'cust_internet_label' => $g->custInternet?->account_number . ' — ' . ($g->custInternet?->internetPackage?->name ?? '-'),
-            'assigned_to_employee_id' => $g->assigned_to_employee_id,
-            'assigned_to_name' => $g->assignedToEmployee?->name,
             'main_pic' => $mainPic ? [
                 'id' => $mainPic->id,
                 'employee_id' => $mainPic->employee_id,
                 'employee_name' => $mainPic->employee?->name,
             ] : null,
-            'main_pic_name' => $mainPic?->employee?->name ?? $g->assignedToEmployee?->name,
+            'main_pic_name' => $mainPic?->employee?->name,
             'additional_pics' => $additionalPics->map(fn($p) => [
                 'id' => $p->id,
                 'employee_id' => $p->employee_id,

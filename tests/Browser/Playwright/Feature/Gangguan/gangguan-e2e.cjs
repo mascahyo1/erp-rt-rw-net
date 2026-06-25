@@ -295,13 +295,14 @@ async function main() {
 
         // Verify DB
         const dbCheck2 = phpExec(`
-            $g = \\App\\Models\\Gangguan::find('${gid}');
-            echo $g->status_pengerjaan->value . '|' . ($g->assigned_to_employee_id ?? 'null');
+            $g = \\App\\Models\\Gangguan::with('pics.employee')->find('${gid}');
+            $mainPic = $g->pics->where('is_main_pic', true)->first();
+            echo $g->status_pengerjaan->value . '|' . ($mainPic?->employee_id ?? 'null');
         `);
         log(`  → DB: ${dbCheck2}`);
         const [sp2, eid2] = dbCheck2.split('|');
         assert(sp2 === 'in_progress', '[Karyawan] DB status_pengerjaan=in_progress');
-        assert(eid2 === ahmadId, '[Karyawan] DB assigned_to_employee_id=ahmad');
+        assert(eid2 === ahmadId, '[Karyawan] DB main_pic (support_ticket_pics.is_main_pic=true) = ahmad');
 
         log('\n[Karyawan] STEP 2.6: Click "Tandai Selesai" (resolve)');
         // Re-open resolve modal
@@ -394,15 +395,16 @@ async function main() {
 
         // Verify final DB
         const finalDb = phpExec(`
-            $g = \\App\\Models\\Gangguan::find('${gid}');
-            echo $g->status_pengerjaan->value . '|' . $g->status_verifikasi->value . '|' . $g->alasan_verifikasi . '|' . $g->assigned_to_employee_id;
+            $g = \\App\\Models\\Gangguan::with('pics.employee')->find('${gid}');
+            $mainPic = $g->pics->where('is_main_pic', true)->first();
+            echo $g->status_pengerjaan->value . '|' . $g->status_verifikasi->value . '|' . $g->alasan_verifikasi . '|' . ($mainPic?->employee_id ?? 'null');
         `);
         log(`  → Final DB: ${finalDb}`);
         const [fsp, fsv, falasan, fpic] = finalDb.split('|');
         assert(fsp === 'resolved', '[Perusahaan FINAL] status_pengerjaan=resolved');
         assert(fsv === 'approved', '[Perusahaan FINAL] status_verifikasi=approved');
         assert(falasan.includes('Sudah ditindaklanjuti'), '[Perusahaan FINAL] alasan_verifikasi saved');
-        assert(!!fpic, '[Perusahaan FINAL] main_pic (assigned_to_employee_id) ter-set');
+        assert(!!fpic, '[Perusahaan FINAL] main_pic (support_ticket_pics.is_main_pic=true) ter-set');
         await page3.close();
 
         log('\n========== E2E FLOW COMPLETE ==========');
