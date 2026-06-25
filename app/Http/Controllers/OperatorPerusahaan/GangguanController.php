@@ -133,8 +133,11 @@ class GangguanController extends Controller
             ]);
         }
         foreach ($validated['additional_pic_employee_ids'] ?? [] as $empId) {
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->main_pic_name ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, ($g->additional_pics ? count($g->additional_pics) : 0) > 0 ? implode(', ', array_column($g->additional_pics, 'employee_name')) : '-', DataType::TYPE_STRING);
+            SupportTicketPic::create([
+                'support_ticket_id' => $gangguan->id,
+                'employee_id' => $empId,
+                'is_main_pic' => false,
+            ]);
         }
 
         return back()->with('success', 'Tiket gangguan berhasil dibuat.');
