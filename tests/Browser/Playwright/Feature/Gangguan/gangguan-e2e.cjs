@@ -49,6 +49,46 @@ async function loginAs(page, email, loginUrl, log) {
     await page.waitForTimeout(5000);
 }
 
+/**
+ * Pilih Kode Langganan via SearchableSelectAjax.
+ * Flow: klik button (Pilih Kode Langganan) → ketik di search → klik option.
+ * @param page Playwright Page
+ * @param portal 'customer' | 'karyawan' | 'perusahaan' — menentukan URL API
+ * @param searchFragment text yang akan diketik (biasanya account_number)
+ * @returns true jika berhasil
+ */
+async function pickKodeLangganan(page, portal, searchFragment) {
+    // Klik button trigger SearchableSelectAjax (yang ada placeholder)
+    const triggerBtn = page.locator('button').filter({ hasText: /Pilih Kode Langganan/ }).first();
+    await triggerBtn.click();
+    await page.waitForTimeout(1500);
+    // Ketik di search input dropdown
+    const searchInput = page.locator('input[placeholder="Cari..."]').last();
+    if (await searchInput.count() > 0 && await searchInput.isVisible()) {
+        await searchInput.fill(searchFragment);
+        await page.waitForTimeout(2000);
+    }
+    // Klik option <button> di dropdown list yang text-nya match account_number.
+    // SearchableSelectAjax merender options sebagai <button> dengan child <span>.
+    // Pakai locator dengan exact text match supaya tidak match ke parent/element lain.
+    const option = page.locator(`button.absolute.z-50 button:has-text("${searchFragment}")`).first();
+    let clicked = false;
+    if (await option.count() > 0) {
+        await option.click();
+        clicked = true;
+    } else {
+        // Fallback: cari semua button visible di dalam dropdown yang punya text match
+        const fallback = page.locator(`button:visible:has-text("${searchFragment}")`).last();
+        if (await fallback.count() > 0) {
+            await fallback.click();
+            clicked = true;
+        }
+    }
+    if (!clicked) throw new Error(`Opsi kode langganan dengan "${searchFragment}" tidak ditemukan di dropdown`);
+    await page.waitForTimeout(500);
+    return true;
+}
+
 async function main() {
     const browser = await chromium.launch({ headless: false, slowMo: 400 });
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -104,11 +144,9 @@ async function main() {
         assert(await page1.getByTestId('modal-create').isVisible(), '[Customer] Modal Create visible');
 
         log('\n[Customer] STEP 1.4: Pilih kode langganan + isi catatan');
-        // Pilih cust_internet dari dropdown
-        await page1.getByTestId('select-cust-internet').selectOption(custInetId);
-        await page1.waitForTimeout(500);
-        const selectedValue = await page1.getByTestId('select-cust-internet').inputValue();
-        assert(selectedValue === custInetId, '[Customer] Kode langganan ter-select', `value: ${selectedValue}`);
+        // SearchableSelectAjax: klik button → search → click option
+        const custInternetSelected = await pickKodeLangganan(page1, 'customer', accountNumber);
+        assert(custInternetSelected, '[Customer] Kode langganan ter-select (via SearchableSelectAjax)');
 
         const catatan = 'Internet putus sejak pagi, mohon dicek';
         await page1.getByTestId('textarea-catatan').fill(catatan);

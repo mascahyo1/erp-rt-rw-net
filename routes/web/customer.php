@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SearchController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -459,4 +460,9 @@ Route::middleware('auth:customer')->group(function () {
         ->name('customer.gangguan.destroy');
     Route::patch('/customer/gangguan/{id}/restore', [\App\Http\Controllers\Customer\GangguanController::class, 'restore'])
         ->name('customer.gangguan.restore');
+
+    // Search API untuk SearchableSelectAjax (Kode Langganan di form Gangguan, dll)
+    // Re-use SearchController@langganans — sudah auto-scope by company_id (Customer punya company_id)
+    Route::get('/customer/api/search/langganans', [SearchController::class, 'langganans'])
+        ->name('customer.api.search.langganans');
 });
