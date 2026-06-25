@@ -19,7 +19,7 @@ const PlaywrightHelper = require('../../support/PlaywrightHelper.cjs');
 
 
 const BASE = require('../../support/baseUrl.cjs');
-const PROJECT_BASH = path.resolve(__dirname, '..', '..', '..', '..').replace(/\\/g, '/');
+const PROJECT_BASH = path.resolve(__dirname, '..', '..', '..', '..', '..').replace(/\\/g, '/');
 const SCREENSHOT_DIR = path.join(__dirname, 'screenshots-karyawan-perusahaan');
 if (!fs.existsSync(SCREENSHOT_DIR)) fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
@@ -48,12 +48,17 @@ async function run() {
         else { log(`❌ ${label}`); fail++; }
     };
 
-    // Pre-flight: ensure ada minimal 1 payment midtrans+pending di DB
-    log('=== PRE-FLIGHT: ensure 1 midtrans+pending payment ===');
-    const paymentId = phpExec("echo \\App\\Models\\CustInternetPayment::where('provider', 'midtrans')->where('status', 'pending')->value('id');");
+    // Pre-flight: ensure ada minimal 1 payment midtrans di DB (pending atau paid).
+    // - pending: verify-midtrans call Midtrans API real-time (200/502)
+    // - paid: verify-midtrans return 200 "Status sudah final" tanpa call Midtrans
+    // Pakai latest() supaya test ini selalu hit transaksi PALING BARU.
+    // Filter `midtrans_order_id LIKE 'PAY-%'` untuk skip dummy 'TEST-ORDER-*'.
+    log('=== PRE-FLIGHT: ensure 1 midtrans payment (pending atau paid, paling baru, real order) ===');
+    const paymentId = phpExec("echo \\App\\Models\\CustInternetPayment::where('provider', 'midtrans')->where('midtrans_order_id', 'LIKE', 'PAY-%')->latest('created_at')->value('id');");
     const orderId = phpExec("echo \\App\\Models\\CustInternetPayment::where('id', '${paymentId}')->value('midtrans_order_id');");
-    log(`Test payment: id=${paymentId} order=${orderId}`);
-    assert(paymentId && paymentId !== '', 'Ada payment midtrans+pending di DB untuk testing');
+    const payStatus = phpExec("echo \\App\\Models\\CustInternetPayment::where('id', '${paymentId}')->value('status');");
+    log(`Test payment: id=${paymentId} order=${orderId} status=${payStatus}`);
+    assert(paymentId && paymentId !== '', 'Ada payment midtrans (real order) di DB untuk testing');
 
     if (!paymentId) {
         log('⚠️ Skip test — tidak ada payment midtrans+pending. Buat manual via customer flow dulu.');

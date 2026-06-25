@@ -12,7 +12,10 @@ use App\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Midtrans\Config as MidtransConfig;
+use Midtrans\Snap;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -134,18 +137,45 @@ class PembayaranController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50', 'unique:cust_internet_payments,code'],
             'cust_internet_invc_id' => ['required', 'string', 'exists:cust_internet_invcs,id'],
             'amount_paid' => ['required', 'numeric'],
             'payment_date' => ['nullable', 'date'],
-            'payment_method' => ['required', Rule::in(InternalPaymentMethod::values())],
+            'payment_method' => ['required', 'string', 'max:50'],
             'provider' => ['required', Rule::in(PaymentProvider::values())],
             'proof_file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
             'status_description' => ['nullable', 'string', 'max:500'],
         ]);
+
+        // Validasi payment_method sesuai provider:
+        // - provider=internal → payment_method HARUS dari InternalPaymentMethod enum
+        // - provider=midtrans → payment_method HARUS 'midtrans' (handled by Midtrans flow)
+        if ($validated['provider'] === PaymentProvider::INTERNAL->value) {
+            if (!in_array($validated['payment_method'], InternalPaymentMethod::values())) {
+                return back()->withErrors(['payment_method' => 'Metode pembayaran tidak valid untuk provider internal.']);
+            }
+        } elseif ($validated['provider'] === PaymentProvider::MIDTRANS->value) {
+            $validated['payment_method'] = 'midtrans';
+        }
+
+        // Guard: invoice harus milik customer dalam company yang sama dgn caller (karyawan/perusahaan)
+        $callerCompanyId = auth()->user()->company_id ?? null;
+        if ($callerCompanyId) {
+            $invoiceOk = CustInternetInvc::whereHas('custInternet.customer', fn($q) => $q->where('company_id', $callerCompanyId))
+                ->where('id', $validated['cust_internet_invc_id'])
+                ->where('payment_status', '!=', 'paid')
+                ->exists();
+            if (!$invoiceOk) {
+                $msg = 'Tagihan tidak ditemukan, sudah lunas, atau bukan milik company Anda.';
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['error' => $msg], 422);
+                }
+                return back()->withErrors(['cust_internet_invc_id' => $msg]);
+            }
+        }
 
         $data = $validated;
         $uploadService = new FileUploadService();
@@ -153,10 +183,109 @@ class PembayaranController extends Controller
             $data['proof_file'] = $uploadService->processDocument($request->file('proof_file'), 'payments');
         }
         $data['status'] = 'pending';
+        $data['created_by'] = auth()->id();
+        $data['updated_by'] = auth()->id();
 
+        // ===== Midtrans flow =====
+        // Karyawan/perusahaan bisa inisiasi Snap payment atas nama customer.
+        // Snap UI nanti di-bayar oleh siapapun yang pegang akses (karyawan, customer, dll).
+        if ($validated['provider'] === PaymentProvider::MIDTRANS->value) {
+            $invoice = CustInternetInvc::findOrFail($validated['cust_internet_invc_id']);
+            $customer = $invoice->custInternet?->customer;
+            $orderId = 'PAY-' . strtoupper(Str::random(12));
+
+            $payment = CustInternetPayment::create(array_merge($data, [
+                'cust_internet_invc_id' => $invoice->id,
+                'amount_paid' => $validated['amount_paid'],
+                'payment_date' => now(),
+                'payment_method' => 'midtrans',
+                'provider' => PaymentProvider::MIDTRANS->value,
+                'status' => 'pending',
+                'midtrans_order_id' => $orderId,
+                'midtrans_expires_at' => now()->addHours(24),
+            ]));
+
+            // Apply Midtrans config (prevent state leak antara requests)
+            MidtransConfig::$serverKey = config('midtrans.server_key');
+            MidtransConfig::$clientKey = config('midtrans.client_key');
+            MidtransConfig::$isProduction = config('midtrans.is_production');
+            MidtransConfig::$isSanitized = config('midtrans.sanitize');
+            MidtransConfig::$is3ds = config('midtrans.is_3ds');
+
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $orderId,
+                    'gross_amount' => (int) round($validated['amount_paid']),
+                ],
+                'customer_details' => $customer ? [
+                    'first_name' => $customer->name,
+                    'email' => $customer->email,
+                    'phone' => trim(($customer->phone_country_code ?? '+62') . ($customer->phone_number ?? '')),
+                ] : [],
+                'item_details' => [[
+                    'id' => $invoice->invoice_number,
+                    'price' => (int) round($validated['amount_paid']),
+                    'quantity' => 1,
+                    'name' => 'Tagihan ' . $invoice->invoice_number,
+                ]],
+                'expiry' => [
+                    'start_time' => now()->format('Y-m-d H:i:s O'),
+                    'unit' => 'hour',
+                    'duration' => 24,
+                ],
+            ];
+
+            try {
+                $snapResponse = Snap::createTransaction($params);
+            } catch (\Throwable $e) {
+                Log::error('Midtrans Snap::createTransaction failed (karyawan/perusahaan)', [
+                    'order_id' => $orderId,
+                    'caller_id' => auth()->id(),
+                    'error' => $e->getMessage(),
+                ]);
+                $payment->forceDelete();
+                $msg = 'Gagal membuat transaksi Midtrans: ' . $e->getMessage();
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['error' => $msg], 502);
+                }
+                return back()->withErrors(['cust_internet_invc_id' => $msg]);
+            }
+
+            $payment->update([
+                'snap_token' => $snapResponse->token,
+                'data' => array_merge($payment->data ?? [], [
+                    'redirect_url' => $snapResponse->redirect_url,
+                    'created_at_midtrans' => now()->toIso8601String(),
+                    'created_by_portal' => $this->resolvePortalLabel(),
+                ]),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaksi Midtrans berhasil dibuat. Silakan lanjutkan pembayaran.',
+                'snap_token' => $snapResponse->token,
+                'redirect_url' => $snapResponse->redirect_url,
+                'midtrans_order_id' => $orderId,
+                'payment_id' => $payment->id,
+                'client_key' => config('midtrans.client_key'),
+            ], 200);
+        }
+
+        // ===== Internal flow (existing) =====
         CustInternetPayment::create($data);
-
         return back()->with('success', 'Pembayaran berhasil ditambahkan.');
+    }
+
+    /**
+     * Helper: detect portal caller (untuk audit log "siapa yang create Midtrans payment").
+     */
+    private function resolvePortalLabel(): string
+    {
+        $user = auth()->user();
+        if ($user instanceof \App\Models\Employee) return 'karyawan';
+        if ($user instanceof \App\Models\AdminCompany) return 'operator-perusahaan';
+        if ($user instanceof \App\Models\Customer) return 'customer';
+        return 'unknown';
     }
 
     public function update(Request $request, CustInternetPayment $custInternetPayment): RedirectResponse
