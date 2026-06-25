@@ -40,12 +40,15 @@ const importing = ref(false);
 const importFile = ref(null);
 const selectedItem = ref(null);
 
-const createForm = useForm({ cust_internet_id: '', assigned_to_employee_id: '', catatan: '', file_bukti_issue: null });
-const editForm = useForm({ assigned_to_employee_id: '', catatan: '', status_pengerjaan: '', file_bukti_issue: null, file_bukti_issue_diselesaikan: null, alasan_verifikasi: '', status_verifikasi: '' });
+const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '', file_bukti_issue: null });
+const editForm = useForm({ main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', status_pengerjaan: '', issue_dimulai_dari: '', file_bukti_issue: null, file_bukti_issue_diselesaikan: null, alasan_verifikasi: '', status_verifikasi: '' });
 const verifyForm = useForm({ status_verifikasi: '', alasan_verifikasi: '' });
 const createFormFile = ref(null);
 const editFormFileIssue = ref(null);
 const editFormFileSelesai = ref(null);
+// State untuk searchable additional PICs (chip-style)
+const additionalPicInput = ref(null);
+const additionalPics = ref([]); // [{ employee_id, employee_name }]
 
 function buildQuery(o = {}) {
   const p = { ...o };
@@ -94,42 +97,106 @@ function formatDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
+const hasSelected = computed(() => selectedIds.value.length > 0);
+const selectedResolvedCount = computed(() => items.value.filter(i => selectedIds.value.includes(i.id) && i.status_pengerjaan === 'resolved' && i.status_verifikasi === 'pending').length);
+const isAllSelected = computed({
+  get: () => items.value.length > 0 && items.value.every(i => selectedIds.value.includes(i.id)),
+  set: (val) => { selectedIds.value = val ? items.value.map(i => i.id) : []; },
+});
+function toggleSelect(id) { const i = selectedIds.value.indexOf(id); i === -1 ? selectedIds.value.push(id) : selectedIds.value.splice(i, 1); }
+function clearSelected() { selectedIds.value = []; }
+async function bulkDelete() {
+  if (selectedIds.value.length === 0) { toast.error('Pilih data terlebih dahulu.'); return; }
+  if (!confirm(`Hapus ${selectedIds.value.length} tiket?`)) return;
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const resp = await fetch('/operator-perusahaan/gangguan/bulk-delete', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ ids: selectedIds.value }) });
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok) { selectedIds.value = []; toast.success(data.message || 'Tiket dihapus.'); fetchData(); }
+    else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+  } catch (e) { toast.error('Error: ' + e.message); }
+}
+async function bulkRestore() {
+  if (selectedIds.value.length === 0) { toast.error('Pilih data terlebih dahulu.'); return; }
+  if (!confirm(`Pulihkan ${selectedIds.value.length} tiket?`)) return;
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const resp = await fetch('/operator-perusahaan/gangguan/bulk-restore', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ ids: selectedIds.value }) });
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok) { selectedIds.value = []; toast.success(data.message || 'Tiket dipulihkan.'); fetchData(); }
+    else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+  } catch (e) { toast.error('Error: ' + e.message); }
+}
+const showBulkVerifyModal = ref(false);
+const bulkVerifyForm = useForm({ status_verifikasi: '', alasan_verifikasi: '' });
+function openBulkVerify() {
+  bulkVerifyForm.reset(); bulkVerifyForm.clearErrors();
+  bulkVerifyForm.status_verifikasi = ''; bulkVerifyForm.alasan_verifikasi = '';
+  showBulkVerifyModal.value = true;
+}
+async function submitBulkVerify() {
+  if (selectedResolvedCount.value === 0) { toast.error('Pilih tiket yang sudah resolved + pending verifikasi.'); return; }
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const resp = await fetch('/operator-perusahaan/gangguan/bulk-verify', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ ids: selectedIds.value, status_verifikasi: bulkVerifyForm.status_verifikasi, alasan_verifikasi: bulkVerifyForm.alasan_verifikasi }) });
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok) { showBulkVerifyModal.value = false; selectedIds.value = []; toast.success(data.message || 'Verifikasi berhasil.'); fetchData(); }
+    else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+  } catch (e) { toast.error('Error: ' + e.message); }
+}
 const items = computed(() => props.gangguans?.data || []);
 const pagination = computed(() => ({ current: props.gangguans?.current_page || 1, last: props.gangguans?.last_page || 1, total: props.gangguans?.total || 0 }));
 
-function openCreate() { createForm.reset(); createForm.clearErrors(); createFormFile.value = null; showCreateModal.value = true; }
+function openCreate() { createForm.reset(); createForm.clearErrors(); createFormFile.value = null; additionalPics.value = []; showCreateModal.value = true; }
+function addAdditionalPic(employeeId, employeeName) {
+  if (!employeeId) return;
+  if (employeeId === createForm.main_pic_employee_id) { toast.error('Sudah jadi PIC Utama.'); return; }
+  if (additionalPics.value.find(p => p.employee_id === employeeId)) { toast.error('Sudah ditambahkan.'); return; }
+  additionalPics.value.push({ employee_id: employeeId, employee_name: employeeName });
+  if (additionalPicInput.value) additionalPicInput.value.value = '';
+}
+function removeAdditionalPic(employeeId) {
+  additionalPics.value = additionalPics.value.filter(p => p.employee_id !== employeeId);
+}
 async function submitCreate() {
   const fd = new FormData();
   fd.append('cust_internet_id', createForm.cust_internet_id);
-  fd.append('assigned_to_employee_id', createForm.assigned_to_employee_id || '');
+  fd.append('main_pic_employee_id', createForm.main_pic_employee_id || '');
+  additionalPics.value.forEach(p => fd.append('additional_pic_employee_ids[]', p.employee_id));
   fd.append('catatan', createForm.catatan);
+  fd.append('issue_dimulai_dari', createForm.issue_dimulai_dari);
   if (createFormFile.value) fd.append('file_bukti_issue', createFormFile.value);
   try {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const resp = await fetch('/operator-perusahaan/gangguan', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, body: fd });
     const data = await resp.json().catch(() => ({}));
-    if (resp.ok) { showCreateModal.value = false; toast.success('Tiket berhasil dibuat.'); fetchData(); }
+    if (resp.ok) { showCreateModal.value = false; additionalPics.value = []; toast.success('Tiket berhasil dibuat.'); fetchData(); }
     else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
 
 function openEdit(item) {
   editForm.reset(); editForm.clearErrors();
-  editForm.assigned_to_employee_id = item.assigned_to_employee_id || '';
+  editForm.main_pic_employee_id = item.assigned_to_employee_id || '';
   editForm.catatan = item.catatan;
   editForm.status_pengerjaan = item.status_pengerjaan;
+  editForm.issue_dimulai_dari = item.issue_dimulai_dari ? item.issue_dimulai_dari.substring(0, 16) : '';
   editForm.alasan_verifikasi = item.alasan_verifikasi || '';
   editForm.status_verifikasi = item.status_verifikasi;
   editFormFileIssue.value = null; editFormFileSelesai.value = null;
+  // Pre-populate additional pics
+  additionalPics.value = (item.additional_pics || []).map(p => ({ employee_id: p.employee_id, employee_name: p.employee_name }));
   selectedItem.value = item;
   showEditModal.value = true;
 }
 async function submitEdit() {
   const fd = new FormData();
   fd.append('_method', 'PUT');
-  fd.append('assigned_to_employee_id', editForm.assigned_to_employee_id || '');
+  fd.append('main_pic_employee_id', editForm.main_pic_employee_id || '');
+  additionalPics.value.forEach(p => fd.append('additional_pic_employee_ids[]', p.employee_id));
   fd.append('catatan', editForm.catatan || '');
   fd.append('status_pengerjaan', editForm.status_pengerjaan || '');
+  if (editForm.issue_dimulai_dari) fd.append('issue_dimulai_dari', editForm.issue_dimulai_dari);
   fd.append('alasan_verifikasi', editForm.alasan_verifikasi || '');
   fd.append('status_verifikasi', editForm.status_verifikasi || '');
   if (editFormFileIssue.value) fd.append('file_bukti_issue', editFormFileIssue.value);
@@ -248,28 +315,42 @@ async function submitImport() {
       </div>
     </div>
 
+    <!-- Bulk Action Bar -->
+    <div v-if="hasSelected" class="flex items-center justify-between px-4 py-3 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-xl shadow-sm">
+      <span class="text-sm font-medium text-sky-700 dark:text-sky-300"><i class="fas fa-check-circle mr-1.5"></i> {{ selectedIds.length }} tiket dipilih</span>
+      <div class="flex items-center gap-2">
+        <button v-if="selectedResolvedCount > 0" data-testid="btn-bulk-verify" @click="openBulkVerify" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"><i class="fas fa-clipboard-check mr-1"></i>Verifikasi ({{ selectedResolvedCount }} resolved)</button>
+        <button data-testid="btn-bulk-delete" @click="bulkDelete" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash-alt mr-1"></i>Hapus</button>
+        <button data-testid="btn-bulk-clear" @click="clearSelected" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">Batal Pilih</button>
+      </div>
+    </div>
+
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <tr>
+              <th class="px-3 py-3 w-10"><input data-testid="checkbox-select-all" type="checkbox" v-model="isAllSelected" class="rounded border-gray-300 text-sky-600 focus:ring-sky-500" /></th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Kode</th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Customer / Langganan</th>
-              <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Penanggung Jawab</th>
+              <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">PIC Utama</th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs cursor-pointer" @click="sort('status_pengerjaan')">Pengerjaan <i :class="['fas', sortIcon('status_pengerjaan')]"></i></th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs cursor-pointer" @click="sort('status_verifikasi')">Verifikasi <i :class="['fas', sortIcon('status_verifikasi')]"></i></th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs cursor-pointer" @click="sort('issue_dimulai_dari')">Tgl Mulai <i :class="['fas', sortIcon('issue_dimulai_dari')]"></i></th>
+              <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs cursor-pointer" @click="sort('issue_diselesaikan_pada')">Tgl Selesai <i :class="['fas', sortIcon('issue_diselesaikan_pada')]"></i></th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in items" :key="item.id" class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30">
+            <tr v-for="item in items" :key="item.id" :class="['border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30', selectedIds.includes(item.id) ? 'bg-sky-50/50 dark:bg-sky-900/10' : '']">
+              <td class="px-3 py-3"><input data-testid="checkbox-row" type="checkbox" :checked="selectedIds.includes(item.id)" @change="toggleSelect(item.id)" class="rounded border-gray-300 text-sky-600 focus:ring-sky-500" /></td>
               <td class="px-3 py-3 font-mono text-xs text-gray-900 dark:text-white">{{ item.code }}</td>
               <td class="px-3 py-3 text-xs text-gray-600 dark:text-gray-400">{{ item.customer_name }}<br><span class="text-gray-400 text-[10px]">{{ item.cust_internet_label }}</span></td>
-              <td class="px-3 py-3 text-xs text-gray-600 dark:text-gray-400">{{ item.assigned_to_name || '—' }}</td>
+              <td class="px-3 py-3 text-xs text-gray-600 dark:text-gray-400">{{ item.main_pic_name || '—' }}</td>
               <td class="px-3 py-3"><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', statusPengerjaanBadge(item.status_pengerjaan)]">{{ item.status_pengerjaan_label }}</span></td>
               <td class="px-3 py-3"><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', statusVerifikasiBadge(item.status_verifikasi)]">{{ item.status_verifikasi_label }}</span></td>
               <td class="px-3 py-3 text-xs text-gray-500 dark:text-gray-400">{{ formatDate(item.issue_dimulai_dari) }}</td>
+              <td class="px-3 py-3 text-xs text-gray-500 dark:text-gray-400">{{ formatDate(item.issue_diselesaikan_pada) }}</td>
               <td class="px-3 py-3">
                 <div class="flex items-center gap-1">
                   <button data-testid="btn-detail" @click="openDetail(item)" title="Detail" class="p-1.5 rounded-lg text-gray-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:text-sky-400 dark:hover:bg-sky-900/30"><i class="fas fa-eye"></i></button>
@@ -279,7 +360,7 @@ async function submitImport() {
                 </div>
               </td>
             </tr>
-            <tr v-if="items.length === 0"><td colspan="7" class="px-3 py-12 text-center text-gray-500 dark:text-gray-400">Belum ada tiket gangguan.</td></tr>
+            <tr v-if="items.length === 0"><td colspan="9" class="px-3 py-12 text-center text-gray-500 dark:text-gray-400">Belum ada tiket gangguan.</td></tr>
           </tbody>
         </table>
       </div>
@@ -304,7 +385,14 @@ async function submitImport() {
     <!-- Create Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-create" @submit.prevent="submitCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-plus text-emerald-500 mr-2"></i>Buat Tiket Gangguan</h3><button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/operator-perusahaan/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" /></span></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Penanggung Jawab (opsional)</label><select data-testid="select-assigned" v-model="createForm.assigned_to_employee_id" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none"><option value="">— Belum di-assign —</option><option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option></select></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none" /></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Utama <span class="text-xs text-gray-400">(opsional, bisa dikosongi)</span></label><span data-testid="btn-select-main-pic"><SearchableSelectAjax data-testid="select-main-pic" v-model="createForm.main_pic_employee_id" url="/operator-perusahaan/api/search/employees" placeholder="— Pilih PIC Utama —" display-key="name" /></span></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Tambahan <span class="text-xs text-gray-400">(bisa lebih dari 1, opsional)</span></label>
+        <div class="flex flex-wrap items-center gap-2 mb-2" v-if="additionalPics.length > 0">
+          <span v-for="pic in additionalPics" :key="pic.employee_id" data-testid="chip-additional-pic" class="inline-flex items-center px-3 py-1 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 rounded-full text-xs font-medium">{{ pic.employee_name }}<button type="button" data-testid="btn-remove-pic" @click="removeAdditionalPic(pic.employee_id)" class="ml-1.5 text-sky-700 dark:text-sky-400 hover:text-red-600 dark:hover:text-red-400"><i class="fas fa-times"></i></button></span>
+        </div>
+        <SearchableSelectAjax data-testid="select-additional-pic" :url="'/operator-perusahaan/api/search/employees'" placeholder="— Tambah PIC Tambahan —" display-key="name" @update:modelValue="(v) => { if (v) { const emp = employees.find(e => e.id === v); if (emp) addAdditionalPic(emp.id, emp.name); }}" />
+      </div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Foto Bukti (opsional)</label><input data-testid="input-file-bukti" @change="e => createFormFile = e.target.files[0]" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-400 hover:file:bg-sky-100 dark:hover:file:bg-sky-900/50" /></div>
     </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-simpan" type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>Simpan</button></div></form></div></Transition></Teleport>
@@ -348,6 +436,13 @@ async function submitImport() {
 
     <!-- Delete Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDeleteModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm"><div class="px-6 py-5 text-center"><div class="w-14 h-14 mx-auto rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4"><i class="fas fa-exclamation-triangle text-red-500 text-xl"></i></div><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Hapus Tiket?</h3><p class="text-sm text-gray-600 dark:text-gray-400">Hapus tiket <strong class="text-gray-900 dark:text-white">{{ selectedItem?.code }}</strong>?</p></div><div class="flex justify-center gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"><button @click="showDeleteModal = false" class="px-5 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600">Batal</button><button data-testid="btn-confirm-delete" @click="confirmDelete" class="px-5 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700"><i class="fas fa-trash-alt mr-1.5"></i> Hapus</button></div></div></div></Transition></Teleport>
+
+    <!-- Bulk Verify Modal -->
+    <Teleport to="body"><Transition name="modal"><div v-if="showBulkVerifyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showBulkVerifyModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-bulk-verify" @submit.prevent="submitBulkVerify" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-clipboard-check text-emerald-500 mr-2"></i>Bulk Verifikasi ({{ selectedIds.length }})</h3><button type="button" @click="showBulkVerifyModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+      <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400"><i class="fas fa-info-circle mr-1.5"></i> {{ selectedResolvedCount }} tiket berstatus <strong>resolved + pending</strong> akan di-verify. Tiket dengan status lain akan di-skip.</div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Verifikasi <span class="text-red-500">*</span></label><select data-testid="select-bulk-verify-status" v-model="bulkVerifyForm.status_verifikasi" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none"><option value="">— Pilih —</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option></select></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan (untuk semua tiket) <span class="text-red-500">*</span></label><textarea data-testid="textarea-bulk-alasan" v-model="bulkVerifyForm.alasan_verifikasi" rows="3" placeholder="Jelaskan alasan verifikasi..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea></div>
+    </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showBulkVerifyModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-confirm-bulk-verify" type="submit" :disabled="bulkVerifyForm.processing" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Verifikasi Semua</button></div></form></div></Transition></Teleport>
 
     <!-- Import Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showImportModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-import" @submit.prevent="submitImport" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-file-upload text-emerald-500 mr-2"></i>Import Tiket dari Excel</h3><button type="button" @click="showImportModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">

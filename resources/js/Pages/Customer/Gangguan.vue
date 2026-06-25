@@ -30,7 +30,7 @@ const showDetailModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedItem = ref(null);
 
-const createForm = useForm({ cust_internet_id: '', catatan: '', file_bukti_issue: null });
+const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '', file_bukti_issue: null });
 const createFormFile = ref(null);
 
 function buildQuery(o = {}) {
@@ -85,12 +85,38 @@ const pagination = computed(() => ({
   last: props.gangguans?.last_page || 1,
   total: props.gangguans?.total || 0,
 }));
+const hasSelected = computed(() => selectedIds.value.length > 0);
+const isAllSelected = computed({
+  get: () => items.value.length > 0 && items.value.every(i => selectedIds.value.includes(i.id)),
+  set: (val) => { selectedIds.value = val ? items.value.map(i => i.id) : []; },
+});
+function toggleSelect(id) { const i = selectedIds.value.indexOf(id); i === -1 ? selectedIds.value.push(id) : selectedIds.value.splice(i, 1); }
+function clearSelected() { selectedIds.value = []; }
+async function bulkDelete() {
+  if (selectedIds.value.length === 0) { toast.error('Pilih data terlebih dahulu.'); return; }
+  if (!confirm(`Hapus ${selectedIds.value.length} laporan? Hanya yang masih OPEN yang bisa dihapus.`)) return;
+  let success = 0; let fail = 0;
+  for (const id of selectedIds.value) {
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+      const resp = await fetch(`/customer/gangguan/${id}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+      if (resp.ok) success++; else fail++;
+    } catch (e) { fail++; }
+  }
+  selectedIds.value = [];
+  if (success > 0) toast.success(`${success} laporan berhasil dihapus.`);
+  if (fail > 0) toast.error(`${fail} laporan gagal (mungkin sudah diproses admin).`);
+  fetchData();
+}
 
 function openCreate() { createForm.reset(); createForm.clearErrors(); createFormFile.value = null; showCreateModal.value = true; }
 async function submitCreate() {
   const fd = new FormData();
   fd.append('cust_internet_id', createForm.cust_internet_id);
+  fd.append('main_pic_employee_id', createForm.main_pic_employee_id || '');
+  (createForm.additional_pic_employee_ids || []).forEach(id => fd.append('additional_pic_employee_ids[]', id));
   fd.append('catatan', createForm.catatan);
+  fd.append('issue_dimulai_dari', createForm.issue_dimulai_dari);
   if (createFormFile.value) fd.append('file_bukti_issue', createFormFile.value);
   try {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -157,28 +183,43 @@ function confirmDelete() { router.delete(`/customer/gangguan/${selectedItem.valu
     </div>
 
     <!-- Table -->
+    <!-- Bulk Action Bar -->
+    <div v-if="hasSelected" class="flex items-center justify-between px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl shadow-sm">
+      <span class="text-sm font-medium text-emerald-700 dark:text-emerald-300"><i class="fas fa-check-circle mr-1.5"></i> {{ selectedIds.length }} laporan dipilih</span>
+      <div class="flex items-center gap-2">
+        <button data-testid="btn-bulk-delete" @click="bulkDelete" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700"><i class="fas fa-trash-alt mr-1"></i>Hapus</button>
+        <button data-testid="btn-bulk-clear" @click="clearSelected" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600">Batal Pilih</button>
+      </div>
+    </div>
+
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <tr>
+              <th class="px-3 py-3 w-10"><input data-testid="checkbox-select-all" type="checkbox" v-model="isAllSelected" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" /></th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Kode</th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Kode Langganan</th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Catatan</th>
+              <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">PIC</th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs cursor-pointer" @click="sort('status_pengerjaan')">Pengerjaan <i :class="['fas', sortIcon('status_pengerjaan')]"></i></th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs cursor-pointer" @click="sort('status_verifikasi')">Verifikasi <i :class="['fas', sortIcon('status_verifikasi')]"></i></th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs cursor-pointer" @click="sort('issue_dimulai_dari')">Tgl Mulai <i :class="['fas', sortIcon('issue_dimulai_dari')]"></i></th>
+              <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs cursor-pointer" @click="sort('issue_diselesaikan_pada')">Tgl Selesai <i :class="['fas', sortIcon('issue_diselesaikan_pada')]"></i></th>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Aksi</th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="item in items" :key="item.id" class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30">
+            <tr v-for="item in items" :key="item.id" :class="['border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30', selectedIds.includes(item.id) ? 'bg-emerald-50/50 dark:bg-emerald-900/10' : '']">
+              <td class="px-3 py-3"><input data-testid="checkbox-row" type="checkbox" :checked="selectedIds.includes(item.id)" @change="toggleSelect(item.id)" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" /></td>
               <td class="px-3 py-3 font-mono text-xs text-gray-900 dark:text-white">{{ item.code }}</td>
               <td class="px-3 py-3 text-xs text-gray-600 dark:text-gray-400">{{ item.cust_internet_label }}</td>
               <td class="px-3 py-3 text-xs text-gray-600 dark:text-gray-400 max-w-xs truncate">{{ item.catatan }}</td>
+              <td class="px-3 py-3 text-xs text-gray-600 dark:text-gray-400">{{ item.main_pic_name || '—' }}</td>
               <td class="px-3 py-3"><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', statusPengerjaanBadge(item.status_pengerjaan)]">{{ item.status_pengerjaan_label }}</span></td>
               <td class="px-3 py-3"><span :class="['inline-flex px-2 py-0.5 rounded text-xs font-medium', statusVerifikasiBadge(item.status_verifikasi)]">{{ item.status_verifikasi_label }}</span></td>
               <td class="px-3 py-3 text-xs text-gray-500 dark:text-gray-400">{{ formatDate(item.issue_dimulai_dari) }}</td>
+              <td class="px-3 py-3 text-xs text-gray-500 dark:text-gray-400">{{ formatDate(item.issue_diselesaikan_pada) }}</td>
               <td class="px-3 py-3">
                 <div class="flex items-center gap-1">
                   <button data-testid="btn-detail" @click="openDetail(item)" title="Detail" class="p-1.5 rounded-lg text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:text-emerald-400 dark:hover:bg-emerald-900/30"><i class="fas fa-eye"></i></button>
@@ -186,7 +227,7 @@ function confirmDelete() { router.delete(`/customer/gangguan/${selectedItem.valu
                 </div>
               </td>
             </tr>
-            <tr v-if="items.length === 0"><td colspan="7" class="px-3 py-12 text-center text-gray-500 dark:text-gray-400">Belum ada laporan gangguan.</td></tr>
+            <tr v-if="items.length === 0"><td colspan="9" class="px-3 py-12 text-center text-gray-500 dark:text-gray-400">Belum ada laporan gangguan.</td></tr>
           </tbody>
         </table>
       </div>
@@ -211,6 +252,7 @@ function confirmDelete() { router.delete(`/customer/gangguan/${selectedItem.valu
     <!-- Create Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-create" @submit.prevent="submitCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-triangle-exclamation text-amber-500 mr-2"></i>Buat Laporan Gangguan</h3><button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/customer/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" /></span><p v-if="createForm.errors.cust_internet_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.cust_internet_id }}</p></div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kapan gangguan terjadi? <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /><p v-if="createForm.errors.issue_dimulai_dari" class="text-red-500 text-xs mt-1">{{ createForm.errors.issue_dimulai_dari }}</p></div>
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah yang Anda alami..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea><p v-if="createForm.errors.catatan" class="text-red-500 text-xs mt-1">{{ createForm.errors.catatan }}</p></div>
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Foto Bukti (opsional, maks 2MB)</label><input data-testid="input-file-bukti" @change="e => createFormFile = e.target.files[0]" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700 dark:file:bg-emerald-900/30 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50" /></div>
       </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-kirim" type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-paper-plane mr-1.5"></i>Kirim Laporan</button></div></form></div></Transition></Teleport>

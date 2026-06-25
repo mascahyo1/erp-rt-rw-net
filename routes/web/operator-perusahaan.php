@@ -457,6 +457,16 @@ Route::middleware('auth:admin-company')->group(function () {
     Route::middleware('permission:gangguan.restore')->group(function () {
         Route::patch('/operator-perusahaan/gangguan/{id}/restore', [GangguanController::class, 'restore'])->name('operator-perusahaan.gangguan.restore');
     });
+    // Bulk actions (perusahaan: delete + restore + verify)
+    Route::middleware('permission:gangguan.delete')->group(function () {
+        Route::post('/operator-perusahaan/gangguan/bulk-delete', [GangguanController::class, 'bulkDestroy'])->name('operator-perusahaan.gangguan.bulkDelete');
+    });
+    Route::middleware('permission:gangguan.restore')->group(function () {
+        Route::post('/operator-perusahaan/gangguan/bulk-restore', [GangguanController::class, 'bulkRestore'])->name('operator-perusahaan.gangguan.bulkRestore');
+    });
+    Route::middleware('permission:gangguan.verify')->group(function () {
+        Route::post('/operator-perusahaan/gangguan/bulk-verify', [GangguanController::class, 'bulkVerify'])->name('operator-perusahaan.gangguan.bulkVerify');
+    });
     // Import / Export Excel
     Route::middleware('permission:gangguan.export')->group(function () {
         Route::get('/operator-perusahaan/gangguan/export', [GangguanController::class, 'export'])->name('operator-perusahaan.gangguan.export');

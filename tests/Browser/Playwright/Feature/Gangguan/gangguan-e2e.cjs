@@ -89,6 +89,40 @@ async function pickKodeLangganan(page, portal, searchFragment) {
     return true;
 }
 
+/**
+ * Pilih karyawan via SearchableSelectAjax (untuk main_pic atau additional_pic).
+ * Flow sama dengan pickKodeLangganan, tapi placeholder-nya "Pilih PIC Utama"
+ * atau "Tambah PIC Tambahan" atau "Belum di-assign".
+ * @param page Playwright Page
+ * @param placeholderSubstring bagian dari placeholder (mis. "Pilih PIC Utama" atau "Tambah PIC Tambahan")
+ * @param searchFragment text untuk diketik (mis. nama karyawan)
+ */
+async function pickKaryawan(page, placeholderSubstring, searchFragment) {
+    const triggerBtn = page.locator('button').filter({ hasText: new RegExp(placeholderSubstring) }).first();
+    await triggerBtn.click();
+    await page.waitForTimeout(1500);
+    const searchInput = page.locator('input[placeholder="Cari..."]').last();
+    if (await searchInput.count() > 0 && await searchInput.isVisible()) {
+        await searchInput.fill(searchFragment);
+        await page.waitForTimeout(2000);
+    }
+    const option = page.locator(`button.absolute.z-50 button:has-text("${searchFragment}")`).first();
+    let clicked = false;
+    if (await option.count() > 0) {
+        await option.click();
+        clicked = true;
+    } else {
+        const fallback = page.locator(`button:visible:has-text("${searchFragment}")`).last();
+        if (await fallback.count() > 0) {
+            await fallback.click();
+            clicked = true;
+        }
+    }
+    if (!clicked) throw new Error(`Opsi karyawan dengan "${searchFragment}" tidak ditemukan di dropdown`);
+    await page.waitForTimeout(500);
+    return true;
+}
+
 async function main() {
     const browser = await chromium.launch({ headless: false, slowMo: 400 });
     const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
@@ -143,10 +177,18 @@ async function main() {
         await page1.getByTestId('modal-create').waitFor({ state: 'visible', timeout: 5000 });
         assert(await page1.getByTestId('modal-create').isVisible(), '[Customer] Modal Create visible');
 
-        log('\n[Customer] STEP 1.4: Pilih kode langganan + isi catatan');
+        log('\n[Customer] STEP 1.4: Pilih kode langganan + issue_dimulai_dari + catatan');
         // SearchableSelectAjax: klik button → search → click option
         const custInternetSelected = await pickKodeLangganan(page1, 'customer', accountNumber);
         assert(custInternetSelected, '[Customer] Kode langganan ter-select (via SearchableSelectAjax)');
+
+        // issue_dimulai_dari is now REQUIRED (bukan auto-set ke now())
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        const issueDimulai = now.toISOString().slice(0, 16); // format: YYYY-MM-DDTHH:MM
+        await page1.getByTestId('input-issue-dimulai').fill(issueDimulai);
+        const issueDimulaiValue = await page1.getByTestId('input-issue-dimulai').inputValue();
+        assert(issueDimulaiValue === issueDimulai, '[Customer] issue_dimulai_dari terisi', `value: ${issueDimulaiValue}`);
 
         const catatan = 'Internet putus sejak pagi, mohon dicek';
         await page1.getByTestId('textarea-catatan').fill(catatan);
@@ -222,10 +264,11 @@ async function main() {
         await page2.getByTestId('modal-edit').waitFor({ state: 'visible', timeout: 5000 });
         assert(await page2.getByTestId('modal-edit').isVisible(), '[Karyawan] Modal Edit visible');
 
-        log('\n[Karyawan] STEP 2.4: Set assigned + status in_progress');
-        // Get employee ID for ahmad
-        const employeeId = phpExec(`echo \\App\\Models\\Employee::where('email', 'ahmad@netsejahtera.com')->value('id');`);
-        await page2.getByTestId('select-assigned').selectOption(employeeId);
+        log('\n[Karyawan] STEP 2.4: Set main_pic + status in_progress');
+        // Get employee name + id for ahmad
+        const ahmadName = phpExec(`echo \\App\\Models\\Employee::where('email', 'ahmad@netsejahtera.com')->value('name');`);
+        const ahmadId = phpExec(`echo \\App\\Models\\Employee::where('email', 'ahmad@netsejahtera.com')->value('id');`);
+        await pickKaryawan(page2, 'Pilih PIC Utama', ahmadName);
         await page2.waitForTimeout(300);
         await page2.getByTestId('select-status-pengerjaan').selectOption('in_progress');
         await page2.waitForTimeout(300);
@@ -258,7 +301,7 @@ async function main() {
         log(`  → DB: ${dbCheck2}`);
         const [sp2, eid2] = dbCheck2.split('|');
         assert(sp2 === 'in_progress', '[Karyawan] DB status_pengerjaan=in_progress');
-        assert(eid2 === employeeId, '[Karyawan] DB assigned_to_employee_id=ahmad');
+        assert(eid2 === ahmadId, '[Karyawan] DB assigned_to_employee_id=ahmad');
 
         log('\n[Karyawan] STEP 2.6: Click "Tandai Selesai" (resolve)');
         // Re-open resolve modal
@@ -352,13 +395,14 @@ async function main() {
         // Verify final DB
         const finalDb = phpExec(`
             $g = \\App\\Models\\Gangguan::find('${gid}');
-            echo $g->status_pengerjaan->value . '|' . $g->status_verifikasi->value . '|' . $g->alasan_verifikasi;
+            echo $g->status_pengerjaan->value . '|' . $g->status_verifikasi->value . '|' . $g->alasan_verifikasi . '|' . $g->assigned_to_employee_id;
         `);
         log(`  → Final DB: ${finalDb}`);
-        const [fsp, fsv, falasan] = finalDb.split('|');
+        const [fsp, fsv, falasan, fpic] = finalDb.split('|');
         assert(fsp === 'resolved', '[Perusahaan FINAL] status_pengerjaan=resolved');
         assert(fsv === 'approved', '[Perusahaan FINAL] status_verifikasi=approved');
         assert(falasan.includes('Sudah ditindaklanjuti'), '[Perusahaan FINAL] alasan_verifikasi saved');
+        assert(!!fpic, '[Perusahaan FINAL] main_pic (assigned_to_employee_id) ter-set');
         await page3.close();
 
         log('\n========== E2E FLOW COMPLETE ==========');

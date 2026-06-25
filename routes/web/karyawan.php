@@ -254,5 +254,10 @@ Route::middleware('auth:employee')->group(function () {
         ->delete('/karyawan/gangguan/{gangguan}', [$perusahaanNs.'\GangguanController', 'destroy']);
     Route::middleware('permission:karyawan-gangguan.restore')
         ->patch('/karyawan/gangguan/{id}/restore', [$perusahaanNs.'\GangguanController', 'restore']);
+    // Bulk actions (karyawan: delete + restore; verify = wewenang admin)
+    Route::middleware('permission:karyawan-gangguan.delete')
+        ->post('/karyawan/gangguan/bulk-delete', [$perusahaanNs.'\GangguanController', 'bulkDestroy']);
+    Route::middleware('permission:karyawan-gangguan.restore')
+        ->post('/karyawan/gangguan/bulk-restore', [$perusahaanNs.'\GangguanController', 'bulkRestore']);
     // TODO Phase 5: import/export Excel — add when implemented
 });

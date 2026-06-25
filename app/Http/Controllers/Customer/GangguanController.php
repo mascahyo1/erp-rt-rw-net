@@ -7,6 +7,7 @@ use App\Enums\SupportTicketVerifikasiStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CustInternet;
 use App\Models\Gangguan;
+use App\Models\SupportTicketPic;
 use App\Services\FileUploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,7 @@ class GangguanController extends Controller
             'custInternet.customer',
             'custInternet.internetPackage',
             'assignedToEmployee',
+            'pics.employee',
             'createdBy',
             'updatedBy',
         ])->whereHas('custInternet', fn($q) => $q->where('customer_id', $customerId));
@@ -83,7 +85,11 @@ class GangguanController extends Controller
     {
         $validated = $request->validate([
             'cust_internet_id' => ['required', 'uuid', 'exists:cust_internets,id'],
+            'main_pic_employee_id' => ['nullable', 'uuid', 'exists:employees,id'],
+            'additional_pic_employee_ids' => ['nullable', 'array'],
+            'additional_pic_employee_ids.*' => ['uuid', 'exists:employees,id', 'different:main_pic_employee_id'],
             'catatan' => ['required', 'string', 'max:2000'],
+            'issue_dimulai_dari' => ['required', 'date'],
             'file_bukti_issue' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
         ]);
 
@@ -99,15 +105,31 @@ class GangguanController extends Controller
             'catatan' => $validated['catatan'],
             'status_pengerjaan' => SupportTicketPengerjaanStatus::OPEN->value,
             'status_verifikasi' => SupportTicketVerifikasiStatus::PENDING->value,
-            'issue_dimulai_dari' => now(),
+            'issue_dimulai_dari' => $validated['issue_dimulai_dari'],
         ];
+        if (!empty($validated['main_pic_employee_id'])) $data['assigned_to_employee_id'] = $validated['main_pic_employee_id'];
 
         $uploader = new FileUploadService();
         if ($request->hasFile('file_bukti_issue')) {
             $data['file_bukti_issue'] = $uploader->processImage($request->file('file_bukti_issue'), 'gangguan/issues');
         }
 
-        Gangguan::create($data);
+        $gangguan = Gangguan::create($data);
+
+        if (!empty($validated['main_pic_employee_id'])) {
+            SupportTicketPic::create([
+                'support_ticket_id' => $gangguan->id,
+                'employee_id' => $validated['main_pic_employee_id'],
+                'is_main_pic' => true,
+            ]);
+        }
+        foreach ($validated['additional_pic_employee_ids'] ?? [] as $empId) {
+            SupportTicketPic::create([
+                'support_ticket_id' => $gangguan->id,
+                'employee_id' => $empId,
+                'is_main_pic' => false,
+            ]);
+        }
 
         return back()->with('success', 'Laporan gangguan berhasil dikirim. Tim kami akan segera menindaklanjuti.');
     }
@@ -140,6 +162,10 @@ class GangguanController extends Controller
 
     private function serialize(Gangguan $g): array
     {
+        $pics = $g->pics ?? collect();
+        $mainPic = $pics->where('is_main_pic', true)->first();
+        $additionalPics = $pics->where('is_main_pic', false)->values();
+
         return [
             'id' => $g->id,
             'code' => $g->code,
@@ -147,6 +173,18 @@ class GangguanController extends Controller
             'cust_internet_label' => $g->custInternet?->account_number . ' — ' . ($g->custInternet?->internetPackage?->name ?? '-'),
             'assigned_to_employee_id' => $g->assigned_to_employee_id,
             'assigned_to_name' => $g->assignedToEmployee?->name,
+            'main_pic' => $mainPic ? [
+                'id' => $mainPic->id,
+                'employee_id' => $mainPic->employee_id,
+                'employee_name' => $mainPic->employee?->name,
+            ] : null,
+            'main_pic_name' => $mainPic?->employee?->name ?? $g->assignedToEmployee?->name,
+            'additional_pics' => $additionalPics->map(fn($p) => [
+                'id' => $p->id,
+                'employee_id' => $p->employee_id,
+                'employee_name' => $p->employee?->name,
+            ])->all(),
+            'pics_count' => $pics->count(),
             'catatan' => $g->catatan,
             'status_pengerjaan' => $g->status_pengerjaan?->value,
             'status_pengerjaan_label' => $g->status_pengerjaan?->label(),

@@ -9,6 +9,7 @@ use App\Models\Traits\HasSoftDelete;
 use App\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Gangguan (alias: SupportTicket) — tiket pelaporan gangguan internet.
@@ -58,6 +59,53 @@ class Gangguan extends Model
     public function assignedToEmployee(): BelongsTo
     {
         return $this->belongsTo(Employee::class, 'assigned_to_employee_id');
+    }
+
+    /**
+     * Semua PIC (main + tambahan). TIDAK include soft-deleted.
+     * Di-load eager di controller `index()` untuk hindari N+1.
+     */
+    public function pics(): HasMany
+    {
+        return $this->hasMany(SupportTicketPic::class, 'support_ticket_id');
+    }
+
+    /**
+     * PIC utama (is_main_pic = true). Return null kalau tidak ada.
+     * Fallback: kalau pics kosong tapi assigned_to_employee_id ada (legacy),
+     * return null dan biar UI pakai `assignedToEmployee` saja.
+     */
+    public function getMainPicAttribute(): ?SupportTicketPic
+    {
+        return $this->pics->where('is_main_pic', true)->first();
+    }
+
+    public function getMainPicNameAttribute(): ?string
+    {
+        $main = $this->main_pic;
+        if ($main && $main->employee) return $main->employee->name;
+        // Fallback ke legacy assigned_to_employee_id
+        return $this->assignedToEmployee?->name;
+    }
+
+    public function getAdditionalPicsAttribute()
+    {
+        return $this->pics->where('is_main_pic', false)->values();
+    }
+
+    /**
+     * Backfill PIC: kalau tiket punya assigned_to_employee_id tapi belum ada PIC record,
+     * otomatis create PIC utama (idempotent: skip kalau sudah ada).
+     */
+    public function backfillMainPicIfNeeded(): void
+    {
+        if ($this->pics()->exists()) return;
+        if (!$this->assigned_to_employee_id) return;
+        self::create([
+            'support_ticket_id' => $this->id,
+            'employee_id' => $this->assigned_to_employee_id,
+            'is_main_pic' => true,
+        ]);
     }
 
     /**
