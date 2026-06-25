@@ -1,14 +1,5 @@
-- [Testing dengan headed browser](testing-with-headed-browser.md) — selalu `headless: false` untuk debug visual, jangan silent
-- [Prioritas testing adalah Playwright](testing-prioritas-playwright.md) — JANGAN jalankan PHPUnit untuk verify UI/Vue; output Playwright benar = semuanya benar
-- [Deep verify, no quick](deep-verify-no-quick.md) — tidak ada "quick verify", pakai `DeepVerify*.cjs` atau `Verify{Specific}.cjs`, cakupan harus menyeluruh
-- [Push setelah commit](push-after-commit.md) — SELALU push ke remote setelah commit (backup cloud)
-- [Report system update](report-system-update-after-commit.md) — setiap habis commit, update `briefing/report/{progress,daily,weekly}` agar bisa jawab pertanyaan klien seketika
-- [Tidak bisa lihat gambar](cant-see-images.md) — selalu minta deskripsi teks untuk masalah visual, jangan iterate tanpa kepastian
-- [DomPDF tidak support flex](dompdf-no-flex.md) — pakai table-based layout untuk semua PDF/Word generation
-- [Workflow teliti](teliti-workflow.md) — confirm → todo list (user verify) → 1 file: screenshot + verify + recheck → lanjut
-- [Keydown preventDefault blocks input](keydown-preventdefault-blocks-input.md) — document-level keydown handler yang preventDefault() unconditional akan block typing di search input; pakai type() bukan fill() untuk verify
-- **JANGAN PERNAH jalankan PHPUnit** untuk regression check di repo ini — PHPUnit deprecated per CLAUDE.md, existing test ditulis sebelum fix dan akan fail. Selalu pakai Playwright (Node.js) headed. Pelanggaran berulang → user pernah interupt & ingatkan.
 - [Karyawan API search routes](karyawan-api-search-routes.md) — Karyawan pages butuh route `/karyawan/api/search/...` sendiri, jangan reuse operator-perusahaan endpoint
 - [Forgot password gotchas](forgot-password-gotchas.md) — Composite key mismatch 3 tempat, `+` jadi spasi jika urldecode 2x, validation `email` rule fail untuk composite
 - [Diskusi pre-implementation folder](diskusi-folder.md) — Diskusi pre-implementation ditulis di `briefing/diskusi/YYYY-MM-DD-{slug}.md`, terpisah dari `briefing/report/` (daily/weekly/progress final)
 - [Modal data-testid convention](modal-data-testid-convention.md) — WAJIB `data-testid` di SEMUA field modal Vue (input/select/button/textarea) supaya Playwright gak salah target ke filter/search
+- [Test artifacts no-commit](test-artifacts-no-commit.md) — Screenshots/HTML/WebM dari Playwright JANGAN di-commit (.gitignore sudah ada patterns); pakai `git status` dulu sebelum `git add`

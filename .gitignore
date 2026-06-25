@@ -40,3 +40,16 @@
 debug-screenshots/
 # Test result dirs (Playwright headed runs produce fullPage screenshots)
 /tests/Browser/Playwright/Feature/*/Day*/
+# ====== TEST ARTIFACTS (JANGAN COMMIT — penuh sampah) ======
+# Playwright headed test screenshots (debug visual, bukan production)
+tests/Browser/Playwright/Feature/*/screenshots/
+tests/Browser/Playwright/Feature/*/screenshots-*/
+# Test reports (HTML, JSON, junit, dll)
+/tests/Browser/Playwright/Feature/**/report/
+/tests/Browser/Playwright/Feature/**/playwright-report/
+/tests/Browser/Playwright/Feature/**/test-results/
+/tests/Browser/Playwright/Feature/**/*.html
+# Test temp files (download dirs, video, trace)
+/tests/Browser/Playwright/Feature/**/*.webm
+/tests/Browser/Playwright/Feature/**/*.zip
+/tests/Browser/Playwright/Feature/**/*.log
