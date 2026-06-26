@@ -133,8 +133,17 @@ for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), 1):
             // Verify headers
             const sheetLine = pyOut.split('\n').find(l => l.startsWith('SHEET:'));
             const headersLine = pyOut.split('\n').find(l => l.startsWith('HEADERS:'));
+            const row1Line = pyOut.split('\n').find(l => l.startsWith('ROW1:'));
             assert(sheetLine && sheetLine.includes('Performa'), 'Sheet name = Performa Karyawan', sheetLine);
             assert(headersLine && headersLine.includes('Kode Karyawan') && headersLine.includes('Gangguan solved'), 'Headers match expected columns', headersLine);
+            // Verify "Total Solved" = PJ Utama + PJ Lain (kolom ke-7)
+            if (row1Line) {
+                const cols = row1Line.replace('ROW1:', '').split(',');
+                const utama = parseInt(cols[4]) || 0;
+                const lain = parseInt(cols[5]) || 0;
+                const total = parseInt(cols[6]) || 0;
+                assert(total === utama + lain, `Total Solved (${total}) = Utama (${utama}) + Lain (${lain})`, `row1: ${row1Line}`);
+            }
         } else {
             // Fallback: curl download (since download may open new tab)
             log('  ! Download event not captured, trying direct fetch via ctx request');

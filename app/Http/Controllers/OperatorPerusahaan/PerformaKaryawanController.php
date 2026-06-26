@@ -59,7 +59,7 @@ class PerformaKaryawanController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Performa Karyawan');
 
-        $headers = ['Kode Karyawan', 'Nama Karyawan', 'Jumlah Insentif', 'Nominal Insentif', 'Gangguan solved (PJ Utama)', 'Gangguan solved (PJ Lain)'];
+        $headers = ['Kode Karyawan', 'Nama Karyawan', 'Jumlah Insentif', 'Nominal Insentif', 'Gangguan solved (PJ Utama)', 'Gangguan solved (PJ Lain)', 'Total Solved'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -76,6 +76,7 @@ class PerformaKaryawanController extends Controller
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $p['nominal_insentif'], DataType::TYPE_NUMERIC);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $p['gangguan_solved_pj_utama'], DataType::TYPE_NUMERIC);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $p['gangguan_solved_pj_lain'], DataType::TYPE_NUMERIC);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $p['gangguan_solved_pj_utama'] + $p['gangguan_solved_pj_lain'], DataType::TYPE_NUMERIC);
             $row++;
         }
 
