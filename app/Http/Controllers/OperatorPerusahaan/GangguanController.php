@@ -375,7 +375,7 @@ class GangguanController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Gangguan');
 
-        $headers = ['No', 'Kode', 'Kode Langganan', 'Customer', 'Penanggung Jawab', 'Catatan', 'Status Pengerjaan', 'Status Verifikasi', 'Alasan Verifikasi', 'Tgl Mulai', 'Tgl Selesai'];
+        $headers = ['No', 'Kode', 'Kode Langganan', 'Customer', 'PIC Utama', 'PIC Tambahan', 'Catatan', 'Status Pengerjaan', 'Status Verifikasi', 'Alasan Verifikasi', 'Tgl Mulai', 'Tgl Selesai'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -384,21 +384,47 @@ class GangguanController extends Controller
         }
 
         $row = 2;
+        $no = 0;
+        // Kolom yang di-merge per tiket: No, Kode, Kode Langganan, Customer, PIC Utama, Catatan, Status Pengerjaan, Status Verifikasi, Alasan Verifikasi, Tgl Mulai, Tgl Selesai
+        // Hanya PIC Tambahan (col F) yang TIDAK di-merge — 1 PIC per row
+        $mergeCols = ['A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'J', 'K', 'L'];
+
         foreach ($items as $g) {
-            $col = 1;
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $row - 1, DataType::TYPE_NUMERIC);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->code, DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->custInternet?->account_number ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->custInternet?->customer?->name ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->main_pic_name ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, ($g->additional_pics && $g->additional_pics->count() > 0) ? $g->additional_pics->pluck('employee_name')->implode(', ') : '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->catatan, DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->status_pengerjaan?->label() ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->status_verifikasi?->label() ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->alasan_verifikasi ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->issue_dimulai_dari?->format('Y-m-d H:i') ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->issue_diselesaikan_pada?->format('Y-m-d H:i') ?? '-', DataType::TYPE_STRING);
-            $row++;
+            $no++;
+            $mainName = $g->main_pic_name ?? '-';
+            $additionalPics = ($g->additional_pics ?? collect())->map(fn($p) => $p->employee?->name ?? '-')->values()->all();
+            // Total rows = 1 (main PIC) + N (additional PICs). Minimum 1 row kalau tidak ada PIC sama sekali.
+            $totalRows = max(1, 1 + count($additionalPics));
+            $firstRow = $row;
+            $lastRow = $row + $totalRows - 1;
+
+            // Kolom yang di-merge: set di firstRow saja (value muncul di top cell merged)
+            $sheet->setCellValueExplicit("A{$firstRow}", $no, DataType::TYPE_NUMERIC);
+            $sheet->setCellValueExplicit("B{$firstRow}", $g->code, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("C{$firstRow}", $g->custInternet?->account_number ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("D{$firstRow}", $g->custInternet?->customer?->name ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("E{$firstRow}", $mainName, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("G{$firstRow}", $g->catatan, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("H{$firstRow}", $g->status_pengerjaan?->label() ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("I{$firstRow}", $g->status_verifikasi?->label() ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("J{$firstRow}", $g->alasan_verifikasi ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("K{$firstRow}", $g->issue_dimulai_dari?->format('Y-m-d H:i') ?? '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit("L{$firstRow}", $g->issue_diselesaikan_pada?->format('Y-m-d H:i') ?? '-', DataType::TYPE_STRING);
+
+            // Kolom F (PIC Tambahan): 1 row per additional PIC, atau '-' di firstRow
+            $picTambahan = empty($additionalPics) ? '-' : $additionalPics[0];
+            $sheet->setCellValueExplicit("F{$firstRow}", $picTambahan, DataType::TYPE_STRING);
+            for ($i = 1; $i < $totalRows; $i++) {
+                $sheet->setCellValueExplicit("F" . ($firstRow + $i), $additionalPics[$i] ?? '-', DataType::TYPE_STRING);
+            }
+
+            // Merge kolom yang harus di-merge
+            if ($lastRow > $firstRow) {
+                foreach ($mergeCols as $mc) {
+                    $sheet->mergeCells("{$mc}{$firstRow}:{$mc}{$lastRow}");
+                }
+            }
+            $row = $lastRow + 1;
         }
 
         $filename = 'gangguan-' . date('Y-m-d-His') . '.xlsx';
