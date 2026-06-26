@@ -7,6 +7,7 @@ use App\Http\Controllers\OperatorPerusahaan\AdminRoleWebKaryawanController;
 use App\Http\Controllers\OperatorPerusahaan\CustomerController;
 use App\Http\Controllers\OperatorPerusahaan\GangguanController;
 use App\Http\Controllers\OperatorPerusahaan\InsentifController;
+use App\Http\Controllers\OperatorPerusahaan\PerformaAdminController;
 use App\Http\Controllers\OperatorPerusahaan\PerformaKaryawanController;
 use App\Http\Controllers\OperatorPerusahaan\KaryawanController;
 use App\Http\Controllers\OperatorPerusahaan\KonfigurasiPerusahaanController;
@@ -467,6 +468,16 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:performa-karyawan.export')->group(function () {
         Route::get('/operator-perusahaan/performa-karyawan/export', [PerformaKaryawanController::class, 'export'])->name('operator-perusahaan.performa-karyawan.export');
+    });
+
+    // ============================================================
+    // Performa Admin (admin perusahaan)
+    // ============================================================
+    Route::middleware('permission:performa-admin.list')->group(function () {
+        Route::get('/operator-perusahaan/performa-admin', [PerformaAdminController::class, 'index'])->name('operator-perusahaan.performa-admin.index');
+    });
+    Route::middleware('permission:performa-admin.export')->group(function () {
+        Route::get('/operator-perusahaan/performa-admin/export', [PerformaAdminController::class, 'export'])->name('operator-perusahaan.performa-admin.export');
     });
     // Bulk actions (perusahaan: delete + restore + verify)
     Route::middleware('permission:gangguan.delete')->group(function () {

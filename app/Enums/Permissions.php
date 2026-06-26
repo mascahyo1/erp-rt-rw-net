@@ -153,6 +153,10 @@ enum Permissions: string
     case PerformaKaryawanList   = 'performa-karyawan.list';
     case PerformaKaryawanExport = 'performa-karyawan.export';
 
+    // Performa Admin (admin perusahaan: read-only report — insentif di-review + tiket di-verify)
+    case PerformaAdminList   = 'performa-admin.list';
+    case PerformaAdminExport = 'performa-admin.export';
+
     // Karyawan (full CRUD)
     case KaryawanList   = 'karyawan.list';
     case KaryawanCreate = 'karyawan.create';
@@ -398,6 +402,8 @@ enum Permissions: string
                 self::GangguanImport->value,
                 self::PerformaKaryawanList->value,
                 self::PerformaKaryawanExport->value,
+                self::PerformaAdminList->value,
+                self::PerformaAdminExport->value,
                 self::KaryawanList->value,
                 self::KaryawanCreate->value,
                 self::KaryawanEdit->value,
