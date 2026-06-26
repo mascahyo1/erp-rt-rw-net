@@ -41,6 +41,7 @@ const menuItems = computed(() => {
   if (perms.value.includes('role-perusahaan-op.list')) items.push({ label: 'Role Perusahaan', href: '/operator-perusahaan/role-perusahaan', icon: 'fa-tags' });
   if (perms.value.includes('admin-role-perusahaan-op.list')) items.push({ label: 'Admin Role Perusahaan', href: '/operator-perusahaan/admin-role-perusahaan', icon: 'fa-user-gear' });
   if (perms.value.includes('karyawan.list')) items.push({ label: 'Karyawan', href: '/operator-perusahaan/karyawan', icon: 'fa-users' });
+  if (perms.value.includes('performa-karyawan.list')) items.push({ label: 'Performa Karyawan', href: '/operator-perusahaan/performa-karyawan', icon: 'fa-chart-line' });
   if (perms.value.includes('role-web-karyawan.list')) items.push({ label: 'Role Web Karyawan', href: '/operator-perusahaan/role-web-karyawan', icon: 'fa-globe' });
   if (perms.value.includes('admin-role-web-karyawan.list')) items.push({ label: 'Admin Role Web Karyawan', href: '/operator-perusahaan/admin-role-web-karyawan', icon: 'fa-user-lock' });
   if (perms.value.includes('konfigurasi-perusahaan.list')) items.push({ label: 'Konfigurasi Perusahaan', href: '/operator-perusahaan/konfigurasi-perusahaan', icon: 'fa-sliders' });

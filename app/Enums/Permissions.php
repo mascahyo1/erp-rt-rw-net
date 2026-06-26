@@ -149,6 +149,10 @@ enum Permissions: string
     case GangguanExport   = 'gangguan.export';
     case GangguanImport   = 'gangguan.import';
 
+    // Performa Karyawan (admin perusahaan: read-only report — kinerja + insentif + gangguan solved)
+    case PerformaKaryawanList   = 'performa-karyawan.list';
+    case PerformaKaryawanExport = 'performa-karyawan.export';
+
     // Karyawan (full CRUD)
     case KaryawanList   = 'karyawan.list';
     case KaryawanCreate = 'karyawan.create';
@@ -392,6 +396,8 @@ enum Permissions: string
                 self::GangguanVerify->value,
                 self::GangguanExport->value,
                 self::GangguanImport->value,
+                self::PerformaKaryawanList->value,
+                self::PerformaKaryawanExport->value,
                 self::KaryawanList->value,
                 self::KaryawanCreate->value,
                 self::KaryawanEdit->value,
