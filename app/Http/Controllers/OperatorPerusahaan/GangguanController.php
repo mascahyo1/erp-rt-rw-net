@@ -391,7 +391,7 @@ class GangguanController extends Controller
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->custInternet?->account_number ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->custInternet?->customer?->name ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->main_pic_name ?? '-', DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, count($g->additional_pics ?? []) > 0 ? implode(', ', array_column($g->additional_pics, 'employee_name')) : '-', DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, ($g->additional_pics && $g->additional_pics->count() > 0) ? $g->additional_pics->pluck('employee_name')->implode(', ') : '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->catatan, DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->status_pengerjaan?->label() ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $g->status_verifikasi?->label() ?? '-', DataType::TYPE_STRING);
