@@ -213,6 +213,8 @@ Route::middleware('auth:customer')->group(function () {
         $validated = $request->validate([
             'internet_package_id' => ['required', 'uuid', 'exists:internet_packages,id'],
             'customer_address' => ['required', 'string', 'max:500'],
+            'customer_address_long' => ['nullable', 'string', 'max:50'],
+            'customer_address_lat' => ['nullable', 'string', 'max:50'],
             'company_notes' => ['nullable', 'string', 'max:1000'],
         ], [
             'internet_package_id.required' => 'Pilih paket terlebih dahulu.',
@@ -232,6 +234,8 @@ Route::middleware('auth:customer')->group(function () {
             'internet_package_id' => $paket->id,
             'account_number' => $accountNumber,
             'customer_address' => $validated['customer_address'],
+            'customer_address_long' => $validated['customer_address_long'] ?: null,
+            'customer_address_lat' => $validated['customer_address_lat'] ?: null,
             'internet_status' => 'inactive', // menunggu aktivasi admin (enum: active/inactive/suspended/terminated)
             'company_notes' => $validated['company_notes'] ?? null,
             'created_by' => $customer->id,

@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import KaryawanLayout from '@/Layouts/KaryawanLayout.vue';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
+import LocationPicker from '@/Components/LocationPicker.vue';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
@@ -27,6 +28,9 @@ const showCreateModal = ref(false); const showDetailModal = ref(false);
 const showEditModal = ref(false); const showDeleteModal = ref(false);
 const showImportModal = ref(false);
 const importFile = ref(null);
+const createLocationPicker = ref(null);
+const editLocationPicker = ref(null);
+const detailLocationPicker = ref(null);
 
 function buildQuery(o = {}) {
   const p = { ...o };
@@ -68,11 +72,11 @@ function statusBadgeClass(s) {
 const createForm = useForm({ customer_id: '', internet_package_id: '', account_number: '', router_sn: '', customer_address: '', customer_address_long: '', customer_address_lat: '', internet_status: 'active', company_notes: '' });
 const editForm = useForm({ customer_id: '', internet_package_id: '', account_number: '', router_sn: '', customer_address: '', customer_address_long: '', customer_address_lat: '', internet_status: '', company_notes: '' });
 
-function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; }
+function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; nextTick(() => createLocationPicker.value?.invalidateSize()); }
 function submitCreate() { createForm.post('/karyawan/langganan-customer', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Langganan berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal.') }); }
-function openEdit(item) { editForm.customer_id = item.customer_id; editForm.internet_package_id = item.internet_package_id; editForm.account_number = item.account_number || ''; editForm.router_sn = item.router_sn || ''; editForm.customer_address = item.customer_address || ''; editForm.customer_address_long = item.customer_address_long || ''; editForm.customer_address_lat = item.customer_address_lat || ''; editForm.internet_status = item.internet_status; editForm.company_notes = item.company_notes; editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; }
+function openEdit(item) { editForm.customer_id = item.customer_id; editForm.internet_package_id = item.internet_package_id; editForm.account_number = item.account_number || ''; editForm.router_sn = item.router_sn || ''; editForm.customer_address = item.customer_address || ''; editForm.customer_address_long = item.customer_address_long || ''; editForm.customer_address_lat = item.customer_address_lat || ''; editForm.internet_status = item.internet_status; editForm.company_notes = item.company_notes; editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; nextTick(() => editLocationPicker.value?.invalidateSize()); }
+function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; nextTick(() => detailLocationPicker.value?.invalidateSize()); }
 function submitEdit() { editForm.put('/karyawan/langganan-customer/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Langganan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal.') }); }
-function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
 function confirmDelete() { router.delete('/karyawan/langganan-customer/' + selectedItem.value.id, { onSuccess: () => { showDeleteModal.value = false; fetchData(); toast.success('Langganan berhasil dihapus.'); } }); }
 function confirmRestore(id) { router.patch('/karyawan/langganan-customer/' + id + '/restore', { onSuccess: () => { fetchData(); toast.success('Langganan berhasil dipulihkan.'); } }); }
@@ -253,12 +257,12 @@ onMounted(() => { });
       <Transition name="modal">
         <div v-if="showDetailModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showDetailModal = false">
           <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
-          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg">
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Detail Langganan</h3>
               <button @click="showDetailModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-times"></i></button>
             </div>
-            <div class="px-6 py-5 space-y-3" v-if="selectedItem">
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-3 modal-scroll" v-if="selectedItem">
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="text-xs text-gray-500 dark:text-gray-400">Customer</label>
@@ -284,17 +288,9 @@ onMounted(() => { });
                   <label class="text-xs text-gray-500 dark:text-gray-400">Router SN</label>
                   <p class="font-mono text-xs text-gray-900 dark:text-white">{{ selectedItem.router_sn || '-' }}</p>
                 </div>
-                <div>
+                <div class="col-span-2">
                   <label class="text-xs text-gray-500 dark:text-gray-400">Alamat</label>
                   <p class="text-sm text-gray-900 dark:text-white">{{ selectedItem.customer_address || '-' }}</p>
-                </div>
-                <div>
-                  <label class="text-xs text-gray-500 dark:text-gray-400">Long</label>
-                  <p class="font-mono text-xs text-gray-900 dark:text-white">{{ selectedItem.customer_address_long || '-' }}</p>
-                </div>
-                <div>
-                  <label class="text-xs text-gray-500 dark:text-gray-400">Lat</label>
-                  <p class="font-mono text-xs text-gray-900 dark:text-white">{{ selectedItem.customer_address_lat || '-' }}</p>
                 </div>
                 <div>
                   <label class="text-xs text-gray-500 dark:text-gray-400">Status</label>
@@ -304,11 +300,31 @@ onMounted(() => { });
                   <label class="text-xs text-gray-500 dark:text-gray-400">Tagihan</label>
                   <p class="font-mono text-gray-900 dark:text-white">Rp {{ Number(selectedItem.billing_amount || 0).toLocaleString('id') }}</p>
                 </div>
-                <div>
+                <div class="col-span-2">
                   <label class="text-xs text-gray-500 dark:text-gray-400">Tgl Daftar</label>
                   <p class="text-gray-900 dark:text-white">{{ selectedItem.created_at }}</p>
                 </div>
               </div>
+
+              <!-- Map read-only + Google Maps link -->
+              <div v-if="selectedItem.customer_address_lat && selectedItem.customer_address_long" class="pt-2">
+                <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5">
+                  <i class="fas fa-map-marker-alt mr-1"></i>Lokasi
+                </label>
+                <LocationPicker
+                  ref="detailLocationPicker"
+                  readonly
+                  :lat="selectedItem.customer_address_lat"
+                  :lng="selectedItem.customer_address_long"
+                  height="220px"
+                />
+              </div>
+              <div v-else class="pt-2 text-center text-xs text-gray-400 italic">
+                <i class="fas fa-info-circle mr-1"></i>Lokasi belum di-set
+              </div>
+            </div>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-3 border-t border-gray-200 dark:border-gray-700">
+              <button @click="showDetailModal = false" class="px-5 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Tutup</button>
             </div>
           </div>
         </div>
@@ -351,15 +367,13 @@ onMounted(() => { });
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat</label>
                 <input v-model="createForm.customer_address" type="text" placeholder="Jl. Raya..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
               </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Koordinat Long</label>
-                  <input v-model="createForm.customer_address_long" type="text" placeholder="110.xxx" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Koordinat Lat</label>
-                  <input v-model="createForm.customer_address_lat" type="text" placeholder="-7.xxx" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Titik Lokasi</label>
+                <LocationPicker
+                  ref="createLocationPicker"
+                  v-model:lat="createForm.customer_address_lat"
+                  v-model:lng="createForm.customer_address_long"
+                />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
@@ -420,15 +434,13 @@ onMounted(() => { });
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat</label>
                 <input v-model="editForm.customer_address" type="text" placeholder="Jl. Raya..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
               </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Koordinat Long</label>
-                  <input v-model="editForm.customer_address_long" type="text" placeholder="110.xxx" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Koordinat Lat</label>
-                  <input v-model="editForm.customer_address_lat" type="text" placeholder="-7.xxx" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Titik Lokasi</label>
+                <LocationPicker
+                  ref="editLocationPicker"
+                  v-model:lat="editForm.customer_address_lat"
+                  v-model:lng="editForm.customer_address_long"
+                />
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
