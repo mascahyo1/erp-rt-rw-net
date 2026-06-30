@@ -53,3 +53,14 @@ tests/Browser/Playwright/Feature/*/screenshots-*/
 /tests/Browser/Playwright/Feature/**/*.webm
 /tests/Browser/Playwright/Feature/**/*.zip
 /tests/Browser/Playwright/Feature/**/*.log
+
+# Deploy/server scripts (live OUTSIDE repo di ~/scripts). JANGAN track!
+# - Bisa leak ServerName, endpoint, internal hostname
+# - Bisa leak password reference path
+# - Wrapper SSH script ada di ~/scripts/ssh_run.sh, BUKAN di repo root
+/ssh_run.sh
+/ssh_sudo.sh
+/ssh_*.sh
+/tmp_*.sh
+/tmp_*.b64
+/tmp_*.py

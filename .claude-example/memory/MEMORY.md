@@ -3,3 +3,5 @@
 - [Diskusi pre-implementation folder](diskusi-folder.md) — Diskusi pre-implementation ditulis di `briefing/diskusi/YYYY-MM-DD-{slug}.md`, terpisah dari `briefing/report/` (daily/weekly/progress final)
 - [Modal data-testid convention](modal-data-testid-convention.md) — WAJIB `data-testid` di SEMUA field modal Vue (input/select/button/textarea) supaya Playwright gak salah target ke filter/search
 - [Test artifacts no-commit](test-artifacts-no-commit.md) — Screenshots/HTML/WebM dari Playwright JANGAN di-commit (.gitignore sudah ada patterns); pakai `git status` dulu sebelum `git add`
+- [dotenv-hash-comment-bug](dotenv-hash-comment-bug.md) — PHP dotenv anggap `#` di secret key sebagai comment delimiter → silent truncation. Selalu quote value yg punya `#`.
+- [no-creds-in-repo](no-creds-in-repo.md) — JANGAN taruh SSH wrapper/askpass/credential script di dalam git repo. Taruh di `~/scripts/` atau `~/.ssh/`.
