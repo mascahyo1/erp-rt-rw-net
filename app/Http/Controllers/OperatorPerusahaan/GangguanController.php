@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\OperatorPerusahaan;
 
+use App\Enums\FileAttachmentType;
 use App\Enums\SupportTicketPengerjaanStatus;
 use App\Enums\SupportTicketVerifikasiStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CustInternet;
 use App\Models\Employee;
+use App\Models\FileAttachment;
 use App\Models\Gangguan;
 use App\Models\SupportTicketPic;
-use App\Services\FileUploadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -24,7 +25,8 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 class GangguanController extends Controller
 {
     /**
-     * Admin Perusahaan: full CRUD + verify (approve/reject hasil resolution).
+     * Admin Perusahaan: full CRUD + verify + bulk + import/export Excel.
+     * Multi-file attachment via polymorphic {@see FileAttachment}.
      */
     public function index(Request $request): Response
     {
@@ -34,6 +36,7 @@ class GangguanController extends Controller
             'custInternet.customer',
             'custInternet.internetPackage',
             'pics.employee',
+            'attachments',
             'createdBy',
             'updatedBy',
             'deletedBy',
@@ -89,6 +92,7 @@ class GangguanController extends Controller
             'filters' => $request->only(['search', 'status_pengerjaan', 'status_verifikasi', 'main_pic_employee_id', 'cust_internet_id', 'created_start', 'created_end', 'sort_field', 'sort_dir', 'per_page', 'terhapus']),
             'statusPengerjaanOptions' => SupportTicketPengerjaanStatus::values(),
             'statusVerifikasiOptions' => SupportTicketVerifikasiStatus::values(),
+            'attachmentTypeOptions' => collect(FileAttachmentType::cases())->map(fn($c) => ['value' => $c->value, 'label' => $c->label()])->values()->all(),
         ]);
     }
 
@@ -101,28 +105,26 @@ class GangguanController extends Controller
             'additional_pic_employee_ids.*' => ['uuid', 'exists:employees,id', 'different:main_pic_employee_id'],
             'catatan' => ['required', 'string', 'max:2000'],
             'issue_dimulai_dari' => ['required', 'date'],
-            'file_bukti_issue' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachments_bukti_issue' => ['nullable', 'array'],
+            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachment_names' => ['nullable', 'array'],
+            'attachment_names.*' => ['nullable', 'string', 'max:255'],
+            'attachment_descriptions' => ['nullable', 'array'],
+            'attachment_descriptions.*' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $companyId = auth()->user()->company_id;
         $ci = CustInternet::whereHas('customer', fn($q) => $q->where('company_id', $companyId))
             ->findOrFail($validated['cust_internet_id']);
 
-        $data = [
+        $gangguan = Gangguan::create([
             'code' => 'TKT-' . now()->format('Ymd') . '-' . strtoupper(Str::random(4)),
             'cust_internet_id' => $ci->id,
             'catatan' => $validated['catatan'],
             'status_pengerjaan' => SupportTicketPengerjaanStatus::OPEN->value,
             'status_verifikasi' => SupportTicketVerifikasiStatus::PENDING->value,
             'issue_dimulai_dari' => $validated['issue_dimulai_dari'],
-        ];
-
-        $uploader = new FileUploadService();
-        if ($request->hasFile('file_bukti_issue')) {
-            $data['file_bukti_issue'] = $uploader->processImage($request->file('file_bukti_issue'), 'gangguan/issues');
-        }
-
-        $gangguan = Gangguan::create($data);
+        ]);
 
         // Create PICs
         if (!empty($validated['main_pic_employee_id'])) {
@@ -139,6 +141,8 @@ class GangguanController extends Controller
                 'is_main_pic' => false,
             ]);
         }
+
+        $this->attachFromRequest($gangguan, $validated, FileAttachmentType::BuktiIssue);
 
         return back()->with('success', 'Tiket gangguan berhasil dibuat.');
     }
@@ -157,36 +161,40 @@ class GangguanController extends Controller
             'status_pengerjaan' => ['nullable', 'string', 'in:open,in_progress,resolved'],
             'issue_dimulai_dari' => ['nullable', 'date'],
             'issue_diselesaikan_pada' => ['nullable', 'date', 'required_if:status_pengerjaan,resolved'],
-            'file_bukti_issue' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
-            'file_bukti_issue_diselesaikan' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
             'alasan_verifikasi' => ['nullable', 'string', 'max:1000'],
             'status_verifikasi' => ['nullable', 'string', 'in:pending,approved,rejected'],
+            // Attachments: keep existing + new uploads
+            'attachments_to_keep' => ['nullable', 'array'],
+            'attachments_to_keep.*' => ['string', 'uuid'],
+            'attachments_bukti_issue' => ['nullable', 'array'],
+            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachments_bukti_issue_selesai' => ['nullable', 'array'],
+            'attachments_bukti_issue_selesai.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachment_names' => ['nullable', 'array'],
+            'attachment_names.*' => ['nullable', 'string', 'max:255'],
+            'attachment_descriptions' => ['nullable', 'array'],
+            'attachment_descriptions.*' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $data = [];
         foreach (['catatan', 'status_pengerjaan', 'alasan_verifikasi', 'status_verifikasi', 'issue_dimulai_dari', 'issue_diselesaikan_pada'] as $k) {
             if (array_key_exists($k, $validated) && $validated[$k] !== null) $data[$k] = $validated[$k];
         }
-        // Kalau status_pengerjaan=resolved tapi issue_diselesaikan_pada belum di-set, auto-fill dengan now()
         if (!empty($data['status_pengerjaan']) && $data['status_pengerjaan'] === SupportTicketPengerjaanStatus::RESOLVED->value && empty($data['issue_diselesaikan_pada']) && !$gangguan->issue_diselesaikan_pada) {
             $data['issue_diselesaikan_pada'] = now();
         }
 
-        $uploader = new FileUploadService();
-        if ($request->hasFile('file_bukti_issue')) {
-            if ($gangguan->file_bukti_issue) $uploader->deleteFile($gangguan->file_bukti_issue);
-            $data['file_bukti_issue'] = $uploader->processImage($request->file('file_bukti_issue'), 'gangguan/issues');
-        }
-        if ($request->hasFile('file_bukti_issue_diselesaikan')) {
-            if ($gangguan->file_bukti_issue_diselesaikan) $uploader->deleteFile($gangguan->file_bukti_issue_diselesaikan);
-            $data['file_bukti_issue_diselesaikan'] = $uploader->processImage($request->file('file_bukti_issue_diselesaikan'), 'gangguan/resolutions');
-        }
-
         $gangguan->update($data);
+
+        // Sync attachments kalau ada perubahan
+        if ($request->has('attachments_to_keep') || $request->hasFile('attachments_bukti_issue') || $request->hasFile('attachments_bukti_issue_selesai')) {
+            $keepIds = $validated['attachments_to_keep'] ?? [];
+            $this->syncAttachmentsByType($gangguan, FileAttachmentType::BuktiIssue, $keepIds, $validated);
+            $this->syncAttachmentsByType($gangguan, FileAttachmentType::BuktiIssueSelesai, $keepIds, $validated);
+        }
 
         // Sync PICs kalau dikirim
         if (array_key_exists('main_pic_employee_id', $validated) || array_key_exists('additional_pic_employee_ids', $validated)) {
-            // Hapus semua PIC existing, recreate (sync strategy)
             $gangguan->pics()->forceDelete();
             if (!empty($validated['main_pic_employee_id'])) {
                 SupportTicketPic::create([
@@ -209,7 +217,6 @@ class GangguanController extends Controller
 
     /**
      * Verify hasil resolution: approved | rejected.
-     * Hanya admin perusahaan. Tiket harus status_pengerjaan=resolved dulu.
      */
     public function verify(Request $request, Gangguan $gangguan): RedirectResponse
     {
@@ -235,6 +242,36 @@ class GangguanController extends Controller
         return back()->with('success', "Tiket berhasil {$label}.");
     }
 
+    /**
+     * Mark as resolved: shortcut untuk tandai tiket selesai + upload bukti sekaligus.
+     */
+    public function resolve(Request $request, Gangguan $gangguan): RedirectResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $ownsTicket = $gangguan->custInternet?->customer?->company_id === $companyId;
+        if (!$ownsTicket) return back()->with('error', 'Anda tidak berhak mengubah tiket ini.');
+
+        $validated = $request->validate([
+            'attachments_to_keep' => ['nullable', 'array'],
+            'attachments_to_keep.*' => ['string', 'uuid'],
+            'attachments_bukti_issue_selesai' => ['nullable', 'array'],
+            'attachments_bukti_issue_selesai.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachment_names' => ['nullable', 'array'],
+            'attachment_names.*' => ['nullable', 'string', 'max:255'],
+            'attachment_descriptions' => ['nullable', 'array'],
+            'attachment_descriptions.*' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $gangguan->update([
+            'status_pengerjaan' => SupportTicketPengerjaanStatus::RESOLVED->value,
+            'issue_diselesaikan_pada' => now(),
+        ]);
+
+        $this->syncAttachmentsByType($gangguan, FileAttachmentType::BuktiIssueSelesai, $validated['attachments_to_keep'] ?? [], $validated);
+
+        return back()->with('success', 'Tiket ditandai selesai. Menunggu verifikasi admin.');
+    }
+
     public function destroy(Gangguan $gangguan): RedirectResponse
     {
         $companyId = auth()->user()->company_id;
@@ -256,8 +293,23 @@ class GangguanController extends Controller
     }
 
     /**
+     * Hapus 1 attachment.
+     */
+    public function destroyAttachment(Request $request, Gangguan $gangguan, FileAttachment $attachment): RedirectResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $ownsTicket = $gangguan->custInternet?->customer?->company_id === $companyId;
+        if (!$ownsTicket) return back()->with('error', 'Anda tidak berhak menghapus attachment ini.');
+        if ($attachment->attachable_type !== Gangguan::class || $attachment->attachable_id !== $gangguan->id) {
+            return back()->with('error', 'Attachment bukan milik tiket ini.');
+        }
+
+        $attachment->deleteFromStorage();
+        return back()->with('success', 'Attachment berhasil dihapus.');
+    }
+
+    /**
      * Bulk delete: soft delete banyak tiket sekaligus.
-     * Filter hanya tiket milik company caller (security).
      */
     public function bulkDestroy(Request $request): RedirectResponse
     {
@@ -273,9 +325,6 @@ class GangguanController extends Controller
         return back()->with('success', "{$count} tiket berhasil dihapus.");
     }
 
-    /**
-     * Bulk restore: pulihkan banyak tiket yang sudah di-soft-delete.
-     */
     public function bulkRestore(Request $request): RedirectResponse
     {
         $ids = $request->input('ids', []);
@@ -291,11 +340,6 @@ class GangguanController extends Controller
         return back()->with('success', "{$count} tiket berhasil dipulihkan.");
     }
 
-    /**
-     * Bulk verify: setujui/tolak banyak tiket sekaligus.
-     * Hanya tiket yang status_pengerjaan=resolved yang bisa di-verify.
-     * Perusahaan only (karyawan gak boleh bulk verify — itu wewenang admin).
-     */
     public function bulkVerify(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -324,35 +368,6 @@ class GangguanController extends Controller
         $msg = count($idsToUpdate) . " tiket berhasil {$label}.";
         if ($skipped > 0) $msg .= " {$skipped} tiket di-skip (bukan status resolved).";
         return back()->with('success', $msg);
-    }
-
-    /**
-     * Mark as resolved: shortcut karyawan untuk tandai tiket selesai + upload bukti sekaligus.
-     * Dipakai oleh karyawan (route karyawan-gangguan.resolve) — perusahaan tidak perlu ini.
-     */
-    public function resolve(Request $request, Gangguan $gangguan): RedirectResponse
-    {
-        $companyId = auth()->user()->company_id;
-        $ownsTicket = $gangguan->custInternet?->customer?->company_id === $companyId;
-        if (!$ownsTicket) return back()->with('error', 'Anda tidak berhak mengubah tiket ini.');
-
-        $validated = $request->validate([
-            'file_bukti_issue_diselesaikan' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
-        ]);
-
-        $data = [
-            'status_pengerjaan' => SupportTicketPengerjaanStatus::RESOLVED->value,
-            'issue_diselesaikan_pada' => now(),
-        ];
-
-        $uploader = new FileUploadService();
-        if ($request->hasFile('file_bukti_issue_diselesaikan')) {
-            if ($gangguan->file_bukti_issue_diselesaikan) $uploader->deleteFile($gangguan->file_bukti_issue_diselesaikan);
-            $data['file_bukti_issue_diselesaikan'] = $uploader->processImage($request->file('file_bukti_issue_diselesaikan'), 'gangguan/resolutions');
-        }
-
-        $gangguan->update($data);
-        return back()->with('success', 'Tiket ditandai selesai. Menunggu verifikasi admin.');
     }
 
     public function export(Request $request): BinaryFileResponse
@@ -385,20 +400,16 @@ class GangguanController extends Controller
 
         $row = 2;
         $no = 0;
-        // Kolom yang di-merge per tiket: No, Kode, Kode Langganan, Customer, PIC Utama, Catatan, Status Pengerjaan, Status Verifikasi, Alasan Verifikasi, Tgl Mulai, Tgl Selesai
-        // Hanya PIC Tambahan (col F) yang TIDAK di-merge — 1 PIC per row
         $mergeCols = ['A', 'B', 'C', 'D', 'E', 'G', 'H', 'I', 'J', 'K', 'L'];
 
         foreach ($items as $g) {
             $no++;
             $mainName = $g->main_pic_name ?? '-';
             $additionalPics = ($g->additional_pics ?? collect())->map(fn($p) => $p->employee?->name ?? '-')->values()->all();
-            // Total rows = 1 (main PIC) + N (additional PICs). Minimum 1 row kalau tidak ada PIC sama sekali.
             $totalRows = max(1, 1 + count($additionalPics));
             $firstRow = $row;
             $lastRow = $row + $totalRows - 1;
 
-            // Kolom yang di-merge: set di firstRow saja (value muncul di top cell merged)
             $sheet->setCellValueExplicit("A{$firstRow}", $no, DataType::TYPE_NUMERIC);
             $sheet->setCellValueExplicit("B{$firstRow}", $g->code, DataType::TYPE_STRING);
             $sheet->setCellValueExplicit("C{$firstRow}", $g->custInternet?->account_number ?? '-', DataType::TYPE_STRING);
@@ -411,14 +422,12 @@ class GangguanController extends Controller
             $sheet->setCellValueExplicit("K{$firstRow}", $g->issue_dimulai_dari?->format('Y-m-d H:i') ?? '-', DataType::TYPE_STRING);
             $sheet->setCellValueExplicit("L{$firstRow}", $g->issue_diselesaikan_pada?->format('Y-m-d H:i') ?? '-', DataType::TYPE_STRING);
 
-            // Kolom F (PIC Tambahan): 1 row per additional PIC, atau '-' di firstRow
             $picTambahan = empty($additionalPics) ? '-' : $additionalPics[0];
             $sheet->setCellValueExplicit("F{$firstRow}", $picTambahan, DataType::TYPE_STRING);
             for ($i = 1; $i < $totalRows; $i++) {
                 $sheet->setCellValueExplicit("F" . ($firstRow + $i), $additionalPics[$i] ?? '-', DataType::TYPE_STRING);
             }
 
-            // Merge kolom yang harus di-merge
             if ($lastRow > $firstRow) {
                 foreach ($mergeCols as $mc) {
                     $sheet->mergeCells("{$mc}{$firstRow}:{$mc}{$lastRow}");
@@ -448,7 +457,6 @@ class GangguanController extends Controller
             $sheet->getStyle("{$col}1")->getFont()->setBold(true);
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
-        // Tambah 1 row contoh
         $sheet->setCellValue('A2', 'CI-XXXXX');
         $sheet->setCellValue('B2', 'Ahmad Karyawan');
         $sheet->setCellValue('C2', 'Internet lambat sejak pagi');
@@ -518,6 +526,62 @@ class GangguanController extends Controller
         return back()->with($errors ? 'warning' : 'success', $msg);
     }
 
+    /**
+     * Attach parallel arrays: files + names + descriptions.
+     */
+    private function attachFromRequest(Gangguan $gangguan, array $validated, FileAttachmentType $type): void
+    {
+        $field = $type === FileAttachmentType::BuktiIssue ? 'attachments_bukti_issue' : 'attachments_bukti_issue_selesai';
+        $files = request()->file($field) ?? [];
+        if (!$files) return;
+
+        $names = $validated['attachment_names'] ?? [];
+        $descs = $validated['attachment_descriptions'] ?? [];
+
+        foreach ($files as $i => $file) {
+            $gangguan->attachFile(
+                file: $file,
+                type: $type,
+                fileName: $names[$i] ?? null,
+                fileDescription: $descs[$i] ?? null,
+            );
+        }
+    }
+
+    /**
+     * Sync attachments by type.
+     */
+    private function syncAttachmentsByType(Gangguan $gangguan, FileAttachmentType $type, array $keepIds, array $validated): void
+    {
+        $gangguan->attachmentsByType($type)->get()->each(function ($att) use ($keepIds) {
+            if (!in_array($att->id, $keepIds, true)) {
+                $att->deleteFromStorage();
+            }
+        });
+
+        $fieldMap = [
+            FileAttachmentType::BuktiIssue->value => 'attachments_bukti_issue',
+            FileAttachmentType::BuktiIssueSelesai->value => 'attachments_bukti_issue_selesai',
+        ];
+        $field = $fieldMap[$type->value] ?? null;
+        if (!$field) return;
+
+        $files = request()->file($field) ?? [];
+        if (!$files) return;
+
+        $names = $validated['attachment_names'] ?? [];
+        $descs = $validated['attachment_descriptions'] ?? [];
+
+        foreach ($files as $i => $file) {
+            $gangguan->attachFile(
+                file: $file,
+                type: $type,
+                fileName: $names[$i] ?? null,
+                fileDescription: $descs[$i] ?? null,
+            );
+        }
+    }
+
     private function excelColumn(int $index): string
     {
         $letters = '';
@@ -534,6 +598,20 @@ class GangguanController extends Controller
         $pics = $g->pics ?? collect();
         $mainPic = $pics->where('is_main_pic', true)->first();
         $additionalPics = $pics->where('is_main_pic', false)->values();
+
+        $attachments = $g->attachments ?? collect();
+        $attachmentsByType = [];
+        foreach ($attachments as $att) {
+            $type = $att->type?->value ?? 'unknown';
+            $attachmentsByType[$type][] = [
+                'id' => $att->id,
+                'type' => $type,
+                'file_name' => $att->file_name,
+                'file_description' => $att->file_description,
+                'url' => $att->url,
+                'created_at' => $att->created_at?->toIso8601String(),
+            ];
+        }
 
         return [
             'id' => $g->id,
@@ -559,6 +637,8 @@ class GangguanController extends Controller
             'status_pengerjaan_label' => $g->status_pengerjaan?->label(),
             'status_verifikasi' => $g->status_verifikasi?->value,
             'status_verifikasi_label' => $g->status_verifikasi?->label(),
+            'attachments' => $attachmentsByType,
+            'attachment_count' => $attachments->count(),
             'file_bukti_issue_url' => $g->file_bukti_issue_url,
             'file_bukti_issue_diselesaikan_url' => $g->file_bukti_issue_diselesaikan_url,
             'alasan_verifikasi' => $g->alasan_verifikasi,

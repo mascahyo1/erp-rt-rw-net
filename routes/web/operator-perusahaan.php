@@ -449,6 +449,8 @@ Route::middleware('auth:admin-company')->group(function () {
     });
     Route::middleware('permission:gangguan.edit')->group(function () {
         Route::put('/operator-perusahaan/gangguan/{gangguan}', [GangguanController::class, 'update'])->name('operator-perusahaan.gangguan.update');
+        // Delete 1 attachment
+        Route::delete('/operator-perusahaan/gangguan/{gangguan}/attachments/{attachment}', [GangguanController::class, 'destroyAttachment'])->name('operator-perusahaan.gangguan.attachments.destroy');
     });
     Route::middleware('permission:gangguan.verify')->group(function () {
         Route::post('/operator-perusahaan/gangguan/{gangguan}/verify', [GangguanController::class, 'verify'])->name('operator-perusahaan.gangguan.verify');

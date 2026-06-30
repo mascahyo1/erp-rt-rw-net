@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
 import { useToast } from '@/Composables/useToast';
@@ -7,6 +7,8 @@ import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: CustomerLayout });
+
+const ATT_TYPE_BUKTI_ISSUE = 'bukti_issue';
 
 const props = defineProps({
   gangguans: Object,
@@ -30,8 +32,10 @@ const showDetailModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedItem = ref(null);
 
-const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '', file_bukti_issue: null });
-const createFormFile = ref(null);
+const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '' });
+const createAttachments = reactive({
+  [ATT_TYPE_BUKTI_ISSUE]: { files: [], names: [], descs: [] },
+});
 
 function buildQuery(o = {}) {
   const p = { ...o };
@@ -109,7 +113,23 @@ async function bulkDelete() {
   fetchData();
 }
 
-function openCreate() { createForm.reset(); createForm.clearErrors(); createFormFile.value = null; showCreateModal.value = true; }
+function addAttachmentFile(typeKey, stateRef, file) {
+  stateRef[typeKey].files.push(file);
+  stateRef[typeKey].names.push('');
+  stateRef[typeKey].descs.push('');
+}
+function removeAttachmentFile(typeKey, stateRef, index) {
+  stateRef[typeKey].files.splice(index, 1);
+  stateRef[typeKey].names.splice(index, 1);
+  stateRef[typeKey].descs.splice(index, 1);
+}
+
+function openCreate() {
+  createForm.reset();
+  createForm.clearErrors();
+  createAttachments[ATT_TYPE_BUKTI_ISSUE] = { files: [], names: [], descs: [] };
+  showCreateModal.value = true;
+}
 async function submitCreate() {
   const fd = new FormData();
   fd.append('cust_internet_id', createForm.cust_internet_id);
@@ -117,7 +137,12 @@ async function submitCreate() {
   (createForm.additional_pic_employee_ids || []).forEach(id => fd.append('additional_pic_employee_ids[]', id));
   fd.append('catatan', createForm.catatan);
   fd.append('issue_dimulai_dari', createForm.issue_dimulai_dari);
-  if (createFormFile.value) fd.append('file_bukti_issue', createFormFile.value);
+
+  // Multi-file attachments_bukti_issue (parallel arrays)
+  createAttachments[ATT_TYPE_BUKTI_ISSUE].files.forEach(f => fd.append('attachments_bukti_issue[]', f));
+  createAttachments[ATT_TYPE_BUKTI_ISSUE].names.forEach(n => fd.append('attachment_names[]', n));
+  createAttachments[ATT_TYPE_BUKTI_ISSUE].descs.forEach(d => fd.append('attachment_descriptions[]', d));
+
   try {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const resp = await fetch('/customer/gangguan', {
@@ -128,6 +153,7 @@ async function submitCreate() {
     const data = await resp.json().catch(() => ({}));
     if (resp.ok) {
       showCreateModal.value = false;
+      createAttachments[ATT_TYPE_BUKTI_ISSUE] = { files: [], names: [], descs: [] };
       toast.success('Laporan gangguan berhasil dikirim. Tim kami akan segera menindaklanjuti.');
       fetchData();
     } else {
@@ -254,7 +280,21 @@ function confirmDelete() { router.delete(`/customer/gangguan/${selectedItem.valu
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/customer/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" /></span><p v-if="createForm.errors.cust_internet_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.cust_internet_id }}</p></div>
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kapan gangguan terjadi? <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /><p v-if="createForm.errors.issue_dimulai_dari" class="text-red-500 text-xs mt-1">{{ createForm.errors.issue_dimulai_dari }}</p></div>
         <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah yang Anda alami..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea><p v-if="createForm.errors.catatan" class="text-red-500 text-xs mt-1">{{ createForm.errors.catatan }}</p></div>
-        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Foto Bukti (opsional, maks 2MB)</label><input data-testid="input-file-bukti" @change="e => createFormFile = e.target.files[0]" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700 dark:file:bg-emerald-900/30 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50" /></div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue <span class="text-xs text-gray-400">(opsional, bisa lebih dari 1 file)</span></label>
+          <div v-if="createAttachments[ATT_TYPE_BUKTI_ISSUE].files.length > 0" class="space-y-2 mb-2">
+            <div v-for="(f, i) in createAttachments[ATT_TYPE_BUKTI_ISSUE].files" :key="i" class="p-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-medium text-emerald-700 dark:text-emerald-300"><i class="fas fa-paperclip mr-1"></i>{{ f.name }} ({{ Math.round(f.size/1024) }} KB)</span>
+                <button type="button" data-testid="btn-remove-attachment" @click="removeAttachmentFile(ATT_TYPE_BUKTI_ISSUE, createAttachments, i)" class="text-xs text-red-600 hover:text-red-700"><i class="fas fa-times"></i></button>
+              </div>
+              <input v-model="createAttachments[ATT_TYPE_BUKTI_ISSUE].names[i]" placeholder="Nama / label file (opsional)" class="w-full px-2 py-1 text-xs border border-emerald-300 dark:border-emerald-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none" />
+              <input v-model="createAttachments[ATT_TYPE_BUKTI_ISSUE].descs[i]" placeholder="Keterangan (opsional)" class="w-full px-2 py-1 text-xs border border-emerald-300 dark:border-emerald-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none" />
+            </div>
+          </div>
+          <input data-testid="input-file-bukti" @change="e => { for (const f of e.target.files) addAttachmentFile(ATT_TYPE_BUKTI_ISSUE, createAttachments, f); e.target.value = ''; }" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700 dark:file:bg-emerald-900/30 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50" />
+        </div>
       </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-kirim" type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-paper-plane mr-1.5"></i>Kirim Laporan</button></div></form></div></Transition></Teleport>
 
     <!-- Detail Modal -->
@@ -269,8 +309,18 @@ function confirmDelete() { router.delete(`/customer/gangguan/${selectedItem.valu
           <div><label class="text-xs text-gray-500 dark:text-gray-400">Tgl Selesai</label><p class="text-sm text-gray-900 dark:text-white">{{ formatDate(selectedItem.issue_diselesaikan_pada) }}</p></div>
           <div class="col-span-2"><label class="text-xs text-gray-500 dark:text-gray-400">Catatan</label><p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ selectedItem.catatan }}</p></div>
           <div v-if="selectedItem.alasan_verifikasi"><label class="text-xs text-gray-500 dark:text-gray-400">Alasan Verifikasi</label><p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ selectedItem.alasan_verifikasi }}</p></div>
-          <div v-if="selectedItem.file_bukti_issue_url"><label class="text-xs text-gray-500 dark:text-gray-400">Bukti Issue</label><a :href="selectedItem.file_bukti_issue_url" target="_blank" class="inline-flex items-center mt-1 px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700"><i class="fas fa-image mr-1"></i>Lihat</a></div>
-          <div v-if="selectedItem.file_bukti_issue_diselesaikan_url"><label class="text-xs text-gray-500 dark:text-gray-400">Bukti Selesai</label><a :href="selectedItem.file_bukti_issue_diselesaikan_url" target="_blank" class="inline-flex items-center mt-1 px-3 py-1.5 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700"><i class="fas fa-image mr-1"></i>Lihat</a></div>
+          <div v-if="(selectedItem.attachments?.bukti_issue?.length || 0) > 0" class="col-span-2">
+            <label class="text-xs text-gray-500 dark:text-gray-400">Bukti Issue ({{ selectedItem.attachments.bukti_issue.length }})</label>
+            <div class="flex flex-wrap gap-1.5 mt-1">
+              <a v-for="att in selectedItem.attachments.bukti_issue" :key="att.id" :href="att.url" target="_blank" data-testid="detail-attachment-issue" class="inline-flex items-center px-2.5 py-1 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700"><i class="fas fa-image mr-1"></i>{{ att.file_name }}</a>
+            </div>
+          </div>
+          <div v-if="(selectedItem.attachments?.bukti_issue_selesai?.length || 0) > 0" class="col-span-2">
+            <label class="text-xs text-gray-500 dark:text-gray-400">Bukti Selesai ({{ selectedItem.attachments.bukti_issue_selesai.length }})</label>
+            <div class="flex flex-wrap gap-1.5 mt-1">
+              <a v-for="att in selectedItem.attachments.bukti_issue_selesai" :key="att.id" :href="att.url" target="_blank" data-testid="detail-attachment-selesai" class="inline-flex items-center px-2.5 py-1 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700"><i class="fas fa-image mr-1"></i>{{ att.file_name }}</a>
+            </div>
+          </div>
         </div>
       </div></div></div></Transition></Teleport>
 

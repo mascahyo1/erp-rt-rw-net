@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Enums\FileAttachmentType;
 use App\Enums\SupportTicketPengerjaanStatus;
 use App\Enums\SupportTicketVerifikasiStatus;
 use App\Http\Controllers\Controller;
 use App\Models\CustInternet;
+use App\Models\FileAttachment;
 use App\Models\Gangguan;
 use App\Models\SupportTicketPic;
-use App\Services\FileUploadService;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -21,6 +21,8 @@ class GangguanController extends Controller
     /**
      * Customer hanya bisa lihat & buat tiket untuk cust_internet MILIKNYA sendiri.
      * Read-only setelah create — tidak bisa update/delete (kecuali karyawan/perusahaan).
+     *
+     * Attachments (BuktiIssue) sekarang multi-file via polymorphic {@see FileAttachment}.
      */
     public function index(Request $request): Response
     {
@@ -30,6 +32,7 @@ class GangguanController extends Controller
             'custInternet.customer',
             'custInternet.internetPackage',
             'pics.employee',
+            'attachments',
             'createdBy',
             'updatedBy',
         ])->whereHas('custInternet', fn($q) => $q->where('customer_id', $customerId));
@@ -89,7 +92,12 @@ class GangguanController extends Controller
             'additional_pic_employee_ids.*' => ['uuid', 'exists:employees,id', 'different:main_pic_employee_id'],
             'catatan' => ['required', 'string', 'max:2000'],
             'issue_dimulai_dari' => ['required', 'date'],
-            'file_bukti_issue' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachments_bukti_issue' => ['nullable', 'array'],
+            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachment_names' => ['nullable', 'array'],
+            'attachment_names.*' => ['nullable', 'string', 'max:255'],
+            'attachment_descriptions' => ['nullable', 'array'],
+            'attachment_descriptions.*' => ['nullable', 'string', 'max:1000'],
         ]);
 
         // Guard: cust_internet harus milik customer yang login
@@ -106,12 +114,6 @@ class GangguanController extends Controller
             'status_verifikasi' => SupportTicketVerifikasiStatus::PENDING->value,
             'issue_dimulai_dari' => $validated['issue_dimulai_dari'],
         ];
-        // main_pic_employee_id sudah di-handle lewat support_ticket_pics
-
-        $uploader = new FileUploadService();
-        if ($request->hasFile('file_bukti_issue')) {
-            $data['file_bukti_issue'] = $uploader->processImage($request->file('file_bukti_issue'), 'gangguan/issues');
-        }
 
         $gangguan = Gangguan::create($data);
 
@@ -130,12 +132,13 @@ class GangguanController extends Controller
             ]);
         }
 
+        $this->attachFromRequest($gangguan, $validated, FileAttachmentType::BuktiIssue);
+
         return back()->with('success', 'Laporan gangguan berhasil dikirim. Tim kami akan segera menindaklanjuti.');
     }
 
     public function destroy(Gangguan $gangguan): RedirectResponse
     {
-        // Customer hanya bisa delete tiket MILIKNYA sendiri, dan hanya yang masih OPEN
         $customerId = auth()->user()->id;
         $ownsTicket = $gangguan->custInternet?->customer_id === $customerId;
         if (!$ownsTicket) {
@@ -159,11 +162,65 @@ class GangguanController extends Controller
         return back()->with('success', 'Laporan gangguan berhasil dipulihkan.');
     }
 
+    /**
+     * Hapus 1 attachment (untuk customer yang punya akses ke tiketnya).
+     */
+    public function destroyAttachment(Request $request, Gangguan $gangguan, FileAttachment $attachment): RedirectResponse
+    {
+        $customerId = auth()->user()->id;
+        $ownsTicket = $gangguan->custInternet?->customer_id === $customerId;
+        if (!$ownsTicket) {
+            return back()->with('error', 'Anda tidak berhak menghapus attachment ini.');
+        }
+        if ($attachment->attachable_type !== Gangguan::class || $attachment->attachable_id !== $gangguan->id) {
+            return back()->with('error', 'Attachment bukan milik tiket ini.');
+        }
+
+        $attachment->deleteFromStorage();
+        return back()->with('success', 'Attachment berhasil dihapus.');
+    }
+
+    /**
+     * Attach parallel arrays: files + names + descriptions.
+     */
+    private function attachFromRequest(Gangguan $gangguan, array $validated, FileAttachmentType $type): void
+    {
+        $field = $type === FileAttachmentType::BuktiIssue ? 'attachments_bukti_issue' : 'attachments_bukti_issue_selesai';
+        $files = request()->file($field) ?? [];
+        if (!$files) return;
+
+        $names = $validated['attachment_names'] ?? [];
+        $descs = $validated['attachment_descriptions'] ?? [];
+
+        foreach ($files as $i => $file) {
+            $gangguan->attachFile(
+                file: $file,
+                type: $type,
+                fileName: $names[$i] ?? null,
+                fileDescription: $descs[$i] ?? null,
+            );
+        }
+    }
+
     private function serialize(Gangguan $g): array
     {
         $pics = $g->pics ?? collect();
         $mainPic = $pics->where('is_main_pic', true)->first();
         $additionalPics = $pics->where('is_main_pic', false)->values();
+
+        $attachments = $g->attachments ?? collect();
+        $attachmentsByType = [];
+        foreach ($attachments as $att) {
+            $type = $att->type?->value ?? 'unknown';
+            $attachmentsByType[$type][] = [
+                'id' => $att->id,
+                'type' => $type,
+                'file_name' => $att->file_name,
+                'file_description' => $att->file_description,
+                'url' => $att->url,
+                'created_at' => $att->created_at?->toIso8601String(),
+            ];
+        }
 
         return [
             'id' => $g->id,
@@ -187,6 +244,8 @@ class GangguanController extends Controller
             'status_pengerjaan_label' => $g->status_pengerjaan?->label(),
             'status_verifikasi' => $g->status_verifikasi?->value,
             'status_verifikasi_label' => $g->status_verifikasi?->label(),
+            'attachments' => $attachmentsByType,
+            'attachment_count' => $attachments->count(),
             'file_bukti_issue_url' => $g->file_bukti_issue_url,
             'file_bukti_issue_diselesaikan_url' => $g->file_bukti_issue_diselesaikan_url,
             'alasan_verifikasi' => $g->alasan_verifikasi,
