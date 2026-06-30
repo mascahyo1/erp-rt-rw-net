@@ -177,7 +177,7 @@ const editForm = reactive({
 });
 
 // Shared AJAX form composable (satu instance, dipanggil oleh banyak action).
-const { submit, processing, errors } = useAjaxForm();
+const { submit, processing, errors, clearErrors } = useAjaxForm();
 
 function resetCreateForm() {
   createForm.nama_perusahaan = '';
