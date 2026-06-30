@@ -19,7 +19,7 @@ Walaupun password literal gak ada di file wrapper (cuma reference ke `~/.ssh/ask
 ## Why
 - Git repo = public-ish (kalau push ke remote)
 - Wrapper script biasanya referensi path internal (`/c/Users/masca/...`), hostname (`ssh-smago-ubuntu.cahyosoft.my.id`), user (`cahyo`)
-- PASSWORD ASK PASS file (`echo 'MasCahyo123!@#'`) ada di `~/.ssh/` — itu OK karena di luar repo, TAPI kalau wrapper scripts di repo di-edit & ditambah `echo 'pwd'` = disaster
+- Askpass file di `~/.ssh/` punya password literal di `echo '<password>'` — itu OK karena di luar repo, TAPI kalau wrapper scripts di repo di-edit & ditambah `echo 'pwd'` = disaster
 - `.gitignore` defensive patterns untuk backup safety
 
 ## How to apply
