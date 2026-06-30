@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
+<meta http-equiv="Content-Security-Policy"
+  content="trusted-types vue gIqNx7 default default2 'allow-duplicates'">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
