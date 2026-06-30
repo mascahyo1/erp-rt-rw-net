@@ -65,12 +65,12 @@ function statusBadgeClass(s) {
   return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
 }
 
-const createForm = useForm({ customer_id: '', internet_package_id: '', account_number: '', router_sn: '', customer_address: '', customer_address_long: '', customer_address_lat: '', internet_status: 'active', usage_upload_kb: '', usage_download_kb: '', company_notes: '' });
-const editForm = useForm({ customer_id: '', internet_package_id: '', account_number: '', router_sn: '', customer_address: '', customer_address_long: '', customer_address_lat: '', internet_status: '', usage_upload_kb: '', usage_download_kb: '', company_notes: '' });
+const createForm = useForm({ customer_id: '', internet_package_id: '', account_number: '', router_sn: '', customer_address: '', customer_address_long: '', customer_address_lat: '', internet_status: 'active', company_notes: '' });
+const editForm = useForm({ customer_id: '', internet_package_id: '', account_number: '', router_sn: '', customer_address: '', customer_address_long: '', customer_address_lat: '', internet_status: '', company_notes: '' });
 
 function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; }
 function submitCreate() { createForm.post('/karyawan/langganan-customer', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Langganan berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal.') }); }
-function openEdit(item) { editForm.customer_id = item.customer_id; editForm.internet_package_id = item.internet_package_id; editForm.account_number = item.account_number || ''; editForm.router_sn = item.router_sn || ''; editForm.customer_address = item.customer_address || ''; editForm.customer_address_long = item.customer_address_long || ''; editForm.customer_address_lat = item.customer_address_lat || ''; editForm.internet_status = item.internet_status; editForm.usage_upload_kb = item.usage_upload_kb; editForm.usage_download_kb = item.usage_download_kb; editForm.company_notes = item.company_notes; editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; }
+function openEdit(item) { editForm.customer_id = item.customer_id; editForm.internet_package_id = item.internet_package_id; editForm.account_number = item.account_number || ''; editForm.router_sn = item.router_sn || ''; editForm.customer_address = item.customer_address || ''; editForm.customer_address_long = item.customer_address_long || ''; editForm.customer_address_lat = item.customer_address_lat || ''; editForm.internet_status = item.internet_status; editForm.company_notes = item.company_notes; editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; }
 function submitEdit() { editForm.put('/karyawan/langganan-customer/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Langganan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal.') }); }
 function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
@@ -361,16 +361,6 @@ onMounted(() => { });
                   <input v-model="createForm.customer_address_lat" type="text" placeholder="-7.xxx" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
                 </div>
               </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usage Upload (KB)</label>
-                  <input v-model="createForm.usage_upload_kb" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usage Download (KB)</label>
-                  <input v-model="createForm.usage_download_kb" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                </div>
-              </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
                 <select v-model="createForm.internet_status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none">
@@ -438,16 +428,6 @@ onMounted(() => { });
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Koordinat Lat</label>
                   <input v-model="editForm.customer_address_lat" type="text" placeholder="-7.xxx" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                </div>
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usage Upload (KB)</label>
-                  <input v-model="editForm.usage_upload_kb" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usage Download (KB)</label>
-                  <input v-model="editForm.usage_download_kb" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
                 </div>
               </div>
               <div>

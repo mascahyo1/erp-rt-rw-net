@@ -23,8 +23,6 @@ class CustInternet extends Model
         'customer_address',
         'customer_address_long',
         'customer_address_lat',
-        'usage_upload_kb',
-        'usage_download_kb',
         'internet_status',
         'company_notes',
     ];
@@ -32,8 +30,6 @@ class CustInternet extends Model
     protected function casts(): array
     {
         return [
-            'usage_upload_kb' => 'decimal:2',
-            'usage_download_kb' => 'decimal:2',
             'customer_address_lat' => 'decimal:7',
         ];
     }

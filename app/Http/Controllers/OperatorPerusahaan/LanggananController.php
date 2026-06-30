@@ -8,6 +8,7 @@ use App\Models\CustInternet;
 use App\Models\InternetPackage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -70,8 +71,6 @@ class LanggananController extends Controller
                 'customer_address_long' => $item->customer_address_long,
                 'customer_address_lat' => $item->customer_address_lat,
                 'internet_status' => $item->internet_status,
-                'usage_upload_kb' => $item->usage_upload_kb,
-                'usage_download_kb' => $item->usage_download_kb,
                 'company_notes' => $item->company_notes,
                 'billing_amount' => $item->internetPackage?->price,
                 'dihapus' => $item->trashed(),
@@ -98,8 +97,6 @@ class LanggananController extends Controller
             'customer_address_long' => ['nullable', 'string'],
             'customer_address_lat' => ['nullable', 'numeric'],
             'internet_status' => ['required', 'string', Rule::in(['active', 'inactive', 'suspended', 'terminated'])],
-            'usage_upload_kb' => ['nullable', 'numeric', 'min:0'],
-            'usage_download_kb' => ['nullable', 'numeric', 'min:0'],
             'company_notes' => ['nullable', 'string', 'max:500'],
         ], [
             'account_number.unique' => 'Nomor akun sudah digunakan untuk pelanggan ini.',
@@ -121,8 +118,6 @@ class LanggananController extends Controller
             'customer_address_long' => ['nullable', 'string'],
             'customer_address_lat' => ['nullable', 'numeric'],
             'internet_status' => ['required', 'string', Rule::in(['active', 'inactive', 'suspended', 'terminated'])],
-            'usage_upload_kb' => ['nullable', 'numeric', 'min:0'],
-            'usage_download_kb' => ['nullable', 'numeric', 'min:0'],
             'company_notes' => ['nullable', 'string', 'max:500'],
         ], [
             'account_number.unique' => 'Nomor akun sudah digunakan untuk pelanggan ini.',
@@ -194,7 +189,7 @@ class LanggananController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Daftar Langganan');
 
-        $headers = ['No. Akun', 'Nama Customer', 'Email', 'No. HP', 'Nama Paket', 'Router SN', 'Status', 'Usage Upload (KB)', 'Usage Download (KB)', 'Tagihan', 'Catatan', 'Tanggal Dibuat'];
+        $headers = ['No. Akun', 'Nama Customer', 'Email', 'No. HP', 'Nama Paket', 'Router SN', 'Status', 'Tagihan', 'Catatan', 'Tanggal Dibuat'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
@@ -215,8 +210,6 @@ class LanggananController extends Controller
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->router_sn ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $statusLabel = match($item->internet_status) { 'active' => 'Aktif', 'inactive' => 'Nonaktif', 'suspended' => 'Suspend', 'terminated' => 'Terminasi', default => $item->internet_status };
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $statusLabel, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
-            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->usage_upload_kb);
-            $sheet->setCellValue($this->excelColumn($col++) . $row, $item->usage_download_kb);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, (string) ($item->internetPackage?->price ? number_format((float) $item->internetPackage->price, 0, ',', '.') : '0'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->company_notes ?? '', \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
             $sheet->setCellValueExplicit($this->excelColumn($col++) . $row, $item->created_at->format('Y-m-d H:i'), \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
@@ -243,14 +236,14 @@ class LanggananController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template Import');
 
-        $headers = ['No. Akun', 'Kode Customer', 'Kode Paket', 'Router SN', 'Status (active/inactive/suspended/terminated)', 'Usage Upload (KB)', 'Usage Download (KB)', 'Catatan'];
+        $headers = ['No. Akun', 'Kode Customer', 'Kode Paket', 'Router SN', 'Status (active/inactive/suspended/terminated)', 'Catatan'];
         foreach ($headers as $i => $h) {
             $col = $this->excelColumn($i + 1);
             $sheet->setCellValue("{$col}1", $h);
             $sheet->getStyle("{$col}1")->getFont()->setBold(true);
         }
 
-        $example = ['ACC-001', 'CUST-001', 'PAKET-10MBPS', '', 'active', '0', '0', ''];
+        $example = ['ACC-001', 'CUST-001', 'PAKET-10MBPS', '', 'active', ''];
         foreach ($example as $i => $v) {
             $sheet->setCellValueExplicit($this->excelColumn($i + 1) . '2', (string) $v, \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_STRING);
         }
@@ -295,9 +288,7 @@ class LanggananController extends Controller
             $packageCode = trim($row[2] ?? '');
             $routerSn = trim($row[3] ?? '');
             $status = strtolower(trim($row[4] ?? '')) ?: 'active';
-            $usageUpload = is_numeric($row[5] ?? '') ? (float)$row[5] : 0;
-            $usageDownload = is_numeric($row[6] ?? '') ? (float)$row[6] : 0;
-            $companyNotes = trim($row[7] ?? '');
+            $companyNotes = trim($row[5] ?? '');
 
             if (!$accountNumber || !$customerCode || !$packageCode) {
                 $errors[] = "Baris " . ($idx + 2) . ": No. Akun, Kode Customer, dan Kode Paket wajib diisi";
@@ -334,15 +325,13 @@ class LanggananController extends Controller
             }
 
             $inserts[] = [
-                'id' => \App\Support\Str::uuidV7(),
+                'id' => (string) Str::uuid7(),
                 'company_id' => $companyId,
                 'customer_id' => $customer->id,
                 'internet_package_id' => $package->id,
                 'account_number' => $accountNumber,
                 'router_sn' => $routerSn ?: null,
                 'internet_status' => $status,
-                'usage_upload_kb' => $usageUpload,
-                'usage_download_kb' => $usageDownload,
                 'company_notes' => $companyNotes ?: null,
                 'created_at' => now(),
                 'updated_at' => now(),

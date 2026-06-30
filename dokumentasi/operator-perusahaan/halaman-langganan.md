@@ -102,8 +102,6 @@ Langganan adalah hubungan antara pelanggan dengan paket layanan internet yang me
 | `customer_address` | string | Alamat pelanggan (nullable) |
 | `customer_address_long` | text | Koordinat longitude (nullable) |
 | `customer_address_lat` | decimal(10,7) | Koordinat latitude (nullable) |
-| `usage_upload_kb` | decimal | Total upload dalam KB |
-| `usage_download_kb` | decimal | Total download dalam KB |
 | `internet_status` | enum | active, inactive, suspended, terminated |
 | `company_notes` | text | Catatan internal (nullable) |
 | `billing_amount` | decimal | Jumlah tagihan (nullable) |
@@ -118,6 +116,7 @@ Langganan adalah hubungan antara pelanggan dengan paket layanan internet yang me
 |-----------|-------|
 | `2026_05_11_142443_create_cust_internets_table` | `cust_internets` |
 | `2026_05_24_082445_add_address_columns_to_cust_internets_table` | `cust_internets` (add customer_address, customer_address_long, customer_address_lat) |
+| `2026_06_30_120000_drop_usage_columns_from_cust_internets_table` | `cust_internets` (drop usage_upload_kb, usage_download_kb — bukan tempat tracking usage per periode) |
 | `2026_05_11_142201_create_customers_table` | `customers` |
 | `2026_05_11_141134_create_internet_packages_table` | `internet_packages` |
 
@@ -129,15 +128,13 @@ Langganan adalah hubungan antara pelanggan dengan paket layanan internet yang me
 | account_number | required, string, max:50, unique per customer_id |
 | router_sn | nullable, string, max:100 |
 | internet_status | required, in:active,inactive,suspended,terminated |
-| usage_upload_kb | nullable, numeric, min:0 |
-| usage_download_kb | nullable, numeric, min:0 |
 | company_notes | nullable, string, max:500 |
 
 ### Import Excel
-Template kolom: No. Akun, Customer ID (UUID), Paket ID (UUID), Router SN, Status, Usage Upload (KB), Usage Download (KB), Catatan
+Template kolom: No. Akun, Customer ID (UUID), Paket ID (UUID), Router SN, Status, Catatan
 
 ### Export Excel
-Kolom export: No. Akun, Nama Customer, Email, No. HP, Nama Paket, Router SN, Status, Usage Upload (KB), Usage Download (KB), Tagihan, Catatan, Tanggal Dibuat
+Kolom export: No. Akun, Nama Customer, Email, No. HP, Nama Paket, Router SN, Status, Tagihan, Catatan, Tanggal Dibuat
 
 ### Test Case
 | File | Description |
