@@ -51,6 +51,9 @@ onUnmounted(() => { mediaQuery?.removeEventListener('change', applyTheme); turns
 function renderTurnstileElements() {
   if (!window.turnstile) return;
   document.querySelectorAll('.cf-turnstile:not([data-ts-rendered])').forEach((el) => {
+    // Skip kalau auto-render script sudah berhasil add iframe — double render
+    // bisa throw TurnstileError 110200 kalau 2 render race di element yg sama.
+    if (el.querySelector('iframe')) return;
     el.setAttribute('data-ts-rendered', '1');
     try {
       window.turnstile.render(el, {

@@ -79,6 +79,9 @@ function closeMobileMenu() {
 function renderTurnstileElements() {
   if (!window.turnstile) return;
   document.querySelectorAll('.cf-turnstile:not([data-ts-rendered])').forEach((el) => {
+    // Skip kalau auto-render script sudah berhasil add iframe — double render
+    // bisa throw TurnstileError 110200 kalau 2 render race di element yg sama.
+    if (el.querySelector('iframe')) return;
     el.setAttribute('data-ts-rendered', '1');
     try {
       window.turnstile.render(el, {
@@ -87,7 +90,7 @@ function renderTurnstileElements() {
         'expired-callback': el.dataset.expiredCallback ? window[el.dataset.expiredCallback] : undefined,
       });
     } catch (e) {
-      // Widget sudah di-render (auto-render sukses duluan atau idempotent call) — abaikan.
+      // Widget sudah di-render duluan (auto-render atau idempotent call) — abaikan.
       console.warn('Turnstile render skipped:', e.message);
     }
   });
