@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, onBeforeUnmount } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
@@ -72,20 +72,61 @@ function closeMobileMenu() {
 // Cloudflare Turnstile script
 // ========================
 // Load challenges.cloudflare.com script sekali per page load (idempotent).
-// Widget <div class="cf-turnstile"> di halaman login akan auto-render
-// saat script ready. Idempotent guard supaya kalau layout di-mount
-// ulang (mis. navigasi Inertia), script tidak di-load 2x.
+// Auto-render dari script sering miss di incognito first load karena
+// script load telat (no cache) bisa overlap dengan Vue <Transition>
+// enter animation, jadi kita juga explicit render via ?onload callback
+// + MutationObserver untuk handle element yang di-add setelah script load.
+function renderTurnstileElements() {
+  if (!window.turnstile) return;
+  document.querySelectorAll('.cf-turnstile:not([data-ts-rendered])').forEach((el) => {
+    // Skip kalau auto-render script sudah berhasil add iframe — double render
+    // bisa throw TurnstileError 110200 kalau 2 render race di element yg sama.
+    if (el.querySelector('iframe')) return;
+    el.setAttribute('data-ts-rendered', '1');
+    try {
+      window.turnstile.render(el, {
+        sitekey: el.dataset.sitekey,
+        callback: el.dataset.callback ? window[el.dataset.callback] : undefined,
+        'expired-callback': el.dataset.expiredCallback ? window[el.dataset.expiredCallback] : undefined,
+      });
+    } catch (e) {
+      // Widget sudah di-render duluan (auto-render atau idempotent call) — abaikan.
+      console.warn('Turnstile render skipped:', e.message);
+    }
+  });
+}
+
+// Global callback dipanggil Turnstile script via ?onload=... setelah script ready.
+// Di-share antar layout (LandingLayout & KaryawanLayout) supaya tidak duplikat.
+if (!window.onTurnstileLoaded) {
+  window.onTurnstileLoaded = renderTurnstileElements;
+}
+
+let turnstileObserver = null;
+function startTurnstileObserver() {
+  if (turnstileObserver || !document.body) return;
+  turnstileObserver = new MutationObserver(() => {
+    if (window.turnstile) renderTurnstileElements();
+  });
+  turnstileObserver.observe(document.body, { childList: true, subtree: true });
+}
+
 function loadTurnstileScript() {
   if (document.getElementById('cf-turnstile-script')) return;
   const s = document.createElement('script');
   s.id = 'cf-turnstile-script';
-  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoaded';
   s.async = true;
   s.defer = true;
   document.head.appendChild(s);
 }
 onMounted(() => {
   loadTurnstileScript();
+  startTurnstileObserver();
+});
+onBeforeUnmount(() => {
+  turnstileObserver?.disconnect();
+  turnstileObserver = null;
 });
 
 // ========================

@@ -67,10 +67,10 @@ function submit() {
 
 <template>
   <div>
-    <section class="min-h-[calc(100vh-200px)] flex">
-      <div class="flex-1 grid lg:grid-cols-2">
+    <section class="min-h-[calc(100vh-200px)] flex overflow-x-hidden">
+      <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-w-0">
         <!-- Left: branded panel (animated orbs) -->
-        <div class="relative overflow-hidden bg-linear-to-br from-indigo-600 via-indigo-700 to-purple-700 flex items-center justify-center px-6 py-16 lg:py-0">
+        <div class="relative overflow-hidden bg-linear-to-br from-indigo-600 via-indigo-700 to-purple-700 flex items-center justify-center px-4 sm:px-6 py-16 lg:py-0 min-w-0">
           <div class="absolute -top-32 -right-32 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-blob"></div>
           <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-purple-400/20 rounded-full blur-3xl animate-blob-slow"></div>
           <div class="absolute top-1/2 right-1/4 w-40 h-40 bg-indigo-300/20 rounded-full blur-2xl animate-blob"></div>

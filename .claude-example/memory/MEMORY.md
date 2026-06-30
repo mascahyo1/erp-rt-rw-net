@@ -5,3 +5,5 @@
 - [Test artifacts no-commit](test-artifacts-no-commit.md) — Screenshots/HTML/WebM dari Playwright JANGAN di-commit (.gitignore sudah ada patterns); pakai `git status` dulu sebelum `git add`
 - [dotenv-hash-comment-bug](dotenv-hash-comment-bug.md) — PHP dotenv anggap `#` di secret key sebagai comment delimiter → silent truncation. Selalu quote value yg punya `#`.
 - [no-creds-in-repo](no-creds-in-repo.md) — JANGAN taruh SSH wrapper/askpass/credential script di dalam git repo. Taruh di `~/scripts/` atau `~/.ssh/`.
+- [deploy-dev-env](deploy-dev-env.md) — Dev env pattern: branch `dev`, path `/var/www/dev-erp-rt-rw-net`, DB `erp_rt_rw_net_dev`, bucket `erp-rt-rw-net-dev`, vhost `dev-net.cahyosoft.local`.
+- [no-passwords-in-chat](no-passwords-in-chat.md) — JANGAN tulis password literal di chat output (transcript = log). Reference file/secret, peek first/last 4 chars max.

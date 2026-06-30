@@ -77,9 +77,9 @@ function submit() {
 
 <template>
     <Head title="Login Perusahaan" />
-    <section class="min-h-[calc(100vh-200px)] flex">
-        <div class="flex-1 grid lg:grid-cols-2">
-            <div class="relative overflow-hidden bg-linear-to-br from-sky-500 via-sky-600 to-blue-700 flex items-center justify-center px-6 py-16 lg:py-0">
+    <section class="min-h-[calc(100vh-200px)] flex overflow-x-hidden">
+        <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-w-0">
+            <div class="relative overflow-hidden bg-linear-to-br from-sky-500 via-sky-600 to-blue-700 flex items-center justify-center px-4 sm:px-6 py-16 lg:py-0 min-w-0">
                 <div class="absolute -top-32 -right-32 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-blob"></div>
                 <div class="absolute -bottom-24 -left-24 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl animate-blob-slow"></div>
                 <div class="absolute top-1/3 right-1/3 w-48 h-48 bg-sky-300/20 rounded-full blur-2xl animate-blob"></div>

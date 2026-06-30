@@ -128,7 +128,7 @@ class RiwayatInsentifController extends Controller
 
         $attachmentPath = null;
         if ($request->hasFile('attachment')) {
-            $attachmentPath = $request->file('attachment')->store('insentif-attachments', 'disk');
+            $attachmentPath = $request->file('attachment')->store('insentif-attachments', 'minio');
         }
 
         $payload = [
@@ -187,7 +187,7 @@ class RiwayatInsentifController extends Controller
         ];
 
         if ($request->hasFile('attachment')) {
-            $data['attachment'] = $request->file('attachment')->store('insentif-attachments', 'disk');
+            $data['attachment'] = $request->file('attachment')->store('insentif-attachments', 'minio');
         }
 
         $empIncentiveLog->update($data);
@@ -243,7 +243,7 @@ class RiwayatInsentifController extends Controller
         ];
 
         if ($request->hasFile('review_attachment')) {
-            $data['review_attachment'] = $request->file('review_attachment')->store('insentif-reviews', 'disk');
+            $data['review_attachment'] = $request->file('review_attachment')->store('insentif-reviews', 'minio');
         }
 
         $log->update($data);
@@ -280,7 +280,7 @@ class RiwayatInsentifController extends Controller
         ];
 
         if ($request->hasFile('review_attachment')) {
-            $data['review_attachment'] = $request->file('review_attachment')->store('insentif-reviews', 'disk');
+            $data['review_attachment'] = $request->file('review_attachment')->store('insentif-reviews', 'minio');
         }
 
         $count = 0;

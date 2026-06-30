@@ -37,20 +37,55 @@ const themeIcon = computed(() => theme.value === 'light' ? 'fa-sun' : theme.valu
 function applyTheme() { document.documentElement.classList.toggle('dark', isDark.value); }
 function toggleTheme() { if (theme.value === 'light') theme.value = 'dark'; else if (theme.value === 'dark') theme.value = 'system'; else theme.value = 'light'; localStorage.setItem('theme', theme.value); applyTheme(); }
 let mediaQuery;
-onMounted(() => { applyTheme(); mediaQuery = window.matchMedia('(prefers-color-scheme: dark)'); mediaQuery.addEventListener('change', applyTheme); loadTurnstileScript(); });
-onUnmounted(() => mediaQuery?.removeEventListener('change', applyTheme));
+onMounted(() => { applyTheme(); mediaQuery = window.matchMedia('(prefers-color-scheme: dark)'); mediaQuery.addEventListener('change', applyTheme); loadTurnstileScript(); startTurnstileObserver(); });
+onUnmounted(() => { mediaQuery?.removeEventListener('change', applyTheme); turnstileObserver?.disconnect(); turnstileObserver = null; });
 
 // ========================
 // Cloudflare Turnstile script
 // ========================
 // Load challenges.cloudflare.com script sekali per page load (idempotent).
-// Widget <div class="cf-turnstile"> di halaman login akan auto-render
-// saat script ready.
+// Auto-render dari script sering miss di incognito first load karena
+// script load telat (no cache) bisa overlap dengan Vue <Transition>
+// enter animation, jadi kita juga explicit render via ?onload callback
+// + MutationObserver untuk handle element yang di-add setelah script load.
+function renderTurnstileElements() {
+  if (!window.turnstile) return;
+  document.querySelectorAll('.cf-turnstile:not([data-ts-rendered])').forEach((el) => {
+    // Skip kalau auto-render script sudah berhasil add iframe — double render
+    // bisa throw TurnstileError 110200 kalau 2 render race di element yg sama.
+    if (el.querySelector('iframe')) return;
+    el.setAttribute('data-ts-rendered', '1');
+    try {
+      window.turnstile.render(el, {
+        sitekey: el.dataset.sitekey,
+        callback: el.dataset.callback ? window[el.dataset.callback] : undefined,
+        'expired-callback': el.dataset.expiredCallback ? window[el.dataset.expiredCallback] : undefined,
+      });
+    } catch (e) {
+      console.warn('Turnstile render skipped:', e.message);
+    }
+  });
+}
+
+// Global callback di-share antar layout (LandingLayout & KaryawanLayout).
+if (!window.onTurnstileLoaded) {
+  window.onTurnstileLoaded = renderTurnstileElements;
+}
+
+let turnstileObserver = null;
+function startTurnstileObserver() {
+  if (turnstileObserver || !document.body) return;
+  turnstileObserver = new MutationObserver(() => {
+    if (window.turnstile) renderTurnstileElements();
+  });
+  turnstileObserver.observe(document.body, { childList: true, subtree: true });
+}
+
 function loadTurnstileScript() {
   if (document.getElementById('cf-turnstile-script')) return;
   const s = document.createElement('script');
   s.id = 'cf-turnstile-script';
-  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+  s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoaded';
   s.async = true;
   s.defer = true;
   document.head.appendChild(s);

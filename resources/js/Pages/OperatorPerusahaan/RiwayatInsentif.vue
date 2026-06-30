@@ -80,10 +80,12 @@ function changePerPage(n) { perPage.value = n; fetchData({ per_page: n, page: 1 
 function statusBadgeClass(s) { if (s === 'approved') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'; if (s === 'pending') return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'; return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'; }
 function statusLabel(s) { if (s === 'approved') return 'Disetujui'; if (s === 'pending') return 'Pending'; if (s === 'rejected') return 'Ditolak'; return s; }
 
-const createForm = useForm({ emp_incentive_id: '', cust_internet_invcs_id: '', invoice_number: '', amount: '', date: '', submitted_by_id: '', submitted_by_name: '', reason: '', attachment: null });
+function todayIso() { const d = new Date(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return d.getFullYear() + '-' + m + '-' + day; }
+
+const createForm = useForm({ emp_incentive_id: '', cust_internet_invcs_id: '', invoice_number: '', amount: '', date: todayIso(), submitted_by_id: '', submitted_by_name: '', reason: '', attachment: null });
 const editForm = useForm({ emp_incentive_id: '', cust_internet_invcs_id: '', invoice_number: '', amount: '', date: '', submitted_by_id: '', submitted_by_name: '', reason: '', attachment: null });
 
-function openCreate() { createForm.reset(); createForm.clearErrors(); createForm.attachment = null; showCreateModal.value = true; }
+function openCreate() { createForm.reset(); createForm.clearErrors(); createForm.attachment = null; createForm.date = todayIso(); showCreateModal.value = true; }
 function submitCreate() {
   createForm.post('/operator-perusahaan/riwayat-insentif', {
     preserveState: true, preserveScroll: true,
