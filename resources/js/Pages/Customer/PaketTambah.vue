@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
+import LocationPicker from '@/Components/LocationPicker.vue';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
@@ -20,8 +21,11 @@ const props = defineProps({
 const form = ref({
   internet_package_id: '',
   customer_address: '',
+  customer_address_long: '',
+  customer_address_lat: '',
   company_notes: '',
 });
+const locationPicker = ref(null);
 
 onMounted(() => {
   // Pre-select paket from query param or preselected prop
@@ -72,6 +76,8 @@ async function submitForm() {
       const fd = new FormData();
       fd.append('internet_package_id', form.value.internet_package_id);
       fd.append('customer_address', form.value.customer_address);
+      fd.append('customer_address_long', form.value.customer_address_long || '');
+      fd.append('customer_address_lat', form.value.customer_address_lat || '');
       fd.append('company_notes', form.value.company_notes || '');
       return fd;
     })(),
@@ -148,6 +154,20 @@ async function submitForm() {
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat Instalasi <span class="text-red-500">*</span></label>
           <textarea v-model="form.customer_address" rows="3" placeholder="Alamat lengkap tempat pemasangan" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none', formErrors.customer_address ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-emerald-500']"></textarea>
           <p v-if="formErrors.customer_address" class="text-red-500 text-xs mt-1">{{ formErrors.customer_address }}</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+            <i class="fas fa-map-marker-alt mr-1 text-emerald-600 dark:text-emerald-400"></i>Titik Lokasi
+          </label>
+          <LocationPicker
+            ref="locationPicker"
+            v-model:lat="form.customer_address_lat"
+            v-model:lng="form.customer_address_long"
+          />
+          <p v-if="formErrors.customer_address_long || formErrors.customer_address_lat" class="text-red-500 text-xs mt-1">
+            {{ formErrors.customer_address_long?.[0] || formErrors.customer_address_lat?.[0] }}
+          </p>
         </div>
 
         <div>
