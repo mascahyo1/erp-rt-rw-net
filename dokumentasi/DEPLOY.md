@@ -1,7 +1,8 @@
 # Deployment Guide
 
-> Production deploy: `net.cahyosoft.my.id` (Laravel) + pma/minio subdomains.
-> Dev deploy: `dev-net.cahyosoft.my.id` (Laravel).
+> Production deploy: `net.cahyosoft.my.id` (Laravel) — **alias: `jmpgroup.id`**.
+> Dev deploy: `dev-net.cahyosoft.my.id` (Laravel) — **alias: `dev.jmpgroup.id`**.
+> MinIO + phpMyAdmin **tidak** punya alias — tetap via subdomain `*.cahyosoft.my.id`.
 > Semua akses via **Cloudflare Tunnel** — port 80 publik gak langsung dibuka.
 >
 > **INGAT: jangan commit password / API key / SSH credential apapun.**
@@ -20,10 +21,14 @@ Cloudflare Edge (proxy/reverse proxy)
     ▼
 Apache 2.4 (localhost:80, server 10.26.26.7 internal)
     ├─ pma.cahyosoft.local       → /var/www/pma/public                  → pma.cahyosoft.my.id
-    ├─ net.cahyosoft.local       → /var/www/erp-rt-rw-net/public        → net.cahyosoft.my.id
-    ├─ dev-net.cahyosoft.local   → /var/www/dev-erp-rt-rw-net/public    → dev-net.cahyosoft.my.id
+    ├─ net.cahyosoft.local       → /var/www/erp-rt-rw-net/public        → net.cahyosoft.my.id, jmpgroup.id
+    ├─ dev-net.cahyosoft.local   → /var/www/dev-erp-rt-rw-net/public    → dev-net.cahyosoft.my.id, dev.jmpgroup.id
     ├─ minio-api.cahyosoft.local :9000 (MinIO API, NOT Apache)          → minio-api.cahyosoft.my.id
     └─ minio-web.cahyosoft.local :9001 (MinIO Console, NOT Apache)      → minio-web.cahyosoft.my.id
+
+Catatan: `jmpgroup.id` & `dev.jmpgroup.id` adalah **alias tambahan** (ServerAlias
+di vhost yg sama) — gak ada vhost/listener terpisah. MinIO + phpMyAdmin TIDAK
+punya alias; tetap hanya via `*.cahyosoft.my.id`.
 ```
 
 ---
@@ -74,7 +79,7 @@ Apache 2.4 (localhost:80, server 10.26.26.7 internal)
 ```apache
 <VirtualHost *:80>
     ServerName net.cahyosoft.local
-    ServerAlias net.cahyosoft.my.id
+    ServerAlias net.cahyosoft.my.id jmpgroup.id www.jmpgroup.id
     DocumentRoot /var/www/erp-rt-rw-net/public
 
     <Directory /var/www/erp-rt-rw-net/public>
@@ -93,7 +98,7 @@ Apache 2.4 (localhost:80, server 10.26.26.7 internal)
 ```apache
 <VirtualHost *:80>
     ServerName dev-net.cahyosoft.local
-    ServerAlias dev-net.cahyosoft.my.id
+    ServerAlias dev-net.cahyosoft.my.id dev.jmpgroup.id www.dev.jmpgroup.id
     DocumentRoot /var/www/dev-erp-rt-rw-net/public
 
     <Directory /var/www/dev-erp-rt-rw-net/public>
@@ -106,6 +111,10 @@ Apache 2.4 (localhost:80, server 10.26.26.7 internal)
     CustomLog ${APACHE_LOG_DIR}/dev-net-access.log combined
 </VirtualHost>
 ```
+
+> `www.jmpgroup.id` & `www.dev.jmpgroup.id` opsional — tambahkan kalau mau
+> user yang ngetik `www.` prefix juga resolve. Apex `jmpgroup.id` selalu
+> di-serve tanpa prefix.
 
 ### Template vhost (phpMyAdmin)
 
@@ -135,9 +144,13 @@ Apache 2.4 (localhost:80, server 10.26.26.7 internal)
 127.0.0.1 localhost
 127.0.0.1 pma.local
 127.0.0.1 pma.cahyosoft.my.id pma.cahyosoft.local
-127.0.0.1 net.cahyosoft.my.id net.cahyosoft.local
-127.0.0.1 dev-net.cahyosoft.my.id dev-net.cahyosoft.local
+127.0.0.1 net.cahyosoft.my.id net.cahyosoft.local jmpgroup.id www.jmpgroup.id
+127.0.0.1 dev-net.cahyosoft.my.id dev-net.cahyosoft.local dev.jmpgroup.id www.dev.jmpgroup.id
 ```
+
+> Entry `jmpgroup.id` di `/etc/hosts` WAJIB — tanpa ini Apache vhost
+> `ServerAlias jmpgroup.id` gak akan match kalau Cloudflare tunnel
+> forward pakai hostname `jmpgroup.id` (lihat §4 Service URL trap).
 
 ### Aktivasi
 
@@ -164,10 +177,19 @@ sudo systemctl reload apache2
 |-------------------|------------------------|---------|
 | `pma.cahyosoft.my.id` | `http://pma.local:80` | phpMyAdmin (Apache) |
 | `net.cahyosoft.my.id` | `http://net.cahyosoft.local:80` | Laravel prod (Apache) |
+| `jmpgroup.id` | `http://net.cahyosoft.local:80` | Laravel prod (alias, Apache) |
+| `www.jmpgroup.id` | `http://net.cahyosoft.local:80` | Laravel prod (alias www, Apache) |
 | `dev-net.cahyosoft.my.id` | `http://dev-net.cahyosoft.local:80` | Laravel dev (Apache) |
+| `dev.jmpgroup.id` | `http://dev-net.cahyosoft.local:80` | Laravel dev (alias, Apache) |
+| `www.dev.jmpgroup.id` | `http://dev-net.cahyosoft.local:80` | Laravel dev (alias www, Apache) |
 | `minio-api.cahyosoft.my.id` | `http://pma.local:9000` | MinIO API |
 | `minio-web.cahyosoft.my.id` | `http://pma.local:9001` | MinIO Console |
 
+> ⚠️ `jmpgroup.id` & `dev.jmpgroup.id` adalah domain **terpisah** dari
+> `cahyosoft.my.id` — keduanya harus di-add ke Cloudflare (zero-trust zone
+> atau DNS zone yg sama). DNS record `jmpgroup.id` di-point ke tunnel
+> endpoint (CNAME `<tunnel-id>.cfargotunnel.com`) — lihat §11 catatan.
+>
 > ⚠️ Service URL HARUS hostname internal yang ada di `/etc/hosts`, BUKAN `localhost`.
 > Kalau set ke `http://localhost:80` untuk `net.cahyosoft.my.id` → redirect loop / 400.
 > `pma.local` ada di `/etc/hosts` jadi boleh dipakai untuk yang non-Laravel (pma, minio).
@@ -274,7 +296,13 @@ Akses `https://pma.cahyosoft.my.id/setup/` sekali setelah install:
 APP_NAME="ERP RT/RW Net"
 APP_ENV=production      # atau "local" untuk dev
 APP_DEBUG=false         # atau "true" untuk dev
-APP_URL=https://net.cahyosoft.my.id   # atau https://dev-net.cahyosoft.my.id
+APP_URL=https://jmpgroup.id          # atau https://dev.jmpgroup.id (dev)
+#   Alternatif legacy (kalau APP_URL masih nyimpen versi lama):
+#     prod: https://net.cahyosoft.my.id
+#     dev:  https://dev-net.cahyosoft.my.id
+#   Pilih SATU — ini yang dipakai Laravel untuk generate signed URL,
+#   password reset link, file proxy URL, dst. Domain lain tetap bisa
+#   diakses user karena Apache ServerAlias multiple domain → 1 vhost.
 
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
@@ -361,11 +389,108 @@ sudo a2ensite dev-net.cahyosoft.local && sudo systemctl reload apache2
 
 | Service | URL |
 |---------|-----|
-| Laravel Production | https://net.cahyosoft.my.id |
-| Laravel Dev | https://dev-net.cahyosoft.my.id |
+| Laravel Production | https://net.cahyosoft.my.id (legacy) / https://jmpgroup.id (alias aktif, APP_URL) |
+| Laravel Dev | https://dev-net.cahyosoft.my.id (legacy) / https://dev.jmpgroup.id (alias aktif, APP_URL) |
 | phpMyAdmin | https://pma.cahyosoft.my.id |
 | MinIO Console | https://minio-web.cahyosoft.my.id |
 | MinIO API | https://minio-api.cahyosoft.my.id (S3 endpoint, not browser-friendly) |
+
+> Alias `www.jmpgroup.id` & `www.dev.jmpgroup.id` juga resolve kalau
+> ServerAlias di vhost di-tambah dan route di Cloudflare dashboard ada.
+
+### Setup `jmpgroup.id` & `dev.jmpgroup.id` (alias step-by-step)
+
+Alias sudah ada di vhost + `/etc/hosts` pattern (lihat §3). Untuk
+mengaktifkan end-to-end, kedua sisi harus ikut di-config:
+
+**1. Server-side (per server, sekali):**
+
+```bash
+# Backup vhost existing
+sudo cp /etc/apache2/sites-available/net.cahyosoft.local.conf \
+        /etc/apache2/sites-available/net.cahyosoft.local.conf.bak.$(date +%Y%m%d)
+sudo cp /etc/apache2/sites-available/dev-net.cahyosoft.local.conf \
+        /etc/apache2/sites-available/dev-net.cahyosoft.local.conf.bak.$(date +%Y%m%d)
+
+# Tambah ServerAlias (pakai sed atau edit manual)
+sudo sed -i 's/ServerAlias net.cahyosoft.my.id/ServerAlias net.cahyosoft.my.id jmpgroup.id www.jmpgroup.id/' \
+    /etc/apache2/sites-available/net.cahyosoft.local.conf
+sudo sed -i 's/ServerAlias dev-net.cahyosoft.my.id/ServerAlias dev-net.cahyosoft.my.id dev.jmpgroup.id www.dev.jmpgroup.id/' \
+    /etc/apache2/sites-available/dev-net.cahyosoft.local.conf
+
+# Verify (HARUS ada jmpgroup.id di ServerAlias line net.cahyosoft.local.conf)
+grep ServerAlias /etc/apache2/sites-available/net.cahyosoft.local.conf
+grep ServerAlias /etc/apache2/sites-available/dev-net.cahyosoft.local.conf
+
+# Tambah /etc/hosts entry
+sudo tee -a /etc/hosts > /dev/null << 'EOF'
+127.0.0.1 jmpgroup.id www.jmpgroup.id
+127.0.0.1 dev.jmpgroup.id www.dev.jmpgroup.id
+EOF
+
+# Reload Apache (gak restart, biar gak disrupt existing traffic)
+sudo apache2ctl configtest   # WAJIB: "Syntax OK" sebelum reload
+sudo systemctl reload apache2
+```
+
+**2. Laravel `.env` (per environment):**
+
+```bash
+# Di server, edit /var/www/erp-rt-rw-net/.env (prod) & /var/www/dev-erp-rt-rw-net/.env (dev)
+# Ganti APP_URL line jadi:
+#   prod: APP_URL=https://jmpgroup.id
+#   dev:  APP_URL=https://dev.jmpgroup.id
+#
+# Lalu clear caches biar route cache, signed URL, dsb re-generate pakai host baru:
+cd /var/www/erp-rt-rw-net
+php8.5 artisan config:clear
+php8.5 artisan route:clear
+php8.5 artisan view:clear
+php8.5 artisan storage:link   # idempotent
+```
+
+> Setelah `APP_URL` ganti, **password reset link** & **file proxy URL**
+> akan generate pakai host baru. User yg sudah punya reset link dari
+> host lama masih valid (signed URL independent of APP_URL setelah
+> di-sign), tapi link baru akan pakai host baru.
+
+**3. Cloudflare dashboard (WAJIB — gak bisa di-script):**
+
+`jmpgroup.id` adalah domain **terpisah** dari `cahyosoft.my.id`. Server
+gak punya public IP — semua akses HARUS via Cloudflare Tunnel yg sama.
+
+Step:
+1. **Add jmpgroup.id ke Cloudflare account** (Free plan cukup):
+   - Dashboard → Add Site → `jmpgroup.id` → Free plan
+   - Cloudflare akan kasih 2 nameserver (`xxx.ns.cloudflare.com`)
+2. **Update nameserver di registrar `jmpgroup.id`** ke ns Cloudflare di atas
+   (propagasi DNS 5 menit – 24 jam)
+3. **Add public hostname di tunnel existing** (Zero Trust → Networks → Tunnels → tunnel existing → Configure → Public Hostname):
+   | Subdomain | Type | Domain | Service URL |
+   |-----------|------|--------|-------------|
+   | (apex) | HTTPS | `jmpgroup.id` | `http://net.cahyosoft.local:80` |
+   | www | HTTPS | `jmpgroup.id` | `http://net.cahyosoft.local:80` |
+   | dev | HTTPS | `jmpgroup.id` | `http://dev-net.cahyosoft.local:80` |
+   | (apex dev) | HTTPS | `dev.jmpgroup.id` | `http://dev-net.cahyosoft.local:80` |
+   | www dev | HTTPS | `dev.jmpgroup.id` | `http://dev-net.cahyosoft.local:80` |
+   - TIDAK perlu setting TLS di tunnel (Cloudflare auto-issue cert)
+   - HTTP→HTTPS: di tab "Additional application settings" → TLS → set ke "OFF" (default) atau "ON" sesuai preferensi
+4. **Verify**:
+   ```bash
+   # Dari workstation, setelah DNS propagasi:
+   curl -sIL https://jmpgroup.id/login-perusahaan | grep -E "HTTP|location"
+   # Expected: 200 OK langsung (atau 302 ke /login)
+   # WRONG: redirect loop ke host yg sama
+   ```
+
+⚠️ **Konsiderasi:**
+- Kalau `jmpgroup.id` ditambah di **Cloudflare account yg sama** dengan
+  `cahyosoft.my.id`, tunnel & DNS lebih simpel (tinggal add public
+  hostname). Kalau beda account, tunnel Cloudflare cuma bisa route ke
+  Zone yg sama — perlu pindah `jmpgroup.id` ke account yg sama atau
+  bikin tunnel baru.
+- `MinIO` & `phpMyAdmin` **TIDAK** punya alias — tetap di
+  `*.cahyosoft.my.id` (gak diubah).
 
 ### Internal (server-local, Apache)
 
