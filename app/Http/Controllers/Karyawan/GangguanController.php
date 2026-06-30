@@ -102,7 +102,7 @@ class GangguanController extends Controller
      *   issue_dimulai_dari               : date (required)
      *
      *   # Multi-file attachments (BuktiIssue), parallel arrays, index-aligned
-     *   attachments_bukti_issue[]        : file[] (jpg,jpeg,png,webp,pdf|max:2048) (nullable)
+     *   attachments_bukti_issue[]        : file[] (jpg,jpeg,png,webp,pdf|max:5120) (nullable)
      *   attachment_names[]               : string[] (parallel; user-facing label per file)
      *   attachment_descriptions[]        : string[] (parallel, nullable)
      */
@@ -116,7 +116,7 @@ class GangguanController extends Controller
             'catatan' => ['required', 'string', 'max:2000'],
             'issue_dimulai_dari' => ['required', 'date'],
             'attachments_bukti_issue' => ['nullable', 'array'],
-            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'attachment_names' => ['nullable', 'array'],
             'attachment_names.*' => ['nullable', 'string', 'max:255'],
             'attachment_descriptions' => ['nullable', 'array'],
@@ -181,14 +181,14 @@ class GangguanController extends Controller
             'attachments_to_keep' => ['nullable', 'array'],
             'attachments_to_keep.*' => ['string', 'uuid'],
             'attachments_bukti_issue_selesai' => ['nullable', 'array'],
-            'attachments_bukti_issue_selesai.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachments_bukti_issue_selesai.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'attachment_names' => ['nullable', 'array'],
             'attachment_names.*' => ['nullable', 'string', 'max:255'],
             'attachment_descriptions' => ['nullable', 'array'],
             'attachment_descriptions.*' => ['nullable', 'string', 'max:1000'],
             // Existing BuktiIssue edits (kadang customer update tiket mereka)
             'attachments_bukti_issue' => ['nullable', 'array'],
-            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
         ]);
 
         $data = [];
@@ -247,7 +247,7 @@ class GangguanController extends Controller
             'attachments_to_keep' => ['nullable', 'array'],
             'attachments_to_keep.*' => ['string', 'uuid'],
             'attachments_bukti_issue_selesai' => ['nullable', 'array'],
-            'attachments_bukti_issue_selesai.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachments_bukti_issue_selesai.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'attachment_names' => ['nullable', 'array'],
             'attachment_names.*' => ['nullable', 'string', 'max:255'],
             'attachment_descriptions' => ['nullable', 'array'],

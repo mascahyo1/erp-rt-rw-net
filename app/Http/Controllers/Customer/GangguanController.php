@@ -93,7 +93,7 @@ class GangguanController extends Controller
             'catatan' => ['required', 'string', 'max:2000'],
             'issue_dimulai_dari' => ['required', 'date'],
             'attachments_bukti_issue' => ['nullable', 'array'],
-            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:2048'],
+            'attachments_bukti_issue.*' => ['file', 'mimes:jpg,jpeg,png,webp,pdf', 'max:5120'],
             'attachment_names' => ['nullable', 'array'],
             'attachment_names.*' => ['nullable', 'string', 'max:255'],
             'attachment_descriptions' => ['nullable', 'array'],
