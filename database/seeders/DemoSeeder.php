@@ -425,6 +425,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Melati No. 12, RT 03 RW 05',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -439,6 +440,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Anggrek No. 5, RT 02 RW 05',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -453,6 +455,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Mawar No. 8, RT 01 RW 05',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -467,6 +470,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Kenanga No. 3, RT 04 RW 05',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -481,6 +485,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Cendana No. 10, RT 02 RW 03',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -495,6 +500,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Cempaka No. 7, RT 01 RW 03',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -509,6 +515,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Dahlia No. 15, RT 03 RW 03',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -523,6 +530,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Flamboyan No. 2, RT 05 RW 02',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -537,6 +545,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Asoka No. 11, RT 05 RW 02',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -551,6 +560,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Teratai No. 6, RT 06 RW 02',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -565,6 +575,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Bougenville No. 9, RT 01 RW 07',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -579,6 +590,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Nusa Indah No. 4, RT 02 RW 07',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
             [
                 'id' => Str::uuid(),
@@ -593,6 +605,7 @@ class DemoSeeder extends Seeder
                 'address' => 'Jl. Edelweis No. 13, RT 03 RW 07',
                 'created_at' => now(),
                 'updated_at' => now(),
+                'email_verified_at' => now(),
             ],
         ]);
 
