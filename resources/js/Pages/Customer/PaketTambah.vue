@@ -143,10 +143,23 @@ async function submitForm() {
           </div>
           <h3 class="text-lg font-bold text-gray-900 dark:text-white">{{ selectedPaket.nama }}</h3>
           <div class="grid grid-cols-2 gap-2 text-sm">
-            <div><span class="text-gray-500 dark:text-gray-400">Harga:</span> <strong class="text-emerald-600 dark:text-emerald-400">{{ formatRupiah(selectedPaket.harga) }}</strong>{{ selectedPaket.billing_cycle ? ' / ' + selectedPaket.billing_cycle : '' }}</div>
-            <div><span class="text-gray-500 dark:text-gray-400">Kecepatan:</span> <strong>{{ formatSpeed(selectedPaket.kecepatan_down_kbps, selectedPaket.kecepatan_up_kbps) }}</strong></div>
-            <div v-if="selectedPaket.kuota_gb"><span class="text-gray-500 dark:text-gray-400">Kuota:</span> <strong>{{ selectedPaket.kuota_gb }} GB</strong></div>
-            <div v-if="selectedPaket.max_devices"><span class="text-gray-500 dark:text-gray-400">Maks Perangkat:</span> <strong>{{ selectedPaket.max_devices }}</strong></div>
+            <div>
+              <span class="text-gray-500 dark:text-gray-400">Harga:</span>
+              <strong class="text-emerald-600 dark:text-emerald-400">{{ formatRupiah(selectedPaket.harga) }}</strong>
+              <span v-if="selectedPaket.billing_cycle" class="text-gray-500 dark:text-gray-400">{{ ' / ' + selectedPaket.billing_cycle }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500 dark:text-gray-400">Kecepatan:</span>
+              <strong class="text-gray-900 dark:text-white">{{ formatSpeed(selectedPaket.kecepatan_down_kbps, selectedPaket.kecepatan_up_kbps) }}</strong>
+            </div>
+            <div v-if="selectedPaket.kuota_gb">
+              <span class="text-gray-500 dark:text-gray-400">Kuota:</span>
+              <strong class="text-gray-900 dark:text-white">{{ selectedPaket.kuota_gb }} GB</strong>
+            </div>
+            <div v-if="selectedPaket.max_devices">
+              <span class="text-gray-500 dark:text-gray-400">Maks Perangkat:</span>
+              <strong class="text-gray-900 dark:text-white">{{ selectedPaket.max_devices }}</strong>
+            </div>
           </div>
         </div>
 
