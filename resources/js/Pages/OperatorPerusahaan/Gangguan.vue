@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
 import { useToast } from '@/Composables/useToast';
@@ -8,6 +8,9 @@ import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: OperatorPerusahaanLayout });
 
+const ATT_TYPE_BUKTI_ISSUE = 'bukti_issue';
+const ATT_TYPE_BUKTI_ISSUE_SELESAI = 'bukti_issue_selesai';
+
 const props = defineProps({
   gangguans: Object,
   filters: Object,
@@ -15,6 +18,7 @@ const props = defineProps({
   employees: { type: Array, default: () => [] },
   statusPengerjaanOptions: { type: Array, default: () => [] },
   statusVerifikasiOptions: { type: Array, default: () => [] },
+  attachmentTypeOptions: { type: Array, default: () => [] },
 });
 
 const toast = useToast();
@@ -40,12 +44,49 @@ const importing = ref(false);
 const importFile = ref(null);
 const selectedItem = ref(null);
 
-const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '', issue_diselesaikan_pada: '', file_bukti_issue: null });
-const editForm = useForm({ main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', status_pengerjaan: '', issue_dimulai_dari: '', issue_diselesaikan_pada: '', file_bukti_issue: null, file_bukti_issue_diselesaikan: null, alasan_verifikasi: '', status_verifikasi: '' });
+const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '', issue_diselesaikan_pada: '' });
+const editForm = useForm({ main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', status_pengerjaan: '', issue_dimulai_dari: '', issue_diselesaikan_pada: '', alasan_verifikasi: '', status_verifikasi: '' });
 const verifyForm = useForm({ status_verifikasi: '', alasan_verifikasi: '' });
-const createFormFile = ref(null);
-const editFormFileIssue = ref(null);
-const editFormFileSelesai = ref(null);
+
+const createAttachments = reactive({
+  [ATT_TYPE_BUKTI_ISSUE]: { files: [], names: [], descs: [] },
+});
+const editAttachments = reactive({
+  [ATT_TYPE_BUKTI_ISSUE]: { files: [], names: [], descs: [] },
+  [ATT_TYPE_BUKTI_ISSUE_SELESAI]: { files: [], names: [], descs: [] },
+});
+const createExistingAttachments = ref({ [ATT_TYPE_BUKTI_ISSUE]: [] });
+const editExistingAttachments = ref({ [ATT_TYPE_BUKTI_ISSUE]: [], [ATT_TYPE_BUKTI_ISSUE_SELESAI]: [] });
+
+function addAttachmentFile(typeKey, stateRef, file) {
+  stateRef[typeKey].files.push(file);
+  stateRef[typeKey].names.push('');
+  stateRef[typeKey].descs.push('');
+}
+function removeAttachmentFile(typeKey, stateRef, index) {
+  stateRef[typeKey].files.splice(index, 1);
+  stateRef[typeKey].names.splice(index, 1);
+  stateRef[typeKey].descs.splice(index, 1);
+}
+async function deleteAttachment(modalState, typeKey, attachmentId, gangguanId) {
+  if (!confirm('Hapus attachment ini?')) return;
+  try {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const resp = await fetch(`/operator-perusahaan/gangguan/${gangguanId}/attachments/${attachmentId}`, {
+      method: 'DELETE', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok) {
+      const list = modalState.value?.[typeKey] || [];
+      modalState.value[typeKey] = list.filter(a => a.id !== attachmentId);
+      toast.success('Attachment dihapus.');
+    } else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+  } catch (e) { toast.error('Error: ' + e.message); }
+}
+function resetAttachmentState() {
+  Object.keys(createAttachments).forEach(k => { createAttachments[k].files = []; createAttachments[k].names = []; createAttachments[k].descs = []; });
+  Object.keys(editAttachments).forEach(k => { editAttachments[k].files = []; editAttachments[k].names = []; editAttachments[k].descs = []; });
+}
 // State untuk searchable additional PICs (chip-style)
 const additionalPicInput = ref(null);
 const additionalPics = ref([]); // [{ employee_id, employee_name }]
@@ -148,7 +189,13 @@ async function submitBulkVerify() {
 const items = computed(() => props.gangguans?.data || []);
 const pagination = computed(() => ({ current: props.gangguans?.current_page || 1, last: props.gangguans?.last_page || 1, total: props.gangguans?.total || 0 }));
 
-function openCreate() { createForm.reset(); createForm.clearErrors(); createFormFile.value = null; additionalPics.value = []; showCreateModal.value = true; }
+function openCreate() {
+  createForm.reset(); createForm.clearErrors();
+  resetAttachmentState();
+  createExistingAttachments.value = { [ATT_TYPE_BUKTI_ISSUE]: [] };
+  additionalPics.value = [];
+  showCreateModal.value = true;
+}
 function addAdditionalPic(employeeId, employeeName) {
   if (!employeeId) return;
   if (employeeId === createForm.main_pic_employee_id) { toast.error('Sudah jadi PIC Utama.'); return; }
@@ -167,12 +214,14 @@ async function submitCreate() {
   fd.append('catatan', createForm.catatan);
   fd.append('issue_dimulai_dari', createForm.issue_dimulai_dari);
   if (createForm.issue_diselesaikan_pada) fd.append('issue_diselesaikan_pada', createForm.issue_diselesaikan_pada);
-  if (createFormFile.value) fd.append('file_bukti_issue', createFormFile.value);
+  createAttachments[ATT_TYPE_BUKTI_ISSUE].files.forEach(f => fd.append('attachments_bukti_issue[]', f));
+  createAttachments[ATT_TYPE_BUKTI_ISSUE].names.forEach(n => fd.append('attachment_names[]', n));
+  createAttachments[ATT_TYPE_BUKTI_ISSUE].descs.forEach(d => fd.append('attachment_descriptions[]', d));
   try {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const resp = await fetch('/operator-perusahaan/gangguan', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, body: fd });
     const data = await resp.json().catch(() => ({}));
-    if (resp.ok) { showCreateModal.value = false; additionalPics.value = []; toast.success('Tiket berhasil dibuat.'); fetchData(); }
+    if (resp.ok) { showCreateModal.value = false; additionalPics.value = []; resetAttachmentState(); toast.success('Tiket berhasil dibuat.'); fetchData(); }
     else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
@@ -180,14 +229,17 @@ async function submitCreate() {
 function openEdit(item) {
   editForm.reset(); editForm.clearErrors();
   editForm.main_pic_employee_id = item.assigned_to_employee_id || '';
-  editForm.catatan = item.catatan;
+  editForm.catatan = item.catatan || '';
   editForm.status_pengerjaan = item.status_pengerjaan;
   editForm.issue_dimulai_dari = item.issue_dimulai_dari ? item.issue_dimulai_dari.substring(0, 16) : '';
   editForm.issue_diselesaikan_pada = item.issue_diselesaikan_pada ? item.issue_diselesaikan_pada.substring(0, 16) : '';
   editForm.alasan_verifikasi = item.alasan_verifikasi || '';
   editForm.status_verifikasi = item.status_verifikasi;
-  editFormFileIssue.value = null; editFormFileSelesai.value = null;
-  // Pre-populate additional pics
+  resetAttachmentState();
+  editExistingAttachments.value = {
+    [ATT_TYPE_BUKTI_ISSUE]: item.attachments?.[ATT_TYPE_BUKTI_ISSUE] || [],
+    [ATT_TYPE_BUKTI_ISSUE_SELESAI]: item.attachments?.[ATT_TYPE_BUKTI_ISSUE_SELESAI] || [],
+  };
   additionalPics.value = (item.additional_pics || []).map(p => ({ employee_id: p.employee_id, employee_name: p.employee_name }));
   selectedItem.value = item;
   showEditModal.value = true;
@@ -203,13 +255,21 @@ async function submitEdit() {
   if (editForm.issue_diselesaikan_pada) fd.append('issue_diselesaikan_pada', editForm.issue_diselesaikan_pada);
   fd.append('alasan_verifikasi', editForm.alasan_verifikasi || '');
   fd.append('status_verifikasi', editForm.status_verifikasi || '');
-  if (editFormFileIssue.value) fd.append('file_bukti_issue', editFormFileIssue.value);
-  if (editFormFileSelesai.value) fd.append('file_bukti_issue_diselesaikan', editFormFileSelesai.value);
+  const keepIds = [];
+  editExistingAttachments.value[ATT_TYPE_BUKTI_ISSUE].forEach(a => keepIds.push(a.id));
+  editExistingAttachments.value[ATT_TYPE_BUKTI_ISSUE_SELESAI].forEach(a => keepIds.push(a.id));
+  keepIds.forEach(id => fd.append('attachments_to_keep[]', id));
+  editAttachments[ATT_TYPE_BUKTI_ISSUE].files.forEach(f => fd.append('attachments_bukti_issue[]', f));
+  editAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI].files.forEach(f => fd.append('attachments_bukti_issue_selesai[]', f));
+  const allNames = [...editAttachments[ATT_TYPE_BUKTI_ISSUE].names, ...editAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI].names];
+  const allDescs = [...editAttachments[ATT_TYPE_BUKTI_ISSUE].descs, ...editAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI].descs];
+  allNames.forEach(n => fd.append('attachment_names[]', n));
+  allDescs.forEach(d => fd.append('attachment_descriptions[]', d));
   try {
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     const resp = await fetch(`/operator-perusahaan/gangguan/${selectedItem.value.id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, body: fd });
     const data = await resp.json().catch(() => ({}));
-    if (resp.ok) { showEditModal.value = false; toast.success('Tiket berhasil diperbarui.'); fetchData(); }
+    if (resp.ok) { showEditModal.value = false; resetAttachmentState(); toast.success('Tiket berhasil diperbarui.'); fetchData(); }
     else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
@@ -396,7 +456,20 @@ async function submitImport() {
         <SearchableSelectAjax data-testid="select-additional-pic" :url="'/operator-perusahaan/api/search/employees'" placeholder="— Tambah PIC Tambahan —" display-key="name" @update:modelValue="(v) => { if (v) { const emp = employees.find(e => e.id === v); if (emp) addAdditionalPic(emp.id, emp.name); }}" />
       </div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Foto Bukti (opsional)</label><input data-testid="input-file-bukti" @change="e => createFormFile = e.target.files[0]" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-400 hover:file:bg-sky-100 dark:hover:file:bg-sky-900/50" /></div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue <span class="text-xs text-gray-400">(opsional, bisa lebih dari 1 file)</span></label>
+        <div v-if="createAttachments[ATT_TYPE_BUKTI_ISSUE].files.length > 0" class="space-y-2 mb-2">
+          <div v-for="(f, i) in createAttachments[ATT_TYPE_BUKTI_ISSUE].files" :key="i" data-testid="create-attachment-row" class="p-2.5 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-lg space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-sky-700 dark:text-sky-300"><i class="fas fa-paperclip mr-1"></i>{{ f.name }} ({{ Math.round(f.size/1024) }} KB)</span>
+              <button type="button" data-testid="btn-remove-attachment" @click="removeAttachmentFile(ATT_TYPE_BUKTI_ISSUE, createAttachments, i)" class="text-xs text-red-600 hover:text-red-700"><i class="fas fa-times"></i></button>
+            </div>
+            <input v-model="createAttachments[ATT_TYPE_BUKTI_ISSUE].names[i]" placeholder="Nama / label file (opsional)" class="w-full px-2 py-1 text-xs border border-sky-300 dark:border-sky-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-sky-500 outline-none" />
+            <input v-model="createAttachments[ATT_TYPE_BUKTI_ISSUE].descs[i]" placeholder="Keterangan (opsional)" class="w-full px-2 py-1 text-xs border border-sky-300 dark:border-sky-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-sky-500 outline-none" />
+          </div>
+        </div>
+        <input data-testid="input-file-bukti" @change="e => { for (const f of e.target.files) addAttachmentFile(ATT_TYPE_BUKTI_ISSUE, createAttachments, f); e.target.value = ''; }" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-400 hover:file:bg-sky-100 dark:hover:file:bg-sky-900/50" />
+      </div>
     </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-simpan" type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>Simpan</button></div></form></div></Transition></Teleport>
 
     <!-- Edit Modal -->
@@ -408,8 +481,46 @@ async function submitImport() {
       </div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan</label><textarea data-testid="textarea-catatan" v-model="editForm.catatan" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan Verifikasi</label><textarea data-testid="textarea-alasan" v-model="editForm.alasan_verifikasi" rows="2" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue (kosongkan jika tidak diubah)</label><input data-testid="input-file-bukti" @change="e => editFormFileIssue = e.target.files[0]" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-400 hover:file:bg-sky-100 dark:hover:file:bg-sky-900/50" /></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Selesai (kosongkan jika tidak diubah)</label><input data-testid="input-file-bukti-selesai" @change="e => editFormFileSelesai = e.target.files[0]" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-400 hover:file:bg-sky-100 dark:hover:file:bg-sky-900/50" /></div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue</label>
+        <div v-if="editExistingAttachments[ATT_TYPE_BUKTI_ISSUE].length > 0" class="space-y-1.5 mb-2">
+          <div v-for="att in editExistingAttachments[ATT_TYPE_BUKTI_ISSUE]" :key="att.id" data-testid="existing-attachment-row" class="flex items-center justify-between p-2 bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded text-xs">
+            <div class="flex items-center gap-2 truncate">
+              <i class="fas fa-paperclip text-sky-500"></i>
+              <a :href="att.url" target="_blank" class="text-sky-700 dark:text-sky-300 hover:underline truncate">{{ att.file_name }}</a>
+            </div>
+            <button type="button" data-testid="btn-delete-attachment" @click="deleteAttachment(editExistingAttachments, ATT_TYPE_BUKTI_ISSUE, att.id, selectedItem.id)" class="text-red-600 hover:text-red-700 ml-2"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </div>
+        <div v-if="editAttachments[ATT_TYPE_BUKTI_ISSUE].files.length > 0" class="space-y-2 mb-2">
+          <div v-for="(f, i) in editAttachments[ATT_TYPE_BUKTI_ISSUE].files" :key="i" data-testid="edit-attachment-new-row" class="p-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg space-y-1.5">
+            <div class="flex items-center justify-between"><span class="text-xs font-medium text-emerald-700 dark:text-emerald-300"><i class="fas fa-plus mr-1"></i>{{ f.name }} ({{ Math.round(f.size/1024) }} KB)</span><button type="button" @click="removeAttachmentFile(ATT_TYPE_BUKTI_ISSUE, editAttachments, i)" class="text-xs text-red-600 hover:text-red-700"><i class="fas fa-times"></i></button></div>
+            <input v-model="editAttachments[ATT_TYPE_BUKTI_ISSUE].names[i]" placeholder="Nama / label" class="w-full px-2 py-1 text-xs border border-emerald-300 dark:border-emerald-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none" />
+            <input v-model="editAttachments[ATT_TYPE_BUKTI_ISSUE].descs[i]" placeholder="Keterangan" class="w-full px-2 py-1 text-xs border border-emerald-300 dark:border-emerald-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none" />
+          </div>
+        </div>
+        <input data-testid="input-file-bukti" @change="e => { for (const f of e.target.files) addAttachmentFile(ATT_TYPE_BUKTI_ISSUE, editAttachments, f); e.target.value = ''; }" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-sky-50 file:text-sky-700 dark:file:bg-sky-900/30 dark:file:text-sky-400 hover:file:bg-sky-100 dark:hover:file:bg-sky-900/50" />
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue Selesai</label>
+        <div v-if="editExistingAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI].length > 0" class="space-y-1.5 mb-2">
+          <div v-for="att in editExistingAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI]" :key="att.id" data-testid="existing-attachment-row" class="flex items-center justify-between p-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded text-xs">
+            <div class="flex items-center gap-2 truncate">
+              <i class="fas fa-paperclip text-emerald-500"></i>
+              <a :href="att.url" target="_blank" class="text-emerald-700 dark:text-emerald-300 hover:underline truncate">{{ att.file_name }}</a>
+            </div>
+            <button type="button" data-testid="btn-delete-attachment" @click="deleteAttachment(editExistingAttachments, ATT_TYPE_BUKTI_ISSUE_SELESAI, att.id, selectedItem.id)" class="text-red-600 hover:text-red-700 ml-2"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </div>
+        <div v-if="editAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI].files.length > 0" class="space-y-2 mb-2">
+          <div v-for="(f, i) in editAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI].files" :key="i" data-testid="edit-attachment-new-row" class="p-2.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg space-y-1.5">
+            <div class="flex items-center justify-between"><span class="text-xs font-medium text-emerald-700 dark:text-emerald-300"><i class="fas fa-plus mr-1"></i>{{ f.name }} ({{ Math.round(f.size/1024) }} KB)</span><button type="button" @click="removeAttachmentFile(ATT_TYPE_BUKTI_ISSUE_SELESAI, editAttachments, i)" class="text-xs text-red-600 hover:text-red-700"><i class="fas fa-times"></i></button></div>
+            <input v-model="editAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI].names[i]" placeholder="Nama / label" class="w-full px-2 py-1 text-xs border border-emerald-300 dark:border-emerald-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none" />
+            <input v-model="editAttachments[ATT_TYPE_BUKTI_ISSUE_SELESAI].descs[i]" placeholder="Keterangan" class="w-full px-2 py-1 text-xs border border-emerald-300 dark:border-emerald-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-1 focus:ring-emerald-500 outline-none" />
+          </div>
+        </div>
+        <input data-testid="input-file-bukti-selesai" @change="e => { for (const f of e.target.files) addAttachmentFile(ATT_TYPE_BUKTI_ISSUE_SELESAI, editAttachments, f); e.target.value = ''; }" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700 dark:file:bg-emerald-900/30 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50" />
+      </div>
     </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showEditModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-update" type="submit" :disabled="editForm.processing" class="px-6 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Update</button></div></form></div></Transition></Teleport>
 
     <!-- Verify Modal -->
@@ -432,8 +543,18 @@ async function submitImport() {
         <div><label class="text-xs text-gray-500 dark:text-gray-400">Tgl Selesai</label><p class="text-sm text-gray-900 dark:text-white">{{ formatDate(selectedItem.issue_diselesaikan_pada) }}</p></div>
         <div class="col-span-2"><label class="text-xs text-gray-500 dark:text-gray-400">Catatan</label><p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ selectedItem.catatan }}</p></div>
         <div v-if="selectedItem.alasan_verifikasi" class="col-span-2"><label class="text-xs text-gray-500 dark:text-gray-400">Alasan Verifikasi</label><p class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ selectedItem.alasan_verifikasi }}</p></div>
-        <div v-if="selectedItem.file_bukti_issue_url"><label class="text-xs text-gray-500 dark:text-gray-400">Bukti Issue</label><a :href="selectedItem.file_bukti_issue_url" target="_blank" class="inline-flex items-center mt-1 px-3 py-1.5 bg-sky-600 text-white text-xs rounded-lg hover:bg-sky-700"><i class="fas fa-image mr-1"></i>Lihat</a></div>
-        <div v-if="selectedItem.file_bukti_issue_diselesaikan_url"><label class="text-xs text-gray-500 dark:text-gray-400">Bukti Selesai</label><a :href="selectedItem.file_bukti_issue_diselesaikan_url" target="_blank" class="inline-flex items-center mt-1 px-3 py-1.5 bg-sky-600 text-white text-xs rounded-lg hover:bg-sky-700"><i class="fas fa-image mr-1"></i>Lihat</a></div>
+        <div v-if="(selectedItem.attachments?.bukti_issue?.length || 0) > 0" class="col-span-2">
+          <label class="text-xs text-gray-500 dark:text-gray-400">Bukti Issue ({{ selectedItem.attachments.bukti_issue.length }})</label>
+          <div class="flex flex-wrap gap-1.5 mt-1">
+            <a v-for="att in selectedItem.attachments.bukti_issue" :key="att.id" :href="att.url" target="_blank" data-testid="detail-attachment-issue" class="inline-flex items-center px-2.5 py-1 bg-sky-600 text-white text-xs rounded-lg hover:bg-sky-700"><i class="fas fa-image mr-1"></i>{{ att.file_name }}</a>
+          </div>
+        </div>
+        <div v-if="(selectedItem.attachments?.bukti_issue_selesai?.length || 0) > 0" class="col-span-2">
+          <label class="text-xs text-gray-500 dark:text-gray-400">Bukti Selesai ({{ selectedItem.attachments.bukti_issue_selesai.length }})</label>
+          <div class="flex flex-wrap gap-1.5 mt-1">
+            <a v-for="att in selectedItem.attachments.bukti_issue_selesai" :key="att.id" :href="att.url" target="_blank" data-testid="detail-attachment-selesai" class="inline-flex items-center px-2.5 py-1 bg-emerald-600 text-white text-xs rounded-lg hover:bg-emerald-700"><i class="fas fa-image mr-1"></i>{{ att.file_name }}</a>
+          </div>
+        </div>
       </div>
     </div></div></div></Transition></Teleport>
 

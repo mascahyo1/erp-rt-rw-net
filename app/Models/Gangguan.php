@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\FileAttachmentType;
 use App\Enums\SupportTicketPengerjaanStatus;
 use App\Enums\SupportTicketVerifikasiStatus;
 use App\Models\Traits\HasBlameable;
+use App\Models\Traits\HasFileAttachments;
 use App\Models\Traits\HasSoftDelete;
 use App\Models\Traits\HasUuidV7;
 use Illuminate\Database\Eloquent\Model;
@@ -17,12 +19,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * Flow:
  *   1. Customer / Karyawan / Perusahaan create tiket → status_pengerjaan=open, status_verifikasi=pending
  *   2. Karyawan / Perusahaan kerja → status_pengerjaan=in_progress + set assigned_to_employee_id
- *   3. Selesaikan → status_pengerjaan=resolved + upload file_bukti_issue_diselesaikan + set issue_diselesaikan_pada
+ *   3. Selesaikan → status_pengerjaan=resolved + upload attachments (bukti_issue_selesai) + set issue_diselesaikan_pada
  *   4. Admin Perusahaan verify → status_verifikasi=approved|rejected + alasan_verifikasi
+ *
+ * Multi-file attachment via polymorphic `file_attachments` table
+ * (lihat {@see HasFileAttachments}).
  */
 class Gangguan extends Model
 {
-    use HasUuidV7, HasBlameable, HasSoftDelete;
+    use HasUuidV7, HasBlameable, HasSoftDelete, HasFileAttachments;
 
     protected $table = 'support_tickets';
 
@@ -34,8 +39,6 @@ class Gangguan extends Model
         'catatan',
         'status_pengerjaan',
         'status_verifikasi',
-        'file_bukti_issue',
-        'file_bukti_issue_diselesaikan',
         'alasan_verifikasi',
         'issue_dimulai_dari',
         'issue_diselesaikan_pada',
@@ -84,6 +87,22 @@ class Gangguan extends Model
     }
 
     /**
+     * Backward-compat legacy URL getter.
+     * DEPRECATED: pakai $gangguan->attachmentsByType(FileAttachmentType::BuktiIssue)->first()?->url
+     */
+    public function getFileBuktiIssueUrlAttribute(): ?string
+    {
+        $first = $this->attachmentsByType(FileAttachmentType::BuktiIssue)->first();
+        return $first?->url;
+    }
+
+    public function getFileBuktiIssueDiselesaikanUrlAttribute(): ?string
+    {
+        $first = $this->attachmentsByType(FileAttachmentType::BuktiIssueSelesai)->first();
+        return $first?->url;
+    }
+
+    /**
      * Backfill PIC: kalau tiket punya assigned_to_employee_id tapi belum ada PIC record,
      * otomatis create PIC utama (idempotent: skip kalau sudah ada).
      */
@@ -91,20 +110,5 @@ class Gangguan extends Model
     {
         // Placeholder: kalau di masa depan ada logic backfill, taruh di sini.
         // Untuk sekarang, PIC hanya dibuat dari form (bukan auto-backfill).
-    }
-
-    /**
-     * URL file_bukti_issue via file proxy (MinIO → browser).
-     */
-    public function getFileBuktiIssueUrlAttribute(): ?string
-    {
-        if (!$this->file_bukti_issue) return null;
-        return route('file.proxy', ['path' => $this->file_bukti_issue, 'disk' => 'minio']);
-    }
-
-    public function getFileBuktiIssueDiselesaikanUrlAttribute(): ?string
-    {
-        if (!$this->file_bukti_issue_diselesaikan) return null;
-        return route('file.proxy', ['path' => $this->file_bukti_issue_diselesaikan, 'disk' => 'minio']);
     }
 }

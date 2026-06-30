@@ -254,6 +254,9 @@ Route::middleware('auth:employee')->group(function () {
         ->delete('/karyawan/gangguan/{gangguan}', [$perusahaanNs.'\GangguanController', 'destroy']);
     Route::middleware('permission:karyawan-gangguan.restore')
         ->patch('/karyawan/gangguan/{id}/restore', [$perusahaanNs.'\GangguanController', 'restore']);
+    // Delete 1 attachment (polymorphic file_attachments)
+    Route::middleware('permission:karyawan-gangguan.edit')
+        ->delete('/karyawan/gangguan/{gangguan}/attachments/{attachment}', [$perusahaanNs.'\GangguanController', 'destroyAttachment']);
     // Bulk actions (karyawan: delete + restore; verify = wewenang admin)
     Route::middleware('permission:karyawan-gangguan.delete')
         ->post('/karyawan/gangguan/bulk-delete', [$perusahaanNs.'\GangguanController', 'bulkDestroy']);
