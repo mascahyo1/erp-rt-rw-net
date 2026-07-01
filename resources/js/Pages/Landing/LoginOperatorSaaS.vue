@@ -67,7 +67,19 @@ function submit() {
     setTimeout(() => formCard.value?.classList.remove('shake'), 500);
     return;
   }
-  form.post('/login-operator-saas');
+  form.post('/login-operator-saas', {
+    // Reset Turnstile widget setelah submit (token one-time use).
+    onFinish: () => {
+      form.reset('password');
+      form['cf-turnstile-response'] = '';
+      if (window.turnstile) {
+        const widgets = document.querySelectorAll('.cf-turnstile');
+        widgets.forEach(w => {
+          try { window.turnstile.reset(w); } catch (e) { /* ignore */ }
+        });
+      }
+    },
+  });
 }
 </script>
 
