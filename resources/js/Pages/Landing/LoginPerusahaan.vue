@@ -29,6 +29,13 @@ function onTurnstileSuccess(token) {
 function onTurnstileExpired() {
     form['cf-turnstile-response'] = '';
 }
+
+/**
+ * Submit button disabled sampai Turnstile solved.
+ * - Kalau siteKey empty (dev/testing tanpa Turnstile) → always enabled
+ * - Kalau siteKey set → enabled hanya kalau form sudah punya token
+ */
+const turnstileSolved = computed(() => !siteKey.value || !!form['cf-turnstile-response']);
 // Expose callbacks ke window agar Turnstile widget (loaded async) bisa panggil.
 onMounted(() => {
     window.onTurnstileSuccess = onTurnstileSuccess;
@@ -198,12 +205,13 @@ function submit() {
 
                             <button
                                 type="submit"
-                                :disabled="form.processing"
+                                :disabled="form.processing || !turnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-sky-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <i v-if="form.processing" class="fas fa-spinner fa-spin mr-2"></i>
+                                <i v-else-if="!turnstileSolved" class="fas fa-shield-halved mr-2"></i>
                                 <i v-else class="fas fa-sign-in-alt mr-2"></i>
-                                {{ form.processing ? 'Memproses...' : 'Masuk' }}
+                                {{ form.processing ? 'Memproses...' : (!turnstileSolved ? 'Tunggu verifikasi captcha...' : 'Masuk') }}
                             </button>
 
                             <!-- Cloudflare Turnstile captcha widget -->

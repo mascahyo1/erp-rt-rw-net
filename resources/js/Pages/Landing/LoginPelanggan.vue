@@ -25,6 +25,17 @@ onMounted(() => {
     window.onRegisterTurnstileSuccess = onRegisterTurnstileSuccess;
     window.onRegisterTurnstileExpired = onRegisterTurnstileExpired;
 });
+
+/**
+ * computed: tombol submit disabled selama Turnstile BELUM solved.
+ * - Kalau siteKey empty (dev/testing tanpa Turnstile) → always enabled
+ * - Kalau siteKey set → enabled hanya kalau form sudah punya token
+ *
+ * UX: user GAK BISA submit form sebelum widget solved → gak akan
+ * dapat error "The cf-turnstile-response field is required".
+ */
+const loginTurnstileSolved = computed(() => !siteKey.value || !!loginForm['cf-turnstile-response']);
+const registerTurnstileSolved = computed(() => !siteKey.value || !!registerForm['cf-turnstile-response']);
 onBeforeUnmount(() => {
     delete window.onLoginTurnstileSuccess;
     delete window.onLoginTurnstileExpired;
@@ -298,12 +309,13 @@ function switchTab(tab) {
                             </div>
                             <button
                                 type="submit"
-                                :disabled="loginForm.processing"
+                                :disabled="loginForm.processing || !loginTurnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <i v-if="loginForm.processing" class="fas fa-spinner fa-spin mr-2"></i>
+                                <i v-else-if="!loginTurnstileSolved" class="fas fa-shield-halved mr-2"></i>
                                 <i v-else class="fas fa-sign-in-alt mr-2"></i>
-                                {{ loginForm.processing ? 'Memproses...' : 'Masuk' }}
+                                {{ loginForm.processing ? 'Memproses...' : (!loginTurnstileSolved ? 'Tunggu verifikasi captcha...' : 'Masuk') }}
                             </button>
 
                             <!-- Cloudflare Turnstile captcha widget (login) -->
@@ -442,12 +454,13 @@ function switchTab(tab) {
                             </div>
                             <button
                                 type="submit"
-                                :disabled="registerForm.processing"
+                                :disabled="registerForm.processing || !registerTurnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <i v-if="registerForm.processing" class="fas fa-spinner fa-spin mr-2"></i>
+                                <i v-else-if="!registerTurnstileSolved" class="fas fa-shield-halved mr-2"></i>
                                 <i v-else class="fas fa-user-plus mr-2"></i>
-                                {{ registerForm.processing ? 'Mendaftar...' : 'Daftar Sekarang' }}
+                                {{ registerForm.processing ? 'Mendaftar...' : (!registerTurnstileSolved ? 'Tunggu verifikasi captcha...' : 'Daftar Sekarang') }}
                             </button>
 
                             <!-- Cloudflare Turnstile captcha widget (register) -->
