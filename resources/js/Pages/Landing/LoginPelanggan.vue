@@ -18,14 +18,6 @@ function onLoginTurnstileSuccess(token) { loginForm['cf-turnstile-response'] = t
 function onLoginTurnstileExpired() { loginForm['cf-turnstile-response'] = ''; }
 function onRegisterTurnstileSuccess(token) { registerForm['cf-turnstile-response'] = token; }
 function onRegisterTurnstileExpired() { registerForm['cf-turnstile-response'] = ''; }
-// Expose callbacks ke window agar Turnstile widget (loaded async) bisa panggil.
-onMounted(() => {
-    window.onLoginTurnstileSuccess = onLoginTurnstileSuccess;
-    window.onLoginTurnstileExpired = onLoginTurnstileExpired;
-    window.onRegisterTurnstileSuccess = onRegisterTurnstileSuccess;
-    window.onRegisterTurnstileExpired = onRegisterTurnstileExpired;
-});
-
 /**
  * computed: tombol submit disabled selama Turnstile BELUM solved.
  * - Kalau siteKey empty (dev/testing tanpa Turnstile) → always enabled
@@ -34,8 +26,15 @@ onMounted(() => {
  * UX: user GAK BISA submit form sebelum widget solved → gak akan
  * dapat error "The cf-turnstile-response field is required".
  */
-const loginTurnstileSolved = computed(() => !siteKey.value || !!loginForm['cf-turnstile-response']);
-const registerTurnstileSolved = computed(() => !siteKey.value || !!registerForm['cf-turnstile-response']);
+// PENTING: Set window callbacks SYNCHRONOUSLY (top-level script), BUKAN onMounted.
+// LandingLayout's Turnstile MutationObserver bisa render widget SEBELUM component
+// ini onMounted (test keys auto-solve instan). Kalau window callback di-set di
+// onMounted, callback mungkin terlewat → form['cf-turnstile-response'] tetap
+// kosong → tombol STUCK di "Tunggu verifikasi captcha..." walau widget "Success!".
+window.onLoginTurnstileSuccess = onLoginTurnstileSuccess;
+window.onLoginTurnstileExpired = onLoginTurnstileExpired;
+window.onRegisterTurnstileSuccess = onRegisterTurnstileSuccess;
+window.onRegisterTurnstileExpired = onRegisterTurnstileExpired;
 onBeforeUnmount(() => {
     delete window.onLoginTurnstileSuccess;
     delete window.onLoginTurnstileExpired;
@@ -333,6 +332,7 @@ function switchTab(tab) {
                             </div>
                             <button
                                 type="submit"
+                                data-testid="btn-login-submit"
                                 :disabled="loginForm.processing || !loginTurnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -343,7 +343,7 @@ function switchTab(tab) {
                             </button>
 
                             <!-- Cloudflare Turnstile captcha widget (login) -->
-                            <div v-if="siteKey" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onLoginTurnstileSuccess" data-expired-callback="onLoginTurnstileExpired"></div>
+                            <div v-if="siteKey" data-testid="cf-turnstile-widget" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onLoginTurnstileSuccess" data-expired-callback="onLoginTurnstileExpired"></div>
                             <p v-if="loginForm.errors['cf-turnstile-response']" class="text-red-500 text-xs mt-1 flex items-center gap-1">
                                 <i class="fas fa-exclamation-circle"></i>
                                 {{ loginForm.errors['cf-turnstile-response'] }}
@@ -478,6 +478,7 @@ function switchTab(tab) {
                             </div>
                             <button
                                 type="submit"
+                                data-testid="btn-register-submit"
                                 :disabled="registerForm.processing || !registerTurnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -488,7 +489,7 @@ function switchTab(tab) {
                             </button>
 
                             <!-- Cloudflare Turnstile captcha widget (register) -->
-                            <div v-if="siteKey" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onRegisterTurnstileSuccess" data-expired-callback="onRegisterTurnstileExpired"></div>
+                            <div v-if="siteKey" data-testid="cf-turnstile-widget" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onRegisterTurnstileSuccess" data-expired-callback="onRegisterTurnstileExpired"></div>
                             <p v-if="registerForm.errors['cf-turnstile-response']" class="text-red-500 text-xs mt-1 flex items-center gap-1">
                                 <i class="fas fa-exclamation-circle"></i>
                                 {{ registerForm.errors['cf-turnstile-response'] }}

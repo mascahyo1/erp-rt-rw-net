@@ -36,11 +36,14 @@ function onTurnstileExpired() {
  * - siteKey set → enabled hanya kalau form sudah punya token
  */
 const turnstileSolved = computed(() => !siteKey.value || !!form['cf-turnstile-response']);
-// Expose callbacks ke window agar Turnstile widget (loaded async) bisa panggil.
-onMounted(() => {
-  window.onTurnstileSuccess = onTurnstileSuccess;
-  window.onTurnstileExpired = onTurnstileExpired;
-});
+
+// PENTING: Set window callbacks SYNCHRONOUSLY (top-level script), BUKAN onMounted.
+// LandingLayout's Turnstile MutationObserver bisa render widget SEBELUM component
+// ini onMounted (test keys auto-solve instan). Kalau window callback di-set di
+// onMounted, callback mungkin terlewat → form['cf-turnstile-response'] tetap
+// kosong → tombol STUCK di "Tunggu verifikasi captcha..." walau widget "Success!".
+window.onTurnstileSuccess = onTurnstileSuccess;
+window.onTurnstileExpired = onTurnstileExpired;
 onBeforeUnmount(() => {
   delete window.onTurnstileSuccess;
   delete window.onTurnstileExpired;
@@ -197,6 +200,7 @@ function submit() {
 
               <button
                 type="submit"
+                data-testid="btn-login-submit"
                 :disabled="form.processing || !turnstileSolved"
                 class="w-full py-2.5 bg-linear-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-indigo-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -207,7 +211,7 @@ function submit() {
               </button>
 
               <!-- Cloudflare Turnstile captcha widget -->
-              <div v-if="siteKey" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired"></div>
+              <div v-if="siteKey" data-testid="cf-turnstile-widget" class="cf-turnstile" :data-sitekey="siteKey" data-callback="onTurnstileSuccess" data-expired-callback="onTurnstileExpired"></div>
               <p v-if="form.errors['cf-turnstile-response']" class="text-red-500 text-xs mt-1 flex items-center gap-1">
                 <i class="fas fa-exclamation-circle"></i>
                 {{ form.errors['cf-turnstile-response'] }}
