@@ -77,17 +77,16 @@ function submit() {
         ...data,
         company_id: selectedCompany.value?.id ?? '',
     })).post('/login-perusahaan', {
-        // Reset Turnstile widget setelah submit attempt (token one-time use).
-        onFinish: () => {
-            form.reset('password');
-            form['cf-turnstile-response'] = '';
-            if (window.turnstile) {
-                const widgets = document.querySelectorAll('.cf-turnstile');
-                widgets.forEach(w => {
-                    try { window.turnstile.reset(w); } catch (e) { /* ignore */ }
+        // JANGAN panggil turnstile.reset() — lihat comment di submitLogin LoginPelanggan.vue.
+        onError: (errors) => {
+            if (errors['cf-turnstile-response']) {
+                document.querySelectorAll('.cf-turnstile').forEach(w => {
+                    w.innerHTML = '';
+                    w.removeAttribute('data-ts-rendered');
                 });
             }
         },
+        onFinish: () => form.reset('password'),
     });
 }
 </script>
