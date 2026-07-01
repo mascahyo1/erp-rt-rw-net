@@ -148,19 +148,22 @@ function submitLogin() {
         ...data,
         company_id: selectedCompany.value?.id ?? '',
     })).post('/login-pelanggan', {
-        // Reset Turnstile widget setelah submit attempt (success ATAU error).
-        // Token Turnstile one-time use (TTL 5 min) — kalau user submit ulang
-        // setelah error, server reject dgn "timeout-or-duplicate".
-        onFinish: () => {
-            loginForm.reset('password');
-            loginForm['cf-turnstile-response'] = '';
-            if (window.turnstile) {
-                const widgets = document.querySelectorAll('.cf-turnstile');
-                widgets.forEach(w => {
-                    try { window.turnstile.reset(w); } catch (e) { /* ignore */ }
+        // JANGAN panggil turnstile.reset() — interact dgn MutationObserver
+        // di LandingLayout bisa munculin error "Cannot find Widget" kalau
+        // widget id di-reassign saat re-render. Biarkan widget natural
+        // (token valid 5 min). Kalau user submit LAGI dan server reject
+        // dgn "timeout-or-duplicate", onError handler yg handle.
+        onError: (errors) => {
+            if (errors['cf-turnstile-response']) {
+                // Captcha specifically failed (timeout-or-duplicate / expired)
+                // → force widget re-render via MutationObserver (replace innerHTML)
+                document.querySelectorAll('.cf-turnstile').forEach(w => {
+                    w.innerHTML = '';
+                    w.removeAttribute('data-ts-rendered');
                 });
             }
         },
+        onFinish: () => loginForm.reset('password'),
     });
 }
 
@@ -175,16 +178,16 @@ function submitRegister() {
         ...data,
         company_id: selectedCompany.value?.id ?? '',
     })).post('/daftar-pelanggan', {
-        onFinish: () => {
-            registerForm.reset('password', 'password_confirmation');
-            registerForm['cf-turnstile-response'] = '';
-            if (window.turnstile) {
-                const widgets = document.querySelectorAll('.cf-turnstile');
-                widgets.forEach(w => {
-                    try { window.turnstile.reset(w); } catch (e) { /* ignore */ }
+        // JANGAN panggil turnstile.reset() — lihat comment di submitLogin().
+        onError: (errors) => {
+            if (errors['cf-turnstile-response']) {
+                document.querySelectorAll('.cf-turnstile').forEach(w => {
+                    w.innerHTML = '';
+                    w.removeAttribute('data-ts-rendered');
                 });
             }
         },
+        onFinish: () => registerForm.reset('password', 'password_confirmation'),
     });
 }
 
