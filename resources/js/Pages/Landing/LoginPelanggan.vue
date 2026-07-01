@@ -148,7 +148,19 @@ function submitLogin() {
         ...data,
         company_id: selectedCompany.value?.id ?? '',
     })).post('/login-pelanggan', {
-        onFinish: () => loginForm.reset('password'),
+        // Reset Turnstile widget setelah submit attempt (success ATAU error).
+        // Token Turnstile one-time use (TTL 5 min) — kalau user submit ulang
+        // setelah error, server reject dgn "timeout-or-duplicate".
+        onFinish: () => {
+            loginForm.reset('password');
+            loginForm['cf-turnstile-response'] = '';
+            if (window.turnstile) {
+                const widgets = document.querySelectorAll('.cf-turnstile');
+                widgets.forEach(w => {
+                    try { window.turnstile.reset(w); } catch (e) { /* ignore */ }
+                });
+            }
+        },
     });
 }
 
@@ -163,7 +175,16 @@ function submitRegister() {
         ...data,
         company_id: selectedCompany.value?.id ?? '',
     })).post('/daftar-pelanggan', {
-        onFinish: () => registerForm.reset('password', 'password_confirmation'),
+        onFinish: () => {
+            registerForm.reset('password', 'password_confirmation');
+            registerForm['cf-turnstile-response'] = '';
+            if (window.turnstile) {
+                const widgets = document.querySelectorAll('.cf-turnstile');
+                widgets.forEach(w => {
+                    try { window.turnstile.reset(w); } catch (e) { /* ignore */ }
+                });
+            }
+        },
     });
 }
 

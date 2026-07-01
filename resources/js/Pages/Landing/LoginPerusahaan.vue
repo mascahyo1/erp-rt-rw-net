@@ -77,7 +77,17 @@ function submit() {
         ...data,
         company_id: selectedCompany.value?.id ?? '',
     })).post('/login-perusahaan', {
-        onFinish: () => form.reset('password'),
+        // Reset Turnstile widget setelah submit attempt (token one-time use).
+        onFinish: () => {
+            form.reset('password');
+            form['cf-turnstile-response'] = '';
+            if (window.turnstile) {
+                const widgets = document.querySelectorAll('.cf-turnstile');
+                widgets.forEach(w => {
+                    try { window.turnstile.reset(w); } catch (e) { /* ignore */ }
+                });
+            }
+        },
     });
 }
 </script>
