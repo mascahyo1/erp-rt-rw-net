@@ -1,3 +1,9 @@
+# Plane MCP (memuat API token — JANGAN COMMIT!)
+/.mcp.json
+
+# Claude Code local settings (memuat permissions & allowlist lokal)
+/.claude/settings.local.json
+
 *.log
 .DS_Store
 .env

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "plane": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote@latest", "https://mcp.plane.so/http/api-key/mcp"],
+      "env": {
+        "PLANE_ACCESS_TOKEN": "<YOUR_PLANE_API_KEY_HERE>",
+        "PLANE_WORKSPACE_SLUG": "<YOUR_WORKSPACE_SLUG>"
+      }
+    }
+  }
+}
