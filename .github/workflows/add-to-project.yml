@@ -1,15 +1,20 @@
-name: Add new issues to project
+name: Add issues to project
 
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
   workflow_dispatch:
+    inputs:
+      issue_url:
+        description: 'Issue URL to add'
+        required: false
+        type: string
 
 jobs:
   add-to-project:
     runs-on: ubuntu-latest
     permissions:
-      issues: write
+      issues: read
       projects: write
     steps:
       - name: Add issue to project
@@ -17,4 +22,4 @@ jobs:
         with:
           project-url: https://github.com/users/mascahyo1/projects/1
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          labeled: documentation,enhancement,user-guide,bug
+          issue-url: ${{ inputs.issue_url || github.event.issue.html_url }}
