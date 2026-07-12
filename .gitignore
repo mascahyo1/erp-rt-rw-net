@@ -70,3 +70,4 @@ tests/Browser/Playwright/Feature/*/screenshots-*/
 /tmp_*.sh
 /tmp_*.b64
 /tmp_*.py
+.tmp/

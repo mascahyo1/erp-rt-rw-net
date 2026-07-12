@@ -1,0 +1,312 @@
+[
+  {
+    "section": "Pendahuluan & Topik Lintas Portal",
+    "notion_id": "39b93150-c90e-8178-8142-d000580b8fe2",
+    "title": "[UG-Pendahuluan] Pendahuluan & Topik Lintas Portal"
+  },
+  {
+    "section": "Topik Umum",
+    "notion_id": "39b93150-c90e-81dd-bd33-c4b245ef49df",
+    "title": "[UG-TopikUmum] Multi-Tenant"
+  },
+  {
+    "section": "Topik Umum",
+    "notion_id": "39b93150-c90e-8105-bb16-eb1c7eb56d91",
+    "title": "[UG-TopikUmum] Kontak Support"
+  },
+  {
+    "section": "Topik Umum",
+    "notion_id": "39b93150-c90e-8167-825d-ecc243c2355e",
+    "title": "[UG-TopikUmum] Import/Export Excel"
+  },
+  {
+    "section": "Topik Umum",
+    "notion_id": "39b93150-c90e-813b-bd4a-e5baf16086ec",
+    "title": "[UG-TopikUmum] Workflow Persetujuan"
+  },
+  {
+    "section": "Topik Umum",
+    "notion_id": "39b93150-c90e-8135-8b1d-c1f15d73df44",
+    "title": "[UG-TopikUmum] Kredensial Demo"
+  },
+  {
+    "section": "Topik Umum",
+    "notion_id": "39b93150-c90e-81fb-b089-d002fc886290",
+    "title": "[UG-TopikUmum] RBAC & Permission"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-812c-b00f-e908b6f37d33",
+    "title": "[UG-Landing] beranda"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-81e8-834b-c83f180d61f1",
+    "title": "[UG-Landing] beranda"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-81c9-8d86-cdbcdcb7e1bf",
+    "title": "[UG-Landing] tentang-kami"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-8112-b99a-e55221d58d01",
+    "title": "[UG-Landing] hubungi-kami"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-8146-8e38-c75947f3c690",
+    "title": "[UG-Landing] kebijakan-privasi"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-81d0-9d30-e658cd32d23c",
+    "title": "[UG-Landing] syarat-dan-ketentuan"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-8123-b190-c0a48b661cdb",
+    "title": "[UG-Landing] login-operator-saas"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-8150-ac68-cb87469b8378",
+    "title": "[UG-Landing] login-perusahaan"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-81f4-9e36-e7b0d2de2f07",
+    "title": "[UG-Landing] login-karyawan"
+  },
+  {
+    "section": "Halaman Publik / Landing",
+    "notion_id": "39b93150-c90e-81bf-8f34-c9b11b44b693",
+    "title": "[UG-Landing] login-pelanggan"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-81fd-94b2-cf7c208fe276",
+    "title": "[UG-OpSaas] dashboard"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-8129-b3ed-ca2fdcbbdae2",
+    "title": "[UG-OpSaas] halaman-perusahaan"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-811b-9cfe-f0024f4d2627",
+    "title": "[UG-OpSaas] halaman-admin-perusahaan"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-8132-8782-e736bb189363",
+    "title": "[UG-OpSaas] halaman-admin-saas"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-8186-8734-e962dca199d7",
+    "title": "[UG-OpSaas] halaman-konfigurasi"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-81f9-a542-fe3443278798",
+    "title": "[UG-OpSaas] halaman-role-saas"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-81f3-967c-ecbf872bdc15",
+    "title": "[UG-OpSaas] halaman-admin-role-saas"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-819b-9df7-fe19562176bb",
+    "title": "[UG-OpSaas] halaman-role-admin-perusahaan"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-81e3-a0e9-cc183590a395",
+    "title": "[UG-OpSaas] halaman-role-perusahaan"
+  },
+  {
+    "section": "Operator SaaS",
+    "notion_id": "39b93150-c90e-810f-bfa8-ffddb2286feb",
+    "title": "[UG-OpSaas] profil-saya"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-8139-87d4-e94ac769b37a",
+    "title": "[UG-OpPerush] dashboard"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-8192-83bb-caa53243e536",
+    "title": "[UG-OpPerush] daftar-paket"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-81bb-8506-f81a79050488",
+    "title": "[UG-OpPerush] halaman-langganan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-817e-9fcc-efeaf00f0c54",
+    "title": "[UG-OpPerush] halaman-karyawan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-817b-9ae2-e580a855cf91",
+    "title": "[UG-OpPerush] halaman-customer"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-8176-aa15-cc245cd060ec",
+    "title": "[UG-OpPerush] halaman-admin-perusahaan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-8122-b381-d998c38e9e67",
+    "title": "[UG-OpPerush] halaman-tagihan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-8143-be27-e25483ae817f",
+    "title": "[UG-OpPerush] halaman-riwayat-pembayaran"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-81df-9b00-fffec80fd434",
+    "title": "[UG-OpPerush] halaman-insentif"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-817a-81a7-ca0dc3cd3984",
+    "title": "[UG-OpPerush] halaman-riwayat-insentif"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-8160-b202-fdbd591eedca",
+    "title": "[UG-OpPerush] halaman-role-perusahaan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-8154-af5c-c865a91ec65b",
+    "title": "[UG-OpPerush] halaman-admin-role-perusahaan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-81a6-ac81-c2a45d44e1da",
+    "title": "[UG-OpPerush] halaman-admin-role-web-karyawan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-811c-9c97-cc2f074c1ffa",
+    "title": "[UG-OpPerush] halaman-role-web-karyawan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-8194-b8db-d586223cd99c",
+    "title": "[UG-OpPerush] halaman-konfigurasi-perusahaan"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-81cd-acc4-c8480ae4249f",
+    "title": "[UG-OpPerush] perusahaan-saya"
+  },
+  {
+    "section": "Admin Perusahaan",
+    "notion_id": "39b93150-c90e-811b-917c-fd36489ae881",
+    "title": "[UG-OpPerush] profil-saya"
+  },
+  {
+    "section": "Karyawan",
+    "notion_id": "39b93150-c90e-81a6-b4a4-f53a42a3fb54",
+    "title": "[UG-Karyawan] dashboard"
+  },
+  {
+    "section": "Karyawan",
+    "notion_id": "39b93150-c90e-8198-8560-eba76eaa9114",
+    "title": "[UG-Karyawan] halaman-customer"
+  },
+  {
+    "section": "Karyawan",
+    "notion_id": "39b93150-c90e-813d-a376-f659ce85b93b",
+    "title": "[UG-Karyawan] halaman-langganan"
+  },
+  {
+    "section": "Karyawan",
+    "notion_id": "39b93150-c90e-8189-91c9-fbd8e2c46680",
+    "title": "[UG-Karyawan] halaman-tagihan"
+  },
+  {
+    "section": "Karyawan",
+    "notion_id": "39b93150-c90e-8125-8c00-ed957ea63908",
+    "title": "[UG-Karyawan] halaman-riwayat-pembayaran"
+  },
+  {
+    "section": "Karyawan",
+    "notion_id": "39b93150-c90e-8155-81ab-cff06bd69c3f",
+    "title": "[UG-Karyawan] halaman-insentif"
+  },
+  {
+    "section": "Karyawan",
+    "notion_id": "39b93150-c90e-81cb-8965-ceb16a60386c",
+    "title": "[UG-Karyawan] profil-saya"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-81e7-98d8-c91e6e7d4c32",
+    "title": "[UG-Pelanggan] dashboard"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-8113-b259-f5f8d71a81dd",
+    "title": "[UG-Pelanggan] paket-saya"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-8133-98bf-d70b071bf242",
+    "title": "[UG-Pelanggan] paket-tambah"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-81f7-93a5-f2dfda8d49be",
+    "title": "[UG-Pelanggan] paket-detail"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-8119-829f-d070855ab2b9",
+    "title": "[UG-Pelanggan] tagihan-saya"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-818f-a9a8-d8f8ff402b9f",
+    "title": "[UG-Pelanggan] tagihan-detail"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-81cc-aae1-deed69376f66",
+    "title": "[UG-Pelanggan] pembayaran-tambah"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-812f-8d07-d94e7b191b1d",
+    "title": "[UG-Pelanggan] pembayaran-detail"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-81eb-a4a8-f7771e4cd093",
+    "title": "[UG-Pelanggan] riwayat-pembayaran"
+  },
+  {
+    "section": "Pelanggan",
+    "notion_id": "39b93150-c90e-81ee-80ee-fc87fdf987d1",
+    "title": "[UG-Pelanggan] profil-saya"
+  },
+  {
+    "section": "Developer Guide",
+    "notion_id": "39b93150-c90e-81f6-b8de-f86b507d11b7",
+    "title": "[DG-Master] Developer Guide (Master)"
+  }
+]
