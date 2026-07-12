@@ -2,10 +2,28 @@
   "mcpServers": {
     "plane": {
       "command": "npx",
-      "args": ["-y", "mcp-remote@latest", "https://mcp.plane.so/http/api-key/mcp"],
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://mcp.plane.so/http/api-key/mcp",
+        "--header",
+        "Authorization:${PLANE_BEARER}",
+        "--header",
+        "X-Workspace-slug:${PLANE_WORKSPACE_SLUG}"
+      ],
       "env": {
-        "PLANE_ACCESS_TOKEN": "<YOUR_PLANE_API_KEY_HERE>",
+        "PLANE_BEARER": "Bearer <YOUR_PLANE_API_KEY>",
         "PLANE_WORKSPACE_SLUG": "<YOUR_WORKSPACE_SLUG>"
+      }
+    },
+    "notion": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@notionhq/notion-mcp-server"
+      ],
+      "env": {
+        "NOTION_TOKEN": "<YOUR_NOTION_INTEGRATION_TOKEN>"
       }
     }
   }
