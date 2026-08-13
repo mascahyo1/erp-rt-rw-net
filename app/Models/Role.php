@@ -23,7 +23,7 @@ class Role extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean', 'display_order' => 'integer'];
+        return ['is_active' => 'boolean', 'display_order' => 'integer', 'deleted_at' => 'datetime', 'restored_at' => 'datetime'];
     }
 
     public function company(): BelongsTo
@@ -34,6 +34,7 @@ class Role extends Model
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'role_permissions', 'role_id', 'permission_id')
+            ->using(RolePermission::class)
             ->withTimestamps();
     }
 

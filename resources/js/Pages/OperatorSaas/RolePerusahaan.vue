@@ -318,7 +318,7 @@ function openEdit(role) {
   editForm.company_id = role.company_id || '';
   editForm.deskripsi = role.deskripsi || '';
   editForm.status = role.status;
-  editForm.permission_ids = [];
+  editForm.permission_ids = role.permission_ids ? [...role.permission_ids] : [];
   if (role.company_id && role.perusahaan) {
     const exists = companyOptions.value.find(o => o.value === role.company_id);
     if (!exists) companyOptions.value = [{ value: role.company_id, label: role.perusahaan }, ...companyOptions.value];
@@ -560,6 +560,19 @@ function confirmDelete() {
                 <div class="mt-3">
                   <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Deskripsi</label>
                   <p class="text-sm text-gray-900 dark:text-white mt-0.5">{{ selectedRole?.deskripsi || '—' }}</p>
+                </div>
+              </div>
+
+              <!-- Section: Permission -->
+              <div v-if="selectedRole?.permission_names?.length">
+                <h5 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3">Permission ({{ selectedRole.permission_count }})</h5>
+                <div class="border border-gray-200 dark:border-gray-700 rounded-xl divide-y divide-gray-200 dark:divide-gray-700 max-h-64 overflow-y-auto">
+                  <div v-for="(perms, module) in selectedRole.permission_names.reduce((acc, name) => { const m = name.includes('.') ? name.substring(0, name.lastIndexOf('.')) : name; (acc[m] = acc[m] || []).push(name); return acc; }, {})" :key="module" class="px-3 py-2">
+                    <div class="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1.5">{{ module }}</div>
+                    <div class="flex flex-wrap gap-1">
+                      <span v-for="name in perms" :key="name" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-400"><i class="fas fa-check-circle text-[9px]"></i> {{ name }}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

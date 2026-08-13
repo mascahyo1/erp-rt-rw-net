@@ -49,6 +49,8 @@ class RolePerusahaanController extends Controller
             'id' => $r->id,
             'nama_role' => $r->name,
             'permission_count' => $r->permissions->count(),
+            'permission_ids' => $r->permissions->pluck('id')->toArray(),
+            'permission_names' => $r->permissions->pluck('name')->toArray(),
             'perusahaan' => $r->company?->name,
             'company_id' => $r->company_id,
             'display_order' => $r->display_order,
@@ -64,7 +66,7 @@ class RolePerusahaanController extends Controller
             'updated_by' => $r->updatedBy?->name,
         ]);
 
-        $permissions = Permission::where('scope', 'karyawan_perusahaan')
+        $permissions = Permission::where('scope', 'admin_perusahaan')
             ->orderBy('display_order')
             ->get()
             ->map(fn($p) => ['id' => $p->id, 'nama' => $p->name, 'deskripsi' => $p->description]);

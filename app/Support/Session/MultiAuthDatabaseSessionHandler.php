@@ -56,7 +56,11 @@ class MultiAuthDatabaseSessionHandler extends DatabaseSessionHandler
             ->delete();
 
         if ($records) {
-            $connection->table('session_authenticated')->insert($records);
+            $connection->table('session_authenticated')->upsert(
+                $records,
+                ['session_id', 'guard_name'],
+                ['user_type', 'user_id', 'payload', 'last_activity']
+            );
         }
     }
 }
