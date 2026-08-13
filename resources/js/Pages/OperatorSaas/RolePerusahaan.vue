@@ -11,7 +11,7 @@ defineOptions({ layout: OperatorSaasLayout });
 
 const props = defineProps({
   roles: Object,
-  permissions: Array,
+  availablePermissions: Array,
   filters: Object,
 });
 
