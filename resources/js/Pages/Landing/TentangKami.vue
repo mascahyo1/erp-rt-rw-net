@@ -22,7 +22,7 @@ defineOptions({ layout: LandingLayout });
           </div>
           <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">Tentang Kami</h1>
           <p class="text-lg text-gray-600 dark:text-gray-400 leading-relaxed">
-            Kami hadir untuk membantu bisnis RT/RW Net di seluruh Indonesia mengelola operasional mereka dengan lebih efisien, transparan, dan modern.
+            Kami hadir untuk membantu bisnis ISP di seluruh Indonesia mengelola operasional mereka dengan lebih efisien, transparan, dan modern.
           </p>
         </div>
       </div>
@@ -57,7 +57,7 @@ defineOptions({ layout: LandingLayout });
               </div>
               <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-3">Visi</h2>
               <p class="text-gray-600 dark:text-gray-400 leading-relaxed">
-                Menjadi platform ERP nomor satu untuk bisnis RT/RW Net di Indonesia, memberdayakan pemilik usaha dengan teknologi yang mudah digunakan dan terjangkau.
+                Menjadi platform ERP nomor satu untuk bisnis ISP di Indonesia, memberdayakan pemilik usaha dengan teknologi yang mudah digunakan dan terjangkau.
               </p>
             </div>
           </div>
@@ -73,7 +73,7 @@ defineOptions({ layout: LandingLayout });
               <ul class="space-y-2 text-gray-600 dark:text-gray-400">
                 <li class="flex items-start gap-2">
                   <i class="fas fa-check-circle text-emerald-500 mt-1 shrink-0"></i>
-                  <span>Mendigitalisasi pencatatan operasional RT/RW Net dari manual menjadi otomatis.</span>
+                  <span>Mendigitalisasi pencatatan operasional ISP dari manual menjadi otomatis.</span>
                 </li>
                 <li class="flex items-start gap-2">
                   <i class="fas fa-check-circle text-emerald-500 mt-1 shrink-0"></i>

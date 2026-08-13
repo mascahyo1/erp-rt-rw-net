@@ -154,12 +154,12 @@ function closeDropdown(e) {
         <div class="flex items-center justify-between h-16">
 
           <!-- Logo -->
-          <Link href="/" class="flex items-center gap-2 shrink-0">
+          <Link href="/" data-testid="logo-jmpgroup" class="flex items-center gap-2 shrink-0">
             <div class="w-9 h-9 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-lg flex items-center justify-center">
               <i class="fas fa-wifi text-white text-sm"></i>
             </div>
             <span class="font-bold text-lg text-gray-900 dark:text-white hidden sm:block">
-              RT/RW Net
+              JMPGroup
             </span>
           </Link>
 
@@ -293,10 +293,10 @@ function closeDropdown(e) {
               <div class="w-9 h-9 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <i class="fas fa-wifi text-white text-sm"></i>
               </div>
-              <span class="font-bold text-lg text-white">RT/RW Net</span>
+              <span class="font-bold text-lg text-white">JMPGroup</span>
             </div>
             <p class="text-sm text-slate-400 leading-relaxed">
-              Solusi ERP modern untuk bisnis RT/RW Net Anda. Kelola pelanggan, tagihan, dan pembayaran dalam satu platform.
+              Solusi ERP modern untuk bisnis ISP Anda. Kelola pelanggan, tagihan, dan pembayaran dalam satu platform.
             </p>
           </div>
 
@@ -333,7 +333,7 @@ function closeDropdown(e) {
         <!-- Bottom -->
         <div class="mt-10 pt-6 border-t border-slate-700/50 text-center">
           <p class="text-sm text-slate-500">
-            &copy; {{ new Date().getFullYear() }} RT/RW Net. All rights reserved.
+            &copy; {{ new Date().getFullYear() }} JMPGroup. All rights reserved.
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 
 defineOptions({ layout: LandingLayout });
@@ -74,7 +74,7 @@ const features = [
   { icon: 'fas fa-hand-holding-usd', title: 'Pembayaran Tunai & Non-Tunai', desc: 'Input pembayaran tunai oleh kolektor dan upload bukti transfer non-tunai. Semua tercatat rapi.', gradient: 'bg-linear-to-br from-amber-500 to-orange-600' },
   { icon: 'fas fa-coins', title: 'Insentif Karyawan', desc: 'Kalkulasi otomatis insentif kolektor dari pembayaran tunai & non-tunai. Riwayat lengkap & approval.', gradient: 'bg-linear-to-br from-pink-500 to-rose-600' },
   { icon: 'fas fa-chart-line', title: 'Laporan & Dashboard', desc: 'Laporan harian, mingguan, bulanan, tahunan. Dashboard real-time dengan notifikasi via WebSocket.', gradient: 'bg-linear-to-br from-violet-500 to-purple-600' },
-  { icon: 'fas fa-building-shield', title: 'Multi-Perusahaan', desc: 'Kelola banyak perusahaan RT/RW Net dalam satu sistem. Data terisolasi, branding per tenant.', gradient: 'bg-linear-to-br from-cyan-500 to-blue-600' },
+  { icon: 'fas fa-building-shield', title: 'Multi-Perusahaan', desc: 'Kelola banyak ISP dalam satu sistem. Data terisolasi, branding per tenant.', gradient: 'bg-linear-to-br from-cyan-500 to-blue-600' },
 ];
 
 // ========================
@@ -91,7 +91,7 @@ const faqs = [
     a: 'Ya, kami menyediakan masa trial gratis 30 hari untuk perusahaan baru. Anda bisa mencoba semua fitur Premium tanpa biaya. Tidak perlu kartu kredit untuk daftar.',
   },
   {
-    q: 'Berapa biaya langganan ERP RT/RW Net?',
+    q: 'Berapa biaya langganan JMPGroup ERP?',
     a: 'Biaya langganan bervariasi tergantung jumlah pelanggan aktif. Tersedia paket Starter, Professional, dan Enterprise. Hubungi tim sales untuk penawaran custom.',
   },
   {
@@ -146,6 +146,8 @@ const testimonials = [
 
 <template>
   <div>
+    <Head title="Solusi ERP untuk ISP Indonesia" />
+
     <!-- HERO -->
     <section class="relative overflow-hidden bg-linear-to-br from-sky-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-950 dark:to-indigo-950/30 transition-colors">
       <!-- Background blobs -->
@@ -163,18 +165,18 @@ const testimonials = [
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Dipercaya 500+ perusahaan RT/RW Net</span>
+              <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Dipercaya 12+ ISP di seluruh Indonesia</span>
             </div>
 
             <h1 class="reveal text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white leading-tight tracking-tight" style="transition-delay: 60ms">
-              ERP Modern untuk
+              Solusi ERP Modern untuk
               <span class="bg-linear-to-r from-sky-500 to-indigo-600 bg-clip-text text-transparent">
-                RT/RW Net
+                Bisnis ISP
               </span>
             </h1>
             <p class="reveal mt-6 text-lg text-gray-600 dark:text-gray-400 leading-relaxed" style="transition-delay: 120ms">
               Kelola pelanggan, tagihan, pembayaran, dan insentif karyawan dalam satu platform.
-              Dibangun khusus untuk bisnis RT/RW Net skala kecil hingga besar.
+              JMPGroup menghadirkan sistem ERP yang dibangun khusus untuk bisnis internet skala kecil hingga besar.
             </p>
             <div class="reveal mt-10 flex flex-col sm:flex-row gap-3 lg:justify-start justify-center" style="transition-delay: 180ms">
               <Link href="/login-perusahaan" class="inline-flex items-center justify-center px-6 py-3 bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
@@ -252,7 +254,7 @@ const testimonials = [
     <section class="py-10 bg-white dark:bg-gray-950 border-y border-gray-100 dark:border-gray-900 reveal">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <p class="text-center text-xs uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-6 font-semibold">
-          Dipercaya oleh operator RT/RW Net di seluruh Indonesia
+          Dipercaya oleh operator ISP di seluruh Indonesia
         </p>
         <div class="flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-60">
           <div v-for="(name, i) in ['Net Sejahtera', 'Angkasa Net', 'Jaringan Prima', 'Net Mandiri', 'PlusNet', 'MitraNet']" :key="i"
@@ -323,7 +325,7 @@ const testimonials = [
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16 reveal">
           <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white">Fitur Unggulan</h2>
-          <p class="mt-3 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">Semua yang Anda butuhkan untuk mengelola bisnis RT/RW Net dalam satu dashboard.</p>
+          <p class="mt-3 text-gray-600 dark:text-gray-400 max-w-xl mx-auto">Semua yang Anda butuhkan untuk mengelola bisnis ISP dalam satu dashboard.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -347,8 +349,8 @@ const testimonials = [
       <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center text-white">
           <div class="reveal">
-            <div class="text-3xl md:text-4xl font-extrabold mb-1" data-counter="500" data-suffix="+">0</div>
-            <div class="text-sm opacity-80">Perusahaan RT/RW Net</div>
+            <div class="text-3xl md:text-4xl font-extrabold mb-1" data-counter="12" data-suffix="+">0</div>
+            <div class="text-sm opacity-80">ISP Bergabung</div>
           </div>
           <div class="reveal" style="transition-delay: 80ms">
             <div class="text-3xl md:text-4xl font-extrabold mb-1" data-counter="50000" data-suffix="+">0</div>
@@ -419,7 +421,7 @@ const testimonials = [
     <!-- CTA -->
     <section class="py-20 bg-gray-50 dark:bg-gray-900 transition-colors">
       <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center reveal">
-        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Siap Mengelola Bisnis RT/RW Net Anda?</h2>
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">Siap Mengelola Bisnis ISP Anda bersama JMPGroup?</h2>
         <p class="text-lg text-gray-600 dark:text-gray-400 mb-8">Daftar sekarang dan dapatkan free trial 30 hari.</p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/login-pelanggan" class="inline-flex items-center justify-center px-8 py-3 bg-linear-to-r from-sky-500 to-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-sky-500/30 hover:shadow-xl hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
