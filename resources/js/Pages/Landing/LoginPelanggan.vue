@@ -2,12 +2,17 @@
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 import CompanySearchInput from '@/Components/CompanySearchInput.vue';
 import CountryCodeSelect from '@/Components/CountryCodeSelect.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import ToastContainer from '@/Components/ToastContainer.vue';
+import { useToast } from '@/Composables/useToast';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineOptions({ layout: LandingLayout });
 
 const page = usePage();
+const toast = useToast();
 
 const activeTab = ref('login');
 const selectedCompany = ref(null);
@@ -153,6 +158,7 @@ function submitLogin() {
         // (token valid 5 min). Kalau user submit LAGI dan server reject
         // dgn "timeout-or-duplicate", onError handler yg handle.
         onError: (errors) => {
+            toast.error('Login gagal: ' + errorSummary(errors), 6000);
             if (errors['cf-turnstile-response']) {
                 // Captcha specifically failed (timeout-or-duplicate / expired)
                 // → force widget re-render via MutationObserver (replace innerHTML)
@@ -179,6 +185,7 @@ function submitRegister() {
     })).post('/daftar-pelanggan', {
         // JANGAN panggil turnstile.reset() — lihat comment di submitLogin().
         onError: (errors) => {
+            toast.error('Pendaftaran gagal: ' + errorSummary(errors), 6000);
             if (errors['cf-turnstile-response']) {
                 document.querySelectorAll('.cf-turnstile').forEach(w => {
                     w.innerHTML = '';
@@ -199,6 +206,7 @@ function switchTab(tab) {
 
 <template>
     <Head title="Login Pelanggan" />
+    <ToastContainer />
     <section class="min-h-[calc(100vh-200px)] flex overflow-x-hidden">
         <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-w-0">
             <div class="relative overflow-hidden bg-linear-to-br from-emerald-500 via-emerald-600 to-teal-700 flex items-center justify-center px-4 sm:px-6 py-16 lg:py-0 min-w-0">
@@ -267,6 +275,7 @@ function switchTab(tab) {
                         </div>
 
                         <form v-if="activeTab === 'login'" class="space-y-4" @submit.prevent="submitLogin" novalidate>
+                            <FormErrorSummary :errors="loginForm.errors" title="Gagal masuk — periksa isian berikut:" />
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                 <CompanySearchInput v-model="selectedCompany" @blur="lt.company.value = true" placeholder="Cari perusahaan Anda..." />
@@ -351,6 +360,7 @@ function switchTab(tab) {
                         </form>
 
                         <form v-else class="space-y-3.5" @submit.prevent="submitRegister" novalidate>
+                            <FormErrorSummary :errors="registerForm.errors" title="Gagal mendaftar — periksa isian berikut:" />
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                 <CompanySearchInput v-model="selectedCompany" @blur="rt.company.value = true" placeholder="Cari perusahaan Anda..." />

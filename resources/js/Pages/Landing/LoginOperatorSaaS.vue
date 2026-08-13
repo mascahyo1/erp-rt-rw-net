@@ -2,10 +2,15 @@
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useForm, usePage, Link } from '@inertiajs/vue3';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import ToastContainer from '@/Components/ToastContainer.vue';
+import { useToast } from '@/Composables/useToast';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 
 defineOptions({ layout: LandingLayout });
 
 const page = usePage();
+const toast = useToast();
 const form = useForm({
   email: '',
   password: '',
@@ -73,6 +78,7 @@ function submit() {
   form.post('/login-operator-saas', {
     // JANGAN panggil turnstile.reset() — lihat comment di submitLogin LoginPelanggan.vue.
     onError: (errors) => {
+      toast.error('Login gagal: ' + errorSummary(errors), 6000);
       if (errors['cf-turnstile-response']) {
         document.querySelectorAll('.cf-turnstile').forEach(w => {
           w.innerHTML = '';
@@ -87,6 +93,7 @@ function submit() {
 
 <template>
   <div>
+    <ToastContainer />
     <section class="min-h-[calc(100vh-200px)] flex overflow-x-hidden">
       <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-w-0">
         <!-- Left: branded panel (animated orbs) -->
@@ -136,6 +143,7 @@ function submit() {
             </div>
 
             <form class="space-y-4" @submit.prevent="submit" novalidate>
+            <FormErrorSummary :errors="form.errors" title="Gagal masuk — periksa isian berikut:" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
                 <div class="relative">

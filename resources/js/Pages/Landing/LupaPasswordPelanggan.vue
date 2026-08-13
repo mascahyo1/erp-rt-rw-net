@@ -4,7 +4,9 @@ import { Head, useForm, usePage, Link } from '@inertiajs/vue3';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 import CompanySearchInput from '@/Components/CompanySearchInput.vue';
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import { errorSummary } from '@/Composables/useFormErrorToast';
+import { ref, computed, onBeforeUnmount } from 'vue';
 
 defineOptions({ layout: LandingLayout });
 
@@ -20,6 +22,7 @@ const selectedCompany = ref(null);
 
 const isResetMode = computed(() => !!props.token);
 const siteKey = computed(() => page.props.turnstile_site_key || '');
+const turnstileSolved = computed(() => !siteKey.value || !!form['cf-turnstile-response']);
 
 const form = useForm({
     email: props.email || '',
@@ -36,10 +39,10 @@ function onTurnstileSuccess(token) {
 function onTurnstileExpired() {
     form['cf-turnstile-response'] = '';
 }
-onMounted(() => {
-    window.onTurnstileSuccess = onTurnstileSuccess;
-    window.onTurnstileExpired = onTurnstileExpired;
-});
+// Set SYNCHRONOUSLY (bukan onMounted) — widget Turnstile bisa render
+// duluan; kalau callback belum terdaftar, token tidak masuk form.
+window.onTurnstileSuccess = onTurnstileSuccess;
+window.onTurnstileExpired = onTurnstileExpired;
 onBeforeUnmount(() => {
     delete window.onTurnstileSuccess;
     delete window.onTurnstileExpired;
@@ -50,8 +53,13 @@ const submit = () => {
         form.post('/lupa-password-pelanggan/reset', {
             onSuccess: () => toast.success('Password berhasil direset! Silakan login.'),
             onError: (errors) => {
-                const firstError = Object.values(errors)[0];
-                if (firstError) toast.error(firstError);
+                toast.error('Gagal: ' + errorSummary(errors), 6000);
+                if (errors['cf-turnstile-response']) {
+                    document.querySelectorAll('.cf-turnstile').forEach(w => {
+                        w.innerHTML = '';
+                        w.removeAttribute('data-ts-rendered');
+                    });
+                }
             },
         });
     } else {
@@ -65,8 +73,13 @@ const submit = () => {
                 form.reset('email');
             },
             onError: (errors) => {
-                const firstError = Object.values(errors)[0];
-                if (firstError) toast.error(firstError);
+                toast.error('Gagal: ' + errorSummary(errors), 6000);
+                if (errors['cf-turnstile-response']) {
+                    document.querySelectorAll('.cf-turnstile').forEach(w => {
+                        w.innerHTML = '';
+                        w.removeAttribute('data-ts-rendered');
+                    });
+                }
             },
         });
     }
@@ -106,6 +119,7 @@ const submit = () => {
                         </div>
 
                         <form class="space-y-4" @submit.prevent="submit">
+                            <FormErrorSummary :errors="form.errors" title="Gagal — periksa isian berikut:" />
                             <div v-if="!isResetMode">
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                 <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
@@ -123,7 +137,7 @@ const submit = () => {
                                         type="email"
                                         placeholder="pelanggan@contoh.com"
                                         required
-                                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                                        :class="['w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-colors', form.errors.email ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500']"
                                     />
                                 </div>
                                 <p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
@@ -145,7 +159,7 @@ const submit = () => {
                                             type="password"
                                             placeholder="Minimal 8 karakter"
                                             required
-                                            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                                            :class="['w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-colors', form.errors.password ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500']"
                                         />
                                     </div>
                                     <p v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</p>
@@ -162,7 +176,7 @@ const submit = () => {
                                             type="password"
                                             placeholder="Ulangi password baru"
                                             required
-                                            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                                            :class="['w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-colors', form.errors.password_confirmation ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500']"
                                         />
                                     </div>
                                 </div>
@@ -170,12 +184,12 @@ const submit = () => {
 
                             <button
                                 type="submit"
-                                :disabled="form.processing"
+                                :disabled="form.processing || !turnstileSolved"
                                 class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50"
                             >
                                 <i v-if="form.processing" class="fas fa-spinner fa-spin mr-2"></i>
                                 <i v-else :class="isResetMode ? 'fas fa-check mr-2' : 'fas fa-paper-plane mr-2'"></i>
-                                {{ form.processing ? 'Memproses...' : (isResetMode ? 'Reset Password' : 'Kirim Link Reset') }}
+                                {{ form.processing ? 'Memproses...' : (!turnstileSolved ? 'Tunggu verifikasi captcha...' : (isResetMode ? 'Reset Password' : 'Kirim Link Reset')) }}
                             </button>
 
                             <!-- Cloudflare Turnstile captcha -->

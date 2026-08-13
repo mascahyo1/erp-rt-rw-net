@@ -1,12 +1,17 @@
 <script setup>
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 import CompanySearchInput from '@/Components/CompanySearchInput.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import ToastContainer from '@/Components/ToastContainer.vue';
+import { useToast } from '@/Composables/useToast';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineOptions({ layout: LandingLayout });
 
 const page = usePage();
+const toast = useToast();
 const selectedCompany = ref(null);
 const form = useForm({
     email: '',
@@ -82,6 +87,7 @@ function submit() {
     })).post('/login-perusahaan', {
         // JANGAN panggil turnstile.reset() — lihat comment di submitLogin LoginPelanggan.vue.
         onError: (errors) => {
+            toast.error('Login gagal: ' + errorSummary(errors), 6000);
             if (errors['cf-turnstile-response']) {
                 document.querySelectorAll('.cf-turnstile').forEach(w => {
                     w.innerHTML = '';
@@ -96,6 +102,7 @@ function submit() {
 
 <template>
     <Head title="Login Perusahaan" />
+    <ToastContainer />
     <section class="min-h-[calc(100vh-200px)] flex overflow-x-hidden">
         <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-w-0">
             <div class="relative overflow-hidden bg-linear-to-br from-sky-500 via-sky-600 to-blue-700 flex items-center justify-center px-4 sm:px-6 py-16 lg:py-0 min-w-0">
@@ -145,6 +152,7 @@ function submit() {
                         </div>
 
                         <form class="space-y-4" @submit.prevent="submit" novalidate>
+                            <FormErrorSummary :errors="form.errors" title="Gagal masuk — periksa isian berikut:" />
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                 <CompanySearchInput v-model="selectedCompany" @blur="companyTouched = true" placeholder="Cari perusahaan Anda..." />

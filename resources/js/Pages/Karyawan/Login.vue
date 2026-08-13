@@ -1,10 +1,15 @@
 <script setup>
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 import CompanySearchInput from '@/Components/CompanySearchInput.vue';
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import ToastContainer from '@/Components/ToastContainer.vue';
+import { useToast } from '@/Composables/useToast';
+import { errorSummary } from '@/Composables/useFormErrorToast';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 const page = usePage();
+const toast = useToast();
 
 defineOptions({ layout: LandingLayout });
 
@@ -31,15 +36,20 @@ function onTurnstileSuccess(token) {
 function onTurnstileExpired() {
     form['cf-turnstile-response'] = '';
 }
-// Expose callbacks ke window agar Turnstile widget (loaded async) bisa panggil.
-onMounted(() => {
-    window.onTurnstileSuccess = onTurnstileSuccess;
-    window.onTurnstileExpired = onTurnstileExpired;
-});
+
+// IMPORTANT: window callback HARUS di-set synchronously (top-level), bukan
+// onMounted. LandingLayout bisa render widget Turnstile LEBIH DULU (test key
+// auto-solve instan) — kalau callback belum ada, token tidak pernah masuk ke
+// form['cf-turnstile-response'] -> submit kena "cf-turnstile-response required".
+window.onTurnstileSuccess = onTurnstileSuccess;
+window.onTurnstileExpired = onTurnstileExpired;
 onBeforeUnmount(() => {
     delete window.onTurnstileSuccess;
     delete window.onTurnstileExpired;
 });
+
+// Submit button disabled sampai Turnstile solved (kalau siteKey ada).
+const turnstileSolved = computed(() => !siteKey.value || !!form['cf-turnstile-response']);
 
 const companyError = computed(() => {
     if (!companyTouched.value) return null;
@@ -72,6 +82,15 @@ function submit() {
         ...data,
         company_id: selectedCompany.value?.id ?? '',
     })).post('/login-karyawan', {
+        onError: (errors) => {
+            toast.error('Login gagal: ' + errorSummary(errors), 6000);
+            if (errors['cf-turnstile-response']) {
+                document.querySelectorAll('.cf-turnstile').forEach(w => {
+                    w.innerHTML = '';
+                    w.removeAttribute('data-ts-rendered');
+                });
+            }
+        },
         onFinish: () => form.reset('password'),
     });
 }
@@ -79,6 +98,7 @@ function submit() {
 
 <template>
     <Head title="Login Karyawan" />
+    <ToastContainer />
     <section class="min-h-[calc(100vh-200px)] flex overflow-x-hidden">
         <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 min-w-0">
             <div class="relative overflow-hidden bg-linear-to-br from-amber-500 via-orange-600 to-amber-800 flex items-center justify-center px-4 sm:px-6 py-16 lg:py-0 min-w-0">
@@ -126,6 +146,7 @@ function submit() {
                         </div>
 
                         <form class="space-y-4" @submit.prevent="submit" novalidate>
+                            <FormErrorSummary :errors="form.errors" title="Gagal masuk — periksa isian berikut:" />
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                 <CompanySearchInput v-model="selectedCompany" @blur="companyTouched = true" placeholder="Cari perusahaan Anda..." />
@@ -198,12 +219,12 @@ function submit() {
 
                             <button
                                 type="submit"
-                                :disabled="form.processing"
+                                :disabled="form.processing || !turnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-amber-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <i v-if="form.processing" class="fas fa-spinner fa-spin mr-2"></i>
                                 <i v-else class="fas fa-sign-in-alt mr-2"></i>
-                                {{ form.processing ? 'Memproses...' : 'Masuk' }}
+                                {{ form.processing ? 'Memproses...' : (!turnstileSolved ? 'Tunggu verifikasi captcha...' : 'Masuk') }}
                             </button>
 
                             <!-- Cloudflare Turnstile captcha widget -->
