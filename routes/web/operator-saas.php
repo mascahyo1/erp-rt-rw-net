@@ -274,14 +274,22 @@ Route::middleware(['auth:admin-saas', 'ensure.user.active:admin-saas'])->group(f
     Route::middleware('permission:admin-role-saas.list')->group(function () {
         Route::get('/operator-saas/admin-role-saas', [AdminRoleSaasController::class, 'index'])
             ->name('operator-saas.admin-role-saas.index');
+        Route::get('/operator-saas/admin-role-saas/admins', [AdminRoleSaasController::class, 'adminsAjax'])
+            ->name('operator-saas.admin-role-saas.admins');
+        Route::get('/operator-saas/admin-role-saas/roles', [AdminRoleSaasController::class, 'rolesAjax'])
+            ->name('operator-saas.admin-role-saas.roles');
     });
     Route::middleware('permission:admin-role-saas.create')->group(function () {
         Route::post('/operator-saas/admin-role-saas', [AdminRoleSaasController::class, 'store'])
             ->name('operator-saas.admin-role-saas.store');
+        Route::post('/operator-saas/admin-role-saas/bulk-assign', [AdminRoleSaasController::class, 'bulkAssign'])
+            ->name('operator-saas.admin-role-saas.bulk-assign');
     });
     Route::middleware('permission:admin-role-saas.edit')->group(function () {
         Route::put('/operator-saas/admin-role-saas/{modelHasRole}', [AdminRoleSaasController::class, 'update'])
             ->name('operator-saas.admin-role-saas.update');
+        Route::post('/operator-saas/admin-role-saas/bulk-update-role', [AdminRoleSaasController::class, 'bulkUpdateRole'])
+            ->name('operator-saas.admin-role-saas.bulk-update-role');
     });
     Route::middleware('permission:admin-role-saas.delete')->group(function () {
         Route::delete('/operator-saas/admin-role-saas/{modelHasRole}', [AdminRoleSaasController::class, 'destroy'])

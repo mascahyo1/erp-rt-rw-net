@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AdminSaas;
 use App\Models\ModelHasRole;
 use App\Models\Role;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -101,5 +102,100 @@ class AdminRoleSaasController extends Controller
         $ids = $request->input('ids', []);
         if (empty($ids)) return back()->with('error', 'Tidak ada data yang dipilih.');
         return back()->with('success', ModelHasRole::whereIn('id', $ids)->delete() . " penugasan role berhasil dihapus.");
+    }
+
+    public function bulkAssign(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'admin_ids' => ['required', 'array', 'min:1'],
+            'admin_ids.*' => ['required', 'uuid'],
+            'role_id' => ['required', 'uuid'],
+        ]);
+
+        $role = Role::where('scope', 'operator_saas')
+            ->where('is_active', true)
+            ->findOrFail($validated['role_id']);
+
+        $admins = AdminSaas::whereIn('id', $validated['admin_ids'])->pluck('id');
+
+        if ($admins->isEmpty()) {
+            return back()->with('error', 'Tidak ada admin valid yang dipilih.');
+        }
+
+        $count = 0;
+        foreach ($admins as $adminId) {
+            ModelHasRole::updateOrCreate(
+                ['model_type' => AdminSaas::class, 'model_id' => $adminId],
+                ['role_id' => $role->id],
+            );
+            $count++;
+        }
+
+        return back()->with('success', "Role \"{$role->name}\" berhasil ditetapkan ke {$count} admin.");
+    }
+
+    public function bulkUpdateRole(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'uuid'],
+            'role_id' => ['required', 'uuid'],
+        ]);
+
+        $role = Role::where('scope', 'operator_saas')
+            ->where('is_active', true)
+            ->findOrFail($validated['role_id']);
+
+        $count = ModelHasRole::whereIn('id', $validated['ids'])
+            ->where('model_type', AdminSaas::class)
+            ->update(['role_id' => $role->id]);
+
+        return back()->with('success', "Role {$count} mapping berhasil diubah menjadi \"{$role->name}\".");
+    }
+
+    public function adminsAjax(Request $request): JsonResponse
+    {
+        $search = $request->input('search');
+        $perPage = min((int) $request->input('per_page', 25), 100);
+
+        $query = AdminSaas::where('is_active', true)->orderBy('name');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->paginate($perPage)
+            ->through(fn($a) => [
+                'value' => $a->id,
+                'label' => $a->name . ($a->email ? ' — ' . $a->email : ''),
+                'email' => $a->email,
+            ]);
+
+        return response()->json($items);
+    }
+
+    public function rolesAjax(Request $request): JsonResponse
+    {
+        $search = $request->input('search');
+        $perPage = min((int) $request->input('per_page', 25), 100);
+
+        $query = Role::where('scope', 'operator_saas')
+            ->where('is_active', true)
+            ->orderBy('display_order');
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $items = $query->paginate($perPage)
+            ->through(fn($r) => [
+                'value' => $r->id,
+                'label' => $r->name,
+            ]);
+
+        return response()->json($items);
     }
 }

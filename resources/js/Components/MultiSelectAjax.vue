@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
-  modelValue: { type: [String, Number], default: '' },
+  modelValue: { type: Array, default: () => [] },
   url: { type: String, required: true },
   placeholder: { type: String, default: 'Pilih...' },
   disabled: { type: Boolean, default: false },
@@ -10,9 +10,6 @@ const props = defineProps({
   debounceMs: { type: Number, default: 300 },
   labelKey: { type: String, default: 'label' },
   valueKey: { type: String, default: 'value' },
-  selectedLabel: { type: String, default: '' },
-  displayKey: { type: String, default: '' }, // field to show when selected (e.g. 'invoice_number')
-  onSelect: { type: Function, default: null },
   testId: { type: String, default: '' },
 });
 
@@ -28,15 +25,6 @@ const dropdownRef = ref(null);
 const listRef = ref(null);
 let debounceTimer = null;
 let abortController = null;
-
-const selectedLabelComputed = computed(() => {
-  if (props.selectedLabel) return props.selectedLabel;
-  const found = options.value.find(o => o[props.valueKey] == props.modelValue);
-  if (!found) return '';
-  // If displayKey is set, show only that field value when selected
-  if (props.displayKey && found[props.displayKey]) return found[props.displayKey];
-  return found[props.labelKey] || '';
-});
 
 const hasMore = computed(() => options.value.length < total.value);
 
@@ -73,7 +61,7 @@ async function fetchOptions(search = '', pageNum = 1, append = false) {
     total.value = data.total || data.meta?.total || options.value.length;
   } catch (e) {
     if (e.name !== 'AbortError') {
-      console.error('SearchableSelectAjax fetch error:', e);
+      console.error('MultiSelectAjax fetch error:', e);
     }
   } finally {
     loading.value = false;
@@ -90,11 +78,24 @@ function toggle() {
   }
 }
 
+function isSelected(option) {
+  return props.modelValue.includes(option[props.valueKey]);
+}
+
 function select(option) {
-  emit('update:modelValue', option[props.valueKey]);
-  if (props.onSelect) props.onSelect(option);
-  open.value = false;
-  searchText.value = '';
+  const val = option[props.valueKey];
+  const next = [...props.modelValue];
+  const idx = next.indexOf(val);
+  if (idx === -1) {
+    next.push(val);
+  } else {
+    next.splice(idx, 1);
+  }
+  emit('update:modelValue', next);
+}
+
+function removeSelected(val) {
+  emit('update:modelValue', props.modelValue.filter(v => v !== val));
 }
 
 function close() {
@@ -128,12 +129,7 @@ function handleClickOutside(e) {
   }
 }
 
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-  if (props.modelValue) {
-    fetchOptions('', 1, false);
-  }
-});
+onMounted(() => document.addEventListener('click', handleClickOutside));
 onUnmounted(() => document.removeEventListener('click', handleClickOutside));
 </script>
 
@@ -141,21 +137,27 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
   <div ref="dropdownRef" class="relative">
     <button
       type="button"
-      :data-testid="testId || 'select-ajax'"
+      :data-testid="testId || 'multiselect-ajax'"
       @click="toggle"
       :disabled="disabled"
       class="flex items-center justify-between gap-1.5 w-full min-w-[160px] px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm transition-colors hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
       :class="open ? 'ring-2 ring-sky-500 border-sky-500' : ''"
     >
-      <span :class="modelValue ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'">
-        {{ modelValue ? selectedLabelComputed : placeholder }}
+      <span v-if="modelValue.length === 0" class="text-gray-400 dark:text-gray-500">
+        {{ placeholder }}
+      </span>
+      <span v-else class="inline-flex items-center gap-1.5 flex-wrap text-gray-900 dark:text-white">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400">
+          <i class="fas fa-check text-[9px]"></i> {{ modelValue.length }} dipilih
+        </span>
       </span>
       <div class="flex items-center gap-1">
         <button
-          v-if="modelValue"
-          @click.stop="emit('update:modelValue', '')"
+          v-if="modelValue.length > 0"
+          type="button"
+          @click.stop="emit('update:modelValue', [])"
           class="p-0.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-          title="Hapus pilihan"
+          title="Bersihkan semua pilihan"
         >
           <i class="fas fa-times text-[10px]"></i>
         </button>
@@ -185,43 +187,37 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
         </div>
 
         <div ref="listRef" @scroll="onScroll" class="max-h-48 overflow-y-auto">
-          <!-- Loading -->
           <div v-if="loading && options.length === 0" class="px-4 py-6 text-center text-sm text-gray-400">
             <i class="fas fa-spinner fa-spin text-lg mb-1 block"></i>
             Memuat...
           </div>
 
-          <!-- Empty -->
           <div v-else-if="options.length === 0" class="px-4 py-6 text-center text-sm text-gray-400">
             <i class="fas fa-search text-lg mb-1 block opacity-50"></i>
             Tidak ada hasil
           </div>
 
-          <!-- Options -->
           <button
             type="button"
             v-for="option in options"
             :key="option[valueKey]"
             @click="select(option)"
-            class="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-sky-50 dark:hover:bg-sky-900/20"
-            :class="modelValue == option[valueKey] ? 'bg-sky-50 dark:bg-sky-900/20 text-sky-700 dark:text-sky-400 font-medium' : 'text-gray-700 dark:text-gray-300'"
+            class="w-full text-left px-4 py-2.5 text-sm transition-colors hover:bg-sky-50 dark:hover:bg-sky-900/20 flex items-start gap-2"
           >
-            <span class="block font-medium">{{ option[labelKey] }}</span>
-            <span v-if="option.invoice_number || option.kode_paket || option.customer_code" class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              <template v-if="option.invoice_number">{{ option.invoice_number }}</template>
-              <template v-if="option.kode_paket"> · {{ option.kode_paket }}</template>
-              <template v-if="option.nama_paket"> · {{ option.nama_paket }}</template>
-              <template v-if="option.customer_code"> · Plg: {{ option.customer_code }}</template>
-              <template v-if="option.customer_name"> · {{ option.customer_name }}</template>
+            <span
+              class="mt-0.5 w-4 h-4 shrink-0 rounded border flex items-center justify-center"
+              :class="isSelected(option) ? 'bg-sky-600 border-sky-600 text-white' : 'border-gray-300 dark:border-gray-600 text-transparent'"
+            >
+              <i class="fas fa-check text-[9px]"></i>
             </span>
-            <span v-if="option.email || option.phone || option.payment_status" class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">
-              <template v-if="option.email">{{ option.email }}</template>
-              <template v-if="option.phone"> · {{ option.phone }}</template>
-              <template v-if="option.payment_status"> · <span :class="option.payment_status === 'unpaid' ? 'text-red-500' : 'text-amber-500'">{{ option.payment_status }}</span></template>
+            <span>
+              <span class="block font-medium" :class="isSelected(option) ? 'text-sky-700 dark:text-sky-400' : 'text-gray-700 dark:text-gray-300'">
+                {{ option[labelKey] }}
+              </span>
+              <span v-if="option.email" class="block text-xs text-gray-400 dark:text-gray-500 mt-0.5">{{ option.email }}</span>
             </span>
           </button>
 
-          <!-- Load More -->
           <div v-if="hasMore && !loading" class="px-4 py-2 text-center border-t border-gray-100 dark:border-gray-700">
             <button type="button" @click.stop="loadMore" class="text-xs text-sky-600 dark:text-sky-400 hover:underline">
               Muat lebih banyak...

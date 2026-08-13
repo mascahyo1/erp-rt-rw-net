@@ -182,12 +182,16 @@ Route::middleware('auth:admin-company')->group(function () {
         // Admin Role Perusahaan
         Route::middleware('permission:admin-role-perusahaan-op.list')->group(function () {
             Route::get('/admin-role-perusahaan', [AdminRolePerusahaanController::class, 'index'])->name('admin-role-perusahaan.index');
+            Route::get('/admin-role-perusahaan/admins', [AdminRolePerusahaanController::class, 'adminsAjax'])->name('admin-role-perusahaan.admins');
+            Route::get('/admin-role-perusahaan/roles', [AdminRolePerusahaanController::class, 'rolesAjax'])->name('admin-role-perusahaan.roles');
         });
         Route::middleware('permission:admin-role-perusahaan-op.create')->group(function () {
             Route::post('/admin-role-perusahaan', [AdminRolePerusahaanController::class, 'store'])->name('admin-role-perusahaan.store');
+            Route::post('/admin-role-perusahaan/bulk-assign', [AdminRolePerusahaanController::class, 'bulkAssign'])->name('admin-role-perusahaan.bulkAssign');
         });
         Route::middleware('permission:admin-role-perusahaan-op.edit')->group(function () {
             Route::put('/admin-role-perusahaan/{modelHasRole}', [AdminRolePerusahaanController::class, 'update'])->name('admin-role-perusahaan.update');
+            Route::post('/admin-role-perusahaan/bulk-update-role', [AdminRolePerusahaanController::class, 'bulkUpdateRole'])->name('admin-role-perusahaan.bulkUpdateRole');
         });
         Route::middleware('permission:admin-role-perusahaan-op.delete')->group(function () {
             Route::delete('/admin-role-perusahaan/{modelHasRole}', [AdminRolePerusahaanController::class, 'destroy'])->name('admin-role-perusahaan.destroy');
@@ -204,12 +208,16 @@ Route::middleware('auth:admin-company')->group(function () {
         // Admin Role Web Karyawan
         Route::middleware('permission:admin-role-web-karyawan.list')->group(function () {
             Route::get('/admin-role-web-karyawan', [AdminRoleWebKaryawanController::class, 'index'])->name('admin-role-web-karyawan.index');
+            Route::get('/admin-role-web-karyawan/karyawans', [AdminRoleWebKaryawanController::class, 'karyawansAjax'])->name('admin-role-web-karyawan.karyawans');
+            Route::get('/admin-role-web-karyawan/roles', [AdminRoleWebKaryawanController::class, 'rolesAjax'])->name('admin-role-web-karyawan.roles');
         });
         Route::middleware('permission:admin-role-web-karyawan.create')->group(function () {
             Route::post('/admin-role-web-karyawan', [AdminRoleWebKaryawanController::class, 'store'])->name('admin-role-web-karyawan.store');
+            Route::post('/admin-role-web-karyawan/bulk-assign', [AdminRoleWebKaryawanController::class, 'bulkAssign'])->name('admin-role-web-karyawan.bulkAssign');
         });
         Route::middleware('permission:admin-role-web-karyawan.edit')->group(function () {
             Route::put('/admin-role-web-karyawan/{modelHasRole}', [AdminRoleWebKaryawanController::class, 'update'])->name('admin-role-web-karyawan.update');
+            Route::post('/admin-role-web-karyawan/bulk-update-role', [AdminRoleWebKaryawanController::class, 'bulkUpdateRole'])->name('admin-role-web-karyawan.bulkUpdateRole');
         });
         Route::middleware('permission:admin-role-web-karyawan.delete')->group(function () {
             Route::delete('/admin-role-web-karyawan/{modelHasRole}', [AdminRoleWebKaryawanController::class, 'destroy'])->name('admin-role-web-karyawan.destroy');

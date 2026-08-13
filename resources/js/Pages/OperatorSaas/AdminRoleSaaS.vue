@@ -2,7 +2,8 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import OperatorSaasLayout from '@/Layouts/OperatorSaasLayout.vue';
-import SearchableSelect from '@/Components/SearchableSelect.vue';
+import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
+import MultiSelectAjax from '@/Components/MultiSelectAjax.vue';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
@@ -11,14 +12,12 @@ defineOptions({ layout: OperatorSaasLayout });
 const props = defineProps({
   assignments: Object,
   filters: Object,
-  admins: Array,
-  roles: Array,
 });
 
 const toast = useToast();
 
-const adminOptions = computed(() => props.admins.map(a => ({ value: a.id, label: `${a.name} (${a.email})` })));
-const roleOptions = computed(() => props.roles.map(r => ({ value: r.id, label: r.name })));
+const ADMIN_URL = '/operator-saas/admin-role-saas/admins';
+const ROLE_URL = '/operator-saas/admin-role-saas/roles';
 
 // ── Search & Filter State ──
 const searchInput = ref(props.filters?.search || '');
@@ -114,9 +113,30 @@ const showCreateModal = ref(false);
 const showDetailModal = ref(false);
 const showEditModal = ref(false);
 const showDeleteModal = ref(false);
+const showBulkAssignModal = ref(false);
+const showBulkUpdateRoleModal = ref(false);
 
 const createForm = useForm({ admin_id: '', role_id: '' });
 const editForm = useForm({ id: null, role_id: '' });
+const bulkAssignForm = useForm({ admin_ids: [], role_id: '' });
+const bulkUpdateRoleForm = useForm({ ids: [], role_id: '' });
+
+function openBulkAssign() { bulkAssignForm.reset(); bulkAssignForm.clearErrors(); showBulkAssignModal.value = true; }
+function saveBulkAssign() {
+  bulkAssignForm.post('/operator-saas/admin-role-saas/bulk-assign', {
+    preserveState: true, preserveScroll: true,
+    onSuccess: () => { showBulkAssignModal.value = false; toast.success('Role berhasil ditetapkan ke admin terpilih.'); },
+    onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
+  });
+}
+function openBulkUpdateRole() { bulkUpdateRoleForm.reset(); bulkUpdateRoleForm.clearErrors(); bulkUpdateRoleForm.ids = [...selectedIds.value]; showBulkUpdateRoleModal.value = true; }
+function saveBulkUpdateRole() {
+  bulkUpdateRoleForm.post('/operator-saas/admin-role-saas/bulk-update-role', {
+    preserveState: true, preserveScroll: true,
+    onSuccess: () => { showBulkUpdateRoleModal.value = false; selectedIds.value = []; selectAll.value = false; toast.success('Role mapping berhasil diubah.'); },
+    onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
+  });
+}
 
 function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; }
 function openDetail(a) { selectedAssignment.value = a; showDetailModal.value = true; }
@@ -170,7 +190,10 @@ function confirmDelete() {
 
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div><h2 class="text-2xl font-bold text-gray-900 dark:text-white">Admin Role SaaS</h2><p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Pemetaan role untuk admin platform SaaS.</p></div>
-        <button @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"><i class="fas fa-plus mr-1.5"></i> Tambah Mapping</button>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button data-testid="btn-open-create" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"><i class="fas fa-plus mr-1.5"></i> Tambah Mapping</button>
+          <button data-testid="btn-open-bulk-assign" @click="openBulkAssign" class="inline-flex items-center px-4 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors shadow-sm"><i class="fas fa-layer-group mr-1.5"></i> Tambah Sekaligus</button>
+        </div>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
@@ -191,6 +214,7 @@ function confirmDelete() {
       <div v-if="selectedIds.length > 0" class="flex items-center justify-between px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-xl shadow-sm">
         <span class="text-sm font-medium text-indigo-700 dark:text-indigo-300"><i class="fas fa-check-circle mr-1.5"></i> {{ selectedIds.length }} data dipilih</span>
         <div class="flex items-center gap-2">
+          <button data-testid="btn-bulk-update-role" @click="openBulkUpdateRole" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors"><i class="fas fa-user-tag mr-1"></i> Ubah Sekaligus</button>
           <button @click="bulkDelete()" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"><i class="fas fa-trash-alt mr-1"></i> Hapus</button>
         </div>
       </div>
@@ -312,18 +336,81 @@ function confirmDelete() {
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Admin <span class="text-red-500">*</span></label>
-                <SearchableSelect v-model="createForm.admin_id" :options="adminOptions" placeholder="— Pilih Admin —" />
+                <SearchableSelectAjax v-model="createForm.admin_id" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="select-create-admin" />
                 <p v-if="createForm.errors.admin_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.admin_id }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-                <SearchableSelect v-model="createForm.role_id" :options="roleOptions" placeholder="— Pilih Role —" />
+                <SearchableSelectAjax v-model="createForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-create-role" />
                 <p v-if="createForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.role_id }}</p>
               </div>
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
               <button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
-              <button type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>Simpan</button>
+              <button type="submit" data-testid="btn-submit-create" :disabled="createForm.processing" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>Simpan</button>
+            </div>
+          </form>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ═══════════════ BULK ASSIGN MODAL ═══════════════ -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showBulkAssignModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showBulkAssignModal = false">
+          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <form @submit.prevent="saveBulkAssign" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col" data-testid="modal-bulk-assign">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-layer-group text-violet-500 mr-2"></i>Tambah Role Sekaligus</h3>
+              <button type="button" @click="showBulkAssignModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <div class="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-3 text-xs text-violet-700 dark:text-violet-300">
+                <i class="fas fa-info-circle mr-1.5"></i>Pilih beberapa admin sekaligus, lalu tetapkan satu role untuk mereka semua. Mapping yang sudah ada akan ditimpa (upsert).
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Admin <span class="text-red-500">*</span> <span class="text-xs text-gray-400 font-normal">(multi pilih — {{ bulkAssignForm.admin_ids.length }} dipilih)</span></label>
+                <MultiSelectAjax v-model="bulkAssignForm.admin_ids" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="multiselect-bulk-admin" />
+                <p v-if="bulkAssignForm.errors.admin_ids" class="text-red-500 text-xs mt-1">{{ bulkAssignForm.errors.admin_ids }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
+                <SearchableSelectAjax v-model="bulkAssignForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-assign-role" />
+                <p v-if="bulkAssignForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ bulkAssignForm.errors.role_id }}</p>
+              </div>
+            </div>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button type="button" @click="showBulkAssignModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+              <button type="submit" data-testid="btn-submit-bulk-assign" :disabled="bulkAssignForm.processing" class="px-6 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-layer-group mr-1.5"></i>Simpan Sekaligus</button>
+            </div>
+          </form>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- ═══════════════ BULK UPDATE ROLE MODAL ═══════════════ -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showBulkUpdateRoleModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showBulkUpdateRoleModal = false">
+          <div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <form @submit.prevent="saveBulkUpdateRole" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col" data-testid="modal-bulk-update-role">
+            <div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-user-tag text-amber-500 mr-2"></i>Ubah Role Sekaligus</h3>
+              <button type="button" @click="showBulkUpdateRoleModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
+                <i class="fas fa-info-circle mr-1.5"></i>Mengubah role untuk <strong>{{ bulkUpdateRoleForm.ids.length }}</strong> mapping terpilih. Role baru akan menimpa role lama.
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role Baru <span class="text-red-500">*</span></label>
+                <SearchableSelectAjax v-model="bulkUpdateRoleForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-update-role" />
+                <p v-if="bulkUpdateRoleForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ bulkUpdateRoleForm.errors.role_id }}</p>
+              </div>
+            </div>
+            <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <button type="button" @click="showBulkUpdateRoleModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+              <button type="submit" data-testid="btn-submit-bulk-update-role" :disabled="bulkUpdateRoleForm.processing" class="px-6 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-user-tag mr-1.5"></i>Ubah Sekaligus</button>
             </div>
           </form>
         </div>
@@ -347,7 +434,7 @@ function confirmDelete() {
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-                <SearchableSelect v-model="editForm.role_id" :options="roleOptions" placeholder="— Pilih Role —" />
+                <SearchableSelectAjax v-model="editForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-edit-role" />
                 <p v-if="editForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ editForm.errors.role_id }}</p>
               </div>
             </div>

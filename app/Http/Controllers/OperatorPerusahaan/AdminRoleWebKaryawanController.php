@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use App\Models\ModelHasRole;
 use App\Models\Role;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -108,6 +109,119 @@ class AdminRoleWebKaryawanController extends Controller
         if (empty($ids)) return back()->with('error', 'Tidak ada data yang dipilih.');
         $count = ModelHasRole::whereIn('id', $ids)->delete();
         return back()->with('success', "{$count} penugasan role berhasil dihapus.");
+    }
+
+    public function bulkAssign(Request $request): RedirectResponse
+    {
+        $companyId = auth()->user()->company_id;
+
+        $validated = $request->validate([
+            'karyawan_ids' => ['required', 'array', 'min:1'],
+            'karyawan_ids.*' => ['required', 'uuid'],
+            'role_id' => ['required', 'uuid'],
+        ]);
+
+        $role = Role::where('scope', 'karyawan_perusahaan')
+            ->where('company_id', $companyId)
+            ->where('is_active', true)
+            ->findOrFail($validated['role_id']);
+
+        $karyawans = Employee::where('company_id', $companyId)
+            ->whereIn('id', $validated['karyawan_ids'])
+            ->pluck('id');
+
+        if ($karyawans->isEmpty()) {
+            return back()->with('error', 'Tidak ada karyawan valid yang dipilih.');
+        }
+
+        $count = 0;
+        foreach ($karyawans as $karyawanId) {
+            ModelHasRole::updateOrCreate(
+                ['model_type' => Employee::class, 'model_id' => $karyawanId],
+                ['role_id' => $role->id],
+            );
+            $count++;
+        }
+
+        return back()->with('success', "Role \"{$role->name}\" berhasil ditetapkan ke {$count} karyawan.");
+    }
+
+    public function bulkUpdateRole(Request $request): RedirectResponse
+    {
+        $companyId = auth()->user()->company_id;
+
+        $validated = $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['required', 'uuid'],
+            'role_id' => ['required', 'uuid'],
+        ]);
+
+        $role = Role::where('scope', 'karyawan_perusahaan')
+            ->where('company_id', $companyId)
+            ->where('is_active', true)
+            ->findOrFail($validated['role_id']);
+
+        $rolesForCompany = Role::where('scope', 'karyawan_perusahaan')
+            ->where('company_id', $companyId)
+            ->pluck('id');
+
+        $count = ModelHasRole::whereIn('id', $validated['ids'])
+            ->where('model_type', Employee::class)
+            ->whereIn('role_id', $rolesForCompany)
+            ->update(['role_id' => $role->id]);
+
+        return back()->with('success', "Role {$count} mapping berhasil diubah menjadi \"{$role->name}\".");
+    }
+
+    public function karyawansAjax(Request $request): JsonResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $search = $request->input('search');
+        $perPage = min((int) $request->input('per_page', 25), 100);
+
+        $query = Employee::where('company_id', $companyId)
+            ->where('is_active', true)
+            ->orderBy('name');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $items = $query->paginate($perPage)
+            ->through(fn($e) => [
+                'value' => $e->id,
+                'label' => $e->name . ($e->email ? ' — ' . $e->email : ''),
+                'email' => $e->email,
+            ]);
+
+        return response()->json($items);
+    }
+
+    public function rolesAjax(Request $request): JsonResponse
+    {
+        $companyId = auth()->user()->company_id;
+        $search = $request->input('search');
+        $perPage = min((int) $request->input('per_page', 25), 100);
+
+        $query = Role::where('scope', 'karyawan_perusahaan')
+            ->where('company_id', $companyId)
+            ->where('is_active', true)
+            ->orderBy('name');
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $items = $query->paginate($perPage)
+            ->through(fn($r) => [
+                'value' => $r->id,
+                'label' => $r->name,
+            ]);
+
+        return response()->json($items);
     }
 
     public function export(Request $request): \Symfony\Component\HttpFoundation\BinaryFileResponse
