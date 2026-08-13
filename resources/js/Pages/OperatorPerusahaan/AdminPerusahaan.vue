@@ -3,7 +3,9 @@ import { ref, computed } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
 import CountryCodeSelect from '@/Components/CountryCodeSelect.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import { useToast } from '@/Composables/useToast';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: OperatorPerusahaanLayout });
@@ -132,7 +134,7 @@ function saveCreate() {
   createForm.post('/operator-perusahaan/admin-perusahaan', {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showCreateModal.value = false; toast.success('Admin Perusahaan berhasil ditambahkan.'); },
-    onError: () => toast.error('Validasi gagal. Periksa kembali isian form.'),
+    onError: () => toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000),
   });
 }
 
@@ -140,7 +142,7 @@ function saveEdit() {
   editForm.put(`/operator-perusahaan/admin-perusahaan/${editForm.id}`, {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showEditModal.value = false; toast.success('Admin Perusahaan berhasil diperbarui.'); },
-    onError: () => toast.error('Validasi gagal. Periksa kembali isian form.'),
+    onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000),
   });
 }
 
@@ -363,6 +365,7 @@ function confirmDelete() {
               <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="createForm.errors" test-id="form-error-summary-create" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama <span class="text-red-500">*</span></label>
                 <input v-model="createForm.nama" type="text" placeholder="Nama lengkap" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.nama ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']" />
@@ -389,7 +392,8 @@ function confirmDelete() {
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
-                <select v-model="createForm.status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-colors"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+                <select v-model="createForm.status" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-white', createForm.errors.status ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+                <p v-if="createForm.errors.status" class="text-red-500 text-xs mt-1">{{ createForm.errors.status }}</p>
               </div>
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -412,6 +416,7 @@ function confirmDelete() {
               <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="editForm.errors" test-id="form-error-summary-edit" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama <span class="text-red-500">*</span></label>
                 <input v-model="editForm.nama" type="text" placeholder="Nama lengkap" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.nama ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']" />
@@ -438,7 +443,8 @@ function confirmDelete() {
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
-                <select v-model="editForm.status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-colors"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+                <select v-model="editForm.status" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-800 text-gray-900 dark:text-white', editForm.errors.status ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+                <p v-if="editForm.errors.status" class="text-red-500 text-xs mt-1">{{ editForm.errors.status }}</p>
               </div>
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">

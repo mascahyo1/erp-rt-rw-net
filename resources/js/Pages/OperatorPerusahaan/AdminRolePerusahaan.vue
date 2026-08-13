@@ -4,7 +4,9 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
 import MultiSelectAjax from '@/Components/MultiSelectAjax.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import { useToast } from '@/Composables/useToast';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: OperatorPerusahaanLayout });
@@ -61,9 +63,9 @@ const bulkAssignForm = useForm({ admin_ids: [], role_id: '' });
 const bulkUpdateRoleForm = useForm({ ids: [], role_id: '' });
 
 function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; }
-function submitCreate() { createForm.post('/operator-perusahaan/admin-role-perusahaan', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Mapping berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal. Periksa kembali isian form.') }); }
+function submitCreate() { createForm.post('/operator-perusahaan/admin-role-perusahaan', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Mapping berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000) }); }
 function openEdit(item) { editForm.defaults({ role_id: item.role_id }); editForm.reset(); editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; }
-function submitEdit() { editForm.put('/operator-perusahaan/admin-role-perusahaan/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Mapping berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal. Periksa kembali isian form.') }); }
+function submitEdit() { editForm.put('/operator-perusahaan/admin-role-perusahaan/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Mapping berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
 function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
 function confirmDelete() {
@@ -77,7 +79,7 @@ function submitBulkAssign() {
   bulkAssignForm.post('/operator-perusahaan/admin-role-perusahaan/bulk-assign', {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showBulkAssignModal.value = false; fetchData(); toast.success('Role berhasil ditetapkan ke admin terpilih.'); },
-    onError: () => toast.error('Validasi gagal. Periksa kembali isian form.'),
+    onError: () => toast.error('Validasi gagal: ' + errorSummary(bulkAssignForm.errors), 6000),
   });
 }
 function openBulkUpdateRole() { bulkUpdateRoleForm.reset(); bulkUpdateRoleForm.clearErrors(); bulkUpdateRoleForm.ids = [...selectedIds.value]; showBulkUpdateRoleModal.value = true; }
@@ -85,7 +87,7 @@ function submitBulkUpdateRole() {
   bulkUpdateRoleForm.post('/operator-perusahaan/admin-role-perusahaan/bulk-update-role', {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showBulkUpdateRoleModal.value = false; selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Role mapping berhasil diubah.'); },
-    onError: () => toast.error('Validasi gagal. Periksa kembali isian form.'),
+    onError: () => toast.error('Validasi gagal: ' + errorSummary(bulkUpdateRoleForm.errors), 6000),
   });
 }
 
@@ -93,7 +95,7 @@ function exportAll() { window.open('/operator-perusahaan/admin-role-perusahaan/e
 function exportSelected() { if (!selectedIds.value.length) return; window.open('/operator-perusahaan/admin-role-perusahaan/export?ids=' + selectedIds.value.join(','), '_blank'); }
 function downloadTemplate() { window.open('/operator-perusahaan/admin-role-perusahaan/template', '_blank'); }
 function openImport() { importForm.reset(); importForm.clearErrors(); showImportModal.value = true; }
-function submitImport() { importForm.post('/operator-perusahaan/admin-role-perusahaan/import', { preserveState: true, preserveScroll: true, onSuccess: () => { showImportModal.value = false; fetchData(); toast.success('Import berhasil.') }, onError: () => toast.error('Import gagal. Periksa format file.') }); }
+function submitImport() { importForm.post('/operator-perusahaan/admin-role-perusahaan/import', { preserveState: true, preserveScroll: true, onSuccess: () => { showImportModal.value = false; fetchData(); toast.success('Import berhasil.') }, onError: () => toast.error('Validasi gagal: ' + errorSummary(importForm.errors), 6000) }); }
 
 const items = computed(() => props.assignments?.data || []);
 const pagination = computed(() => ({ current: props.assignments?.current_page || 1, last: props.assignments?.last_page || 1, total: props.assignments?.total || 0 }));
@@ -272,15 +274,17 @@ const pagination = computed(() => ({ current: props.assignments?.current_page ||
             <button type="button" @click="showCreateModal = showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
           </div>
           <form class="flex-1 overflow-y-auto px-6 py-5 space-y-4 modal-scroll" @submit.prevent="showCreateModal ? submitCreate() : submitEdit()">
+            <FormErrorSummary v-if="showCreateModal" :errors="createForm.errors" test-id="form-error-summary-create" />
+            <FormErrorSummary v-if="showEditModal" :errors="editForm.errors" test-id="form-error-summary-edit" />
             <div v-if="showCreateModal">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Admin <span class="text-red-500">*</span></label>
-              <SearchableSelectAjax v-model="createForm.admin_id" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="select-create-admin" />
+              <SearchableSelectAjax v-model="createForm.admin_id" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="select-create-admin" :class="createForm.errors.admin_id ? 'ring-2 ring-red-400 rounded-lg' : ''" />
               <p v-if="createForm.errors.admin_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.admin_id }}</p>
               <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Hanya menampilkan admin aktif di perusahaan ini.</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-              <SearchableSelectAjax v-model="(showCreateModal ? createForm : editForm).role_id" :url="ROLE_URL" placeholder="— Pilih Role —" :test-id="showCreateModal ? 'select-create-role' : 'select-edit-role'" />
+              <SearchableSelectAjax v-model="(showCreateModal ? createForm : editForm).role_id" :url="ROLE_URL" placeholder="— Pilih Role —" :test-id="showCreateModal ? 'select-create-role' : 'select-edit-role'" :class="(showCreateModal ? createForm : editForm).errors.role_id ? 'ring-2 ring-red-400 rounded-lg' : ''" />
               <p v-if="(showCreateModal ? createForm : editForm).errors.role_id" class="text-red-500 text-xs mt-1">{{ (showCreateModal ? createForm : editForm).errors.role_id }}</p>
             </div>
             <div v-if="!showCreateModal" class="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-lg p-3 text-xs text-sky-700 dark:text-sky-300">
@@ -307,17 +311,18 @@ const pagination = computed(() => ({ current: props.assignments?.current_page ||
             <button type="button" @click="showBulkAssignModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
           </div>
           <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+            <FormErrorSummary :errors="bulkAssignForm.errors" test-id="form-error-summary-bulk-assign" />
             <div class="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-200 dark:border-indigo-800 rounded-lg p-3 text-xs text-indigo-700 dark:text-indigo-300">
               <i class="fas fa-info-circle mr-1.5"></i>Pilih beberapa admin sekaligus, lalu tetapkan satu role untuk mereka semua. Mapping yang sudah ada akan ditimpa (upsert).
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Admin <span class="text-red-500">*</span> <span class="text-xs text-gray-400 font-normal">(multi pilih — {{ bulkAssignForm.admin_ids.length }} dipilih)</span></label>
-              <MultiSelectAjax v-model="bulkAssignForm.admin_ids" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="multiselect-bulk-admin" />
+              <MultiSelectAjax v-model="bulkAssignForm.admin_ids" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="multiselect-bulk-admin" :class="bulkAssignForm.errors.admin_ids ? 'ring-2 ring-red-400 rounded-lg' : ''" />
               <p v-if="bulkAssignForm.errors.admin_ids" class="text-red-500 text-xs mt-1">{{ bulkAssignForm.errors.admin_ids }}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-              <SearchableSelectAjax v-model="bulkAssignForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-assign-role" />
+              <SearchableSelectAjax v-model="bulkAssignForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-assign-role" :class="bulkAssignForm.errors.role_id ? 'ring-2 ring-red-400 rounded-lg' : ''" />
               <p v-if="bulkAssignForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ bulkAssignForm.errors.role_id }}</p>
             </div>
           </div>
@@ -341,12 +346,14 @@ const pagination = computed(() => ({ current: props.assignments?.current_page ||
             <button type="button" @click="showBulkUpdateRoleModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
           </div>
           <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+            <FormErrorSummary :errors="bulkUpdateRoleForm.errors" test-id="form-error-summary-bulk-update-role" />
             <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
               <i class="fas fa-info-circle mr-1.5"></i>Mengubah role untuk <strong>{{ bulkUpdateRoleForm.ids.length }}</strong> mapping terpilih. Role baru akan menimpa role lama.
             </div>
+            <p v-if="bulkUpdateRoleForm.errors.ids" class="text-red-500 text-xs mt-1">{{ bulkUpdateRoleForm.errors.ids }}</p>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role Baru <span class="text-red-500">*</span></label>
-              <SearchableSelectAjax v-model="bulkUpdateRoleForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-update-role" />
+              <SearchableSelectAjax v-model="bulkUpdateRoleForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-update-role" :class="bulkUpdateRoleForm.errors.role_id ? 'ring-2 ring-red-400 rounded-lg' : ''" />
               <p v-if="bulkUpdateRoleForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ bulkUpdateRoleForm.errors.role_id }}</p>
             </div>
           </div>
@@ -388,6 +395,7 @@ const pagination = computed(() => ({ current: props.assignments?.current_page ||
             <button type="button" @click="showImportModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
           </div>
           <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+            <FormErrorSummary :errors="importForm.errors" test-id="form-error-summary-import" />
             <div class="bg-sky-50 dark:bg-sky-900/20 border border-sky-200 dark:border-sky-800 rounded-lg p-3 text-sm text-sky-700 dark:text-sky-300">
               <i class="fas fa-info-circle mr-1.5"></i>Upload file .xlsx atau .csv. <a @click="downloadTemplate" class="underline font-medium cursor-pointer">Download template</a> untuk format yang benar.
             </div>
@@ -396,7 +404,7 @@ const pagination = computed(() => ({ current: props.assignments?.current_page ||
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">File Excel <span class="text-red-500">*</span></label>
-              <input type="file" @input="importForm.file = $event.target.files[0]" accept=".xlsx,.csv" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-colors file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-sky-600 file:text-white file:text-xs file:hover:bg-sky-700" />
+              <input type="file" @input="importForm.file = $event.target.files[0]" accept=".xlsx,.csv" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none bg-white dark:bg-gray-900 text-gray-900 dark:text-white file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-sky-600 file:text-white file:text-xs file:hover:bg-sky-700', importForm.errors.file ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-sky-500']" />
               <p v-if="importForm.errors.file" class="text-red-500 text-xs mt-1">{{ importForm.errors.file }}</p>
             </div>
           </div>

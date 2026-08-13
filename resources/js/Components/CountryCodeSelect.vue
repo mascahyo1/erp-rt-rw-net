@@ -9,6 +9,7 @@ const props = defineProps({
     accent: { type: String, default: 'indigo' }, // color accent for focus ring
     inputId: { type: String, default: null },
     disabled: { type: Boolean, default: false },
+    error: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update:modelValue', 'change']);
@@ -147,12 +148,13 @@ onBeforeUnmount(() => {
             @keydown="onArrowDown"
             :disabled="disabled"
             :class="[
-                'flex items-center gap-2 w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-left transition-colors outline-none',
+                'flex items-center gap-2 w-full rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-left transition-colors outline-none',
+                error ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600',
                 sizeClasses.trigger,
-                accentClasses.focus,
-                accentClasses.focusBorder,
+                error ? '' : accentClasses.focus,
+                error ? '' : accentClasses.focusBorder,
                 'focus:ring-2',
-                isOpen ? 'ring-2 ring-' + accent + '-500 border-' + accent + '-500' : '',
+                isOpen && !error ? 'ring-2 ring-' + accent + '-500 border-' + accent + '-500' : '',
                 disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400 dark:hover:border-gray-500',
             ]"
         >

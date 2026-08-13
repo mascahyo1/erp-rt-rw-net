@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import KaryawanLayout from '@/Layouts/KaryawanLayout.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import { errorSummary } from '@/Composables/useFormErrorToast.js';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
@@ -83,9 +85,9 @@ const importForm = useForm({ file: null });
 const importing = ref(false);
 
 function openCreate() { createForm.reset(); showCreateModal.value = true; }
-function submitCreate() { createForm.post('/karyawan/tagihan', { onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Tagihan berhasil ditambahkan.'); } }); }
+function submitCreate() { createForm.post('/karyawan/tagihan', { onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Tagihan berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000) }); }
 function openEdit(item) { editForm.defaults({ cust_internet_id: item.cust_internet_id, usage_start_date: item.usage_start_date || '', usage_end_date: item.usage_end_date || '', total_amount: item.total_amount, discount_amount: item.discount_amount, tax_amount: item.tax_amount, due_date: item.due_date || '', description: item.description || '' }); editForm.reset(); selectedItem.value = item; showEditModal.value = true; }
-function submitEdit() { editForm.put('/karyawan/tagihan/' + selectedItem.value.id, { onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Tagihan berhasil diperbarui.'); } }); }
+function submitEdit() { editForm.put('/karyawan/tagihan/' + selectedItem.value.id, { onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Tagihan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
 
 const paymentHistory = ref({ payments: [], total_paid: 0, remaining: 0, grand_total: 0, payment_status_label: 'unpaid' });
 const paymentHistoryLoading = ref(false);
@@ -117,10 +119,10 @@ function bulkRestore() { router.post('/karyawan/tagihan/bulk-restore', { ids: se
 function bulkSetStatus(status) { router.post('/karyawan/tagihan/bulk-status', { ids: selectedIds.value, status }, { onSuccess: () => { selectedIds.value = []; selectAll.value = false; fetchData(); toast.success('Status berhasil diubah.'); } }); }
 
 function openGenerate() { generateForm.reset(); generateForm.cycle = 'monthly'; generateForm.period_year = new Date().getFullYear(); generateForm.period_month = new Date().getMonth() + 1; generateForm.usage_date = new Date().toISOString().slice(0, 10); showGenerateModal.value = true; }
-function submitGenerate() { generateForm.post('/karyawan/tagihan/generate', { onSuccess: () => { showGenerateModal.value = false; fetchData(); toast.success('Tagihan berhasil digenerate.'); } }); }
+function submitGenerate() { generateForm.post('/karyawan/tagihan/generate', { onSuccess: () => { showGenerateModal.value = false; fetchData(); toast.success('Tagihan berhasil digenerate.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(generateForm.errors), 6000) }); }
 
 function openImport() { importForm.reset(); showImportModal.value = true; }
-function submitImport() { importing.value = true; importForm.post('/karyawan/tagihan/import', { onSuccess: () => { showImportModal.value = false; importing.value = false; fetchData(); toast.success('Import berhasil.'); }, onError: () => { importing.value = false; toast.error('Import gagal.'); } }); }
+function submitImport() { importing.value = true; importForm.post('/karyawan/tagihan/import', { onSuccess: () => { showImportModal.value = false; importing.value = false; fetchData(); toast.success('Import berhasil.'); }, onError: () => { importing.value = false; toast.error('Import gagal: ' + errorSummary(importForm.errors), 6000); } }); }
 function downloadTemplate() { window.location.href = '/karyawan/tagihan/template'; }
 function buildFilterParams() {
     const params = new URLSearchParams();
@@ -436,43 +438,50 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
               <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="createForm.errors" testId="form-error-summary-create-tagihan" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Langganan <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="createForm.cust_internet_id" url="/karyawan/api/search/langganans" placeholder="— Pilih Langganan —" />
+                <SearchableSelectAjax v-model="createForm.cust_internet_id" url="/karyawan/api/search/langganans" placeholder="— Pilih Langganan —" :error="!!createForm.errors.cust_internet_id" />
                 <p v-if="createForm.errors.cust_internet_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.cust_internet_id }}</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Awal Usage</label>
-                  <input v-model="createForm.usage_start_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:[color-scheme:dark]" />
+                  <input v-model="createForm.usage_start_date" type="date" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none dark:[color-scheme:dark]', createForm.errors.usage_start_date ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="createForm.errors.usage_start_date" class="text-red-500 text-xs mt-1">{{ createForm.errors.usage_start_date }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Akhir Usage</label>
-                  <input v-model="createForm.usage_end_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:[color-scheme:dark]" />
+                  <input v-model="createForm.usage_end_date" type="date" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none dark:[color-scheme:dark]', createForm.errors.usage_end_date ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="createForm.errors.usage_end_date" class="text-red-500 text-xs mt-1">{{ createForm.errors.usage_end_date }}</p>
                 </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Total Tagihan <span class="text-red-500">*</span></label>
-                <input v-model="createForm.total_amount" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                <input v-model="createForm.total_amount" type="number" placeholder="0" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createForm.errors.total_amount ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
                 <p v-if="createForm.errors.total_amount" class="text-red-500 text-xs mt-1">{{ createForm.errors.total_amount }}</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Diskon</label>
-                  <input v-model="createForm.discount_amount" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="createForm.discount_amount" type="number" placeholder="0" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createForm.errors.discount_amount ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="createForm.errors.discount_amount" class="text-red-500 text-xs mt-1">{{ createForm.errors.discount_amount }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Pajak</label>
-                  <input v-model="createForm.tax_amount" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="createForm.tax_amount" type="number" placeholder="0" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createForm.errors.tax_amount ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="createForm.errors.tax_amount" class="text-red-500 text-xs mt-1">{{ createForm.errors.tax_amount }}</p>
                 </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Jatuh Tempo</label>
-                <input v-model="createForm.due_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:[color-scheme:dark]" />
+                <input v-model="createForm.due_date" type="date" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none dark:[color-scheme:dark]', createForm.errors.due_date ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                <p v-if="createForm.errors.due_date" class="text-red-500 text-xs mt-1">{{ createForm.errors.due_date }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label>
-                <textarea v-model="createForm.description" rows="2" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
+                <textarea v-model="createForm.description" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', createForm.errors.description ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']"></textarea>
+                <p v-if="createForm.errors.description" class="text-red-500 text-xs mt-1">{{ createForm.errors.description }}</p>
               </div>
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -495,43 +504,50 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
               <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="editForm.errors" testId="form-error-summary-edit-tagihan" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Langganan <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="editForm.cust_internet_id" url="/karyawan/api/search/langganans" placeholder="— Pilih Langganan —" :selected-label="selectedItem?.customer_name" />
+                <SearchableSelectAjax v-model="editForm.cust_internet_id" url="/karyawan/api/search/langganans" placeholder="— Pilih Langganan —" :selected-label="selectedItem?.customer_name" :error="!!editForm.errors.cust_internet_id" />
                 <p v-if="editForm.errors.cust_internet_id" class="text-red-500 text-xs mt-1">{{ editForm.errors.cust_internet_id }}</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Awal Usage</label>
-                  <input v-model="editForm.usage_start_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:[color-scheme:dark]" />
+                  <input v-model="editForm.usage_start_date" type="date" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none dark:[color-scheme:dark]', editForm.errors.usage_start_date ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="editForm.errors.usage_start_date" class="text-red-500 text-xs mt-1">{{ editForm.errors.usage_start_date }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Akhir Usage</label>
-                  <input v-model="editForm.usage_end_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:[color-scheme:dark]" />
+                  <input v-model="editForm.usage_end_date" type="date" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none dark:[color-scheme:dark]', editForm.errors.usage_end_date ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="editForm.errors.usage_end_date" class="text-red-500 text-xs mt-1">{{ editForm.errors.usage_end_date }}</p>
                 </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Total Tagihan <span class="text-red-500">*</span></label>
-                <input v-model="editForm.total_amount" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
-                <p v-if="editForm.errors.total_amount" class="text-red-500 text-xs mt-1">{{ createForm.errors.total_amount }}</p>
+                <input v-model="editForm.total_amount" type="number" placeholder="0" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editForm.errors.total_amount ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                <p v-if="editForm.errors.total_amount" class="text-red-500 text-xs mt-1">{{ editForm.errors.total_amount }}</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Diskon</label>
-                  <input v-model="editForm.discount_amount" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="editForm.discount_amount" type="number" placeholder="0" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editForm.errors.discount_amount ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="editForm.errors.discount_amount" class="text-red-500 text-xs mt-1">{{ editForm.errors.discount_amount }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Pajak</label>
-                  <input v-model="editForm.tax_amount" type="number" placeholder="0" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="editForm.tax_amount" type="number" placeholder="0" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editForm.errors.tax_amount ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="editForm.errors.tax_amount" class="text-red-500 text-xs mt-1">{{ editForm.errors.tax_amount }}</p>
                 </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Jatuh Tempo</label>
-                <input v-model="editForm.due_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:[color-scheme:dark]" />
+                <input v-model="editForm.due_date" type="date" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none dark:[color-scheme:dark]', editForm.errors.due_date ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                <p v-if="editForm.errors.due_date" class="text-red-500 text-xs mt-1">{{ editForm.errors.due_date }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Deskripsi</label>
-                <textarea v-model="editForm.description" rows="2" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
+                <textarea v-model="editForm.description" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', editForm.errors.description ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']"></textarea>
+                <p v-if="editForm.errors.description" class="text-red-500 text-xs mt-1">{{ editForm.errors.description }}</p>
               </div>
             </div>
             <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -554,6 +570,7 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
               <button type="button" @click="showGenerateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="px-6 py-5 space-y-4">
+              <FormErrorSummary :errors="generateForm.errors" testId="form-error-summary-generate-tagihan" />
               <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-400">
                 <i class="fas fa-info-circle mr-1"></i> Generate akan membuat tagihan untuk semua langganan aktif pada cycle &amp; periode yang dipilih.
               </div>
@@ -564,31 +581,37 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
                     <input v-model="generateForm.cycle" type="radio" :value="c.v" class="sr-only" />{{ c.l }}<i :class="['fas mt-1', c.i, 'text-base']"></i>
                   </label>
                 </div>
+                <p v-if="generateForm.errors.cycle" class="text-red-500 text-xs mt-1">{{ generateForm.errors.cycle }}</p>
               </div>
               <div v-if="generateForm.cycle === 'daily' || generateForm.cycle === 'weekly'">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Usage Date <span class="text-red-500">*</span></label>
-                <input v-model="generateForm.usage_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:[color-scheme:dark]" />
+                <input v-model="generateForm.usage_date" type="date" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none dark:[color-scheme:dark]', generateForm.errors.usage_date ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                <p v-if="generateForm.errors.usage_date" class="text-red-500 text-xs mt-1">{{ generateForm.errors.usage_date }}</p>
                 <p class="text-xs text-gray-500 mt-1" v-if="generateForm.cycle === 'weekly'">Akan di-snap ke hari Senin (Senin minggu itu)</p>
               </div>
               <div v-if="generateForm.cycle === 'monthly'" class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tahun <span class="text-red-500">*</span></label>
-                  <input v-model="generateForm.period_year" type="number" min="2020" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="generateForm.period_year" type="number" min="2020" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', generateForm.errors.period_year ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="generateForm.errors.period_year" class="text-red-500 text-xs mt-1">{{ generateForm.errors.period_year }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bulan <span class="text-red-500">*</span></label>
-                  <select v-model="generateForm.period_month" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                  <select v-model="generateForm.period_month" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', generateForm.errors.period_month ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']">
                     <option v-for="m in 12" :key="m" :value="m">{{ new Date(2000, m-1, 1).toLocaleString('id', { month: 'long' }) }}</option>
                   </select>
+                  <p v-if="generateForm.errors.period_month" class="text-red-500 text-xs mt-1">{{ generateForm.errors.period_month }}</p>
                 </div>
               </div>
               <div v-if="generateForm.cycle === 'yearly'">
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tahun <span class="text-red-500">*</span></label>
-                <input v-model="generateForm.period_year" type="number" min="2020" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                <input v-model="generateForm.period_year" type="number" min="2020" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', generateForm.errors.period_year ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                <p v-if="generateForm.errors.period_year" class="text-red-500 text-xs mt-1">{{ generateForm.errors.period_year }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Jatuh Tempo (opsional)</label>
-                <input v-model="generateForm.due_date" type="date" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none dark:[color-scheme:dark]" />
+                <input v-model="generateForm.due_date" type="date" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none dark:[color-scheme:dark]', generateForm.errors.due_date ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                <p v-if="generateForm.errors.due_date" class="text-red-500 text-xs mt-1">{{ generateForm.errors.due_date }}</p>
                 <p class="text-xs text-gray-500 mt-1">Kosongkan untuk menggunakan default 30 hari setelah akhir periode</p>
               </div>
             </div>
@@ -612,6 +635,7 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
               <button type="button" @click="showImportModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="px-6 py-5 space-y-4">
+              <FormErrorSummary :errors="importForm.errors" testId="form-error-summary-import-tagihan" />
               <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-xs text-blue-700 dark:text-blue-400">
                 <i class="fas fa-info-circle mr-1"></i> File harus format .xlsx atau .csv. Download template untuk参照.
               </div>

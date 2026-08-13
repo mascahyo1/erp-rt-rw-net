@@ -4,7 +4,9 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import OperatorSaasLayout from '@/Layouts/OperatorSaasLayout.vue';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
 import MultiSelectAjax from '@/Components/MultiSelectAjax.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import { useToast } from '@/Composables/useToast';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: OperatorSaasLayout });
@@ -126,7 +128,7 @@ function saveBulkAssign() {
   bulkAssignForm.post('/operator-saas/admin-role-saas/bulk-assign', {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showBulkAssignModal.value = false; toast.success('Role berhasil ditetapkan ke admin terpilih.'); },
-    onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
+    onError: () => { toast.error('Validasi gagal: ' + errorSummary(bulkAssignForm.errors), 6000); },
   });
 }
 function openBulkUpdateRole() { bulkUpdateRoleForm.reset(); bulkUpdateRoleForm.clearErrors(); bulkUpdateRoleForm.ids = [...selectedIds.value]; showBulkUpdateRoleModal.value = true; }
@@ -134,7 +136,7 @@ function saveBulkUpdateRole() {
   bulkUpdateRoleForm.post('/operator-saas/admin-role-saas/bulk-update-role', {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showBulkUpdateRoleModal.value = false; selectedIds.value = []; selectAll.value = false; toast.success('Role mapping berhasil diubah.'); },
-    onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
+    onError: () => { toast.error('Validasi gagal: ' + errorSummary(bulkUpdateRoleForm.errors), 6000); },
   });
 }
 
@@ -147,7 +149,7 @@ function saveCreate() {
   createForm.post('/operator-saas/admin-role-saas', {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showCreateModal.value = false; toast.success('Role admin SaaS berhasil ditetapkan.'); },
-    onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
+    onError: () => { toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000); },
   });
 }
 
@@ -155,7 +157,7 @@ function saveEdit() {
   editForm.put(`/operator-saas/admin-role-saas/${editForm.id}`, {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showEditModal.value = false; toast.success('Role admin SaaS berhasil diperbarui.'); },
-    onError: () => { toast.error('Validasi gagal. Periksa kembali isian form.'); },
+    onError: () => { toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000); },
   });
 }
 
@@ -334,14 +336,15 @@ function confirmDelete() {
               <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="createForm.errors" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Admin <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="createForm.admin_id" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="select-create-admin" />
+                <SearchableSelectAjax v-model="createForm.admin_id" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="select-create-admin" :error="!!createForm.errors.admin_id" />
                 <p v-if="createForm.errors.admin_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.admin_id }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="createForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-create-role" />
+                <SearchableSelectAjax v-model="createForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-create-role" :error="!!createForm.errors.role_id" />
                 <p v-if="createForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.role_id }}</p>
               </div>
             </div>
@@ -365,17 +368,18 @@ function confirmDelete() {
               <button type="button" @click="showBulkAssignModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="bulkAssignForm.errors" />
               <div class="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 dark:border-violet-800 rounded-lg p-3 text-xs text-violet-700 dark:text-violet-300">
                 <i class="fas fa-info-circle mr-1.5"></i>Pilih beberapa admin sekaligus, lalu tetapkan satu role untuk mereka semua. Mapping yang sudah ada akan ditimpa (upsert).
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Admin <span class="text-red-500">*</span> <span class="text-xs text-gray-400 font-normal">(multi pilih — {{ bulkAssignForm.admin_ids.length }} dipilih)</span></label>
-                <MultiSelectAjax v-model="bulkAssignForm.admin_ids" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="multiselect-bulk-admin" />
+                <MultiSelectAjax v-model="bulkAssignForm.admin_ids" :url="ADMIN_URL" placeholder="— Pilih Admin —" test-id="multiselect-bulk-admin" :error="!!bulkAssignForm.errors.admin_ids" />
                 <p v-if="bulkAssignForm.errors.admin_ids" class="text-red-500 text-xs mt-1">{{ bulkAssignForm.errors.admin_ids }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="bulkAssignForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-assign-role" />
+                <SearchableSelectAjax v-model="bulkAssignForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-assign-role" :error="!!bulkAssignForm.errors.role_id" />
                 <p v-if="bulkAssignForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ bulkAssignForm.errors.role_id }}</p>
               </div>
             </div>
@@ -399,12 +403,13 @@ function confirmDelete() {
               <button type="button" @click="showBulkUpdateRoleModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="bulkUpdateRoleForm.errors" />
               <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-300">
                 <i class="fas fa-info-circle mr-1.5"></i>Mengubah role untuk <strong>{{ bulkUpdateRoleForm.ids.length }}</strong> mapping terpilih. Role baru akan menimpa role lama.
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role Baru <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="bulkUpdateRoleForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-update-role" />
+                <SearchableSelectAjax v-model="bulkUpdateRoleForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-bulk-update-role" :error="!!bulkUpdateRoleForm.errors.role_id" />
                 <p v-if="bulkUpdateRoleForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ bulkUpdateRoleForm.errors.role_id }}</p>
               </div>
             </div>
@@ -428,13 +433,14 @@ function confirmDelete() {
               <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="editForm.errors" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Admin</label>
                 <p class="px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-700 dark:text-gray-300 text-sm">{{ selectedAssignment?.admin_nama }} <span class="text-gray-400">({{ selectedAssignment?.admin_email }})</span></p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="editForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-edit-role" />
+                <SearchableSelectAjax v-model="editForm.role_id" :url="ROLE_URL" placeholder="— Pilih Role —" test-id="select-edit-role" :error="!!editForm.errors.role_id" />
                 <p v-if="editForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ editForm.errors.role_id }}</p>
               </div>
             </div>

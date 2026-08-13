@@ -5,6 +5,8 @@ import KaryawanLayout from '@/Layouts/KaryawanLayout.vue';
 import { useToast } from '@/Composables/useToast';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
 import ToastContainer from '@/Components/ToastContainer.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 
 defineOptions({ layout: KaryawanLayout });
 
@@ -37,6 +39,10 @@ const showResolveModal = ref(false);
 const showDetailModal = ref(false);
 const showDeleteModal = ref(false);
 const selectedItem = ref(null);
+
+const createErrors = ref({});
+const editErrors = ref({});
+const resolveErrors = ref({});
 
 const createForm = useForm({
   cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [],
@@ -209,6 +215,7 @@ function resetAttachmentState() {
 
 function openCreate() {
   createForm.reset(); createForm.clearErrors();
+  createErrors.value = {};
   additionalPics.value = [];
   resetAttachmentState();
   createExistingAttachments.value = { [ATT_TYPE_BUKTI_ISSUE]: [] };
@@ -236,12 +243,16 @@ async function submitCreate() {
     if (resp.ok) {
       showCreateModal.value = false; additionalPics.value = []; resetAttachmentState();
       toast.success('Tiket berhasil dibuat.'); fetchData();
+    } else if (data.errors) {
+      createErrors.value = data.errors;
+      toast.error('Validasi gagal: ' + errorSummary(data.errors), 6000);
     } else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
 
 function openEdit(item) {
   editForm.reset(); editForm.clearErrors();
+  editErrors.value = {};
   editForm.main_pic_employee_id = item.assigned_to_employee_id || '';
   editForm.catatan = item.catatan || '';
   editForm.status_pengerjaan = item.status_pengerjaan || '';
@@ -288,12 +299,16 @@ async function submitEdit() {
     if (resp.ok) {
       showEditModal.value = false; resetAttachmentState();
       toast.success('Tiket berhasil diperbarui.'); fetchData();
+    } else if (data.errors) {
+      editErrors.value = data.errors;
+      toast.error('Validasi gagal: ' + errorSummary(data.errors), 6000);
     } else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
 
 function openResolve(item) {
   resolveForm.reset(); resolveForm.clearErrors();
+  resolveErrors.value = {};
   resetAttachmentState();
   resolveExistingAttachments.value = {
     [ATT_TYPE_BUKTI_ISSUE_SELESAI]: item.attachments?.[ATT_TYPE_BUKTI_ISSUE_SELESAI] || [],
@@ -318,6 +333,9 @@ async function submitResolve() {
     if (resp.ok) {
       showResolveModal.value = false; resetAttachmentState();
       toast.success('Tiket ditandai selesai. Menunggu verifikasi admin.'); fetchData();
+    } else if (data.errors) {
+      resolveErrors.value = data.errors;
+      toast.error('Validasi gagal: ' + errorSummary(data.errors), 6000);
     } else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
@@ -444,17 +462,19 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
 
     <!-- Create Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-create" @submit.prevent="submitCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-plus text-emerald-500 mr-2"></i>Buat Tiket Gangguan</h3><button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/karyawan/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" /></span></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" /></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Selesai Gangguan <span class="text-xs text-gray-400">(opsional, jika sudah fix)</span></label><input data-testid="input-issue-diselesaikan" v-model="createForm.issue_diselesaikan_pada" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" /></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Utama <span class="text-xs text-gray-400">(opsional)</span></label><span data-testid="btn-select-main-pic"><SearchableSelectAjax data-testid="select-main-pic" v-model="createForm.main_pic_employee_id" url="/karyawan/api/search/employees" placeholder="— Pilih PIC Utama —" display-key="name" /></span></div>
+      <FormErrorSummary :errors="createErrors" testId="create-error-summary" />
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/karyawan/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" :error="!!createErrors.cust_internet_id" /></span><p v-if="createErrors.cust_internet_id" class="text-red-500 text-xs mt-1">{{ createErrors.cust_internet_id }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none', createErrors.issue_dimulai_dari ? 'border-red-400 focus:ring-2 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']" /><p v-if="createErrors.issue_dimulai_dari" class="text-red-500 text-xs mt-1">{{ createErrors.issue_dimulai_dari }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Selesai Gangguan <span class="text-xs text-gray-400">(opsional, jika sudah fix)</span></label><input data-testid="input-issue-diselesaikan" v-model="createForm.issue_diselesaikan_pada" type="datetime-local" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none', createErrors.issue_diselesaikan_pada ? 'border-red-400 focus:ring-2 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']" /><p v-if="createErrors.issue_diselesaikan_pada" class="text-red-500 text-xs mt-1">{{ createErrors.issue_diselesaikan_pada }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Utama <span class="text-xs text-gray-400">(opsional)</span></label><span data-testid="btn-select-main-pic"><SearchableSelectAjax data-testid="select-main-pic" v-model="createForm.main_pic_employee_id" url="/karyawan/api/search/employees" placeholder="— Pilih PIC Utama —" display-key="name" :error="!!createErrors.main_pic_employee_id" /></span><p v-if="createErrors.main_pic_employee_id" class="text-red-500 text-xs mt-1">{{ createErrors.main_pic_employee_id }}</p></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Tambahan <span class="text-xs text-gray-400">(opsional, bisa lebih dari 1)</span></label>
         <div v-if="additionalPics.length > 0" class="flex flex-wrap items-center gap-2 mb-2">
           <span v-for="pic in additionalPics" :key="pic.employee_id" data-testid="chip-additional-pic" class="inline-flex items-center px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">{{ pic.employee_name }}<button type="button" data-testid="btn-remove-pic" @click="removeAdditionalPic(pic.employee_id)" class="ml-1.5 hover:text-red-600"><i class="fas fa-times"></i></button></span>
         </div>
-        <SearchableSelectAjax data-testid="select-additional-pic" url="/karyawan/api/search/employees" placeholder="— Tambah PIC Tambahan —" display-key="name" @update:modelValue="(v) => { if (v) { const emp = employees.find(e => e.id === v); if (emp) addAdditionalPic(emp.id, emp.name); }}" />
+        <SearchableSelectAjax data-testid="select-additional-pic" url="/karyawan/api/search/employees" placeholder="— Tambah PIC Tambahan —" display-key="name" :error="!!createErrors.additional_pic_employee_ids" @update:modelValue="(v) => { if (v) { const emp = employees.find(e => e.id === v); if (emp) addAdditionalPic(emp.id, emp.name); }}" />
+        <p v-if="createErrors.additional_pic_employee_ids" class="text-red-500 text-xs mt-1">{{ createErrors.additional_pic_employee_ids }}</p>
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none resize-none', createErrors.catatan ? 'border-red-400 focus:ring-2 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']"></textarea><p v-if="createErrors.catatan" class="text-red-500 text-xs mt-1">{{ createErrors.catatan }}</p></div>
 
       <!-- Bukti Issue Attachments (multi-file, parallel arrays) -->
       <div>
@@ -470,22 +490,25 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
           </div>
         </div>
         <input data-testid="input-file-bukti-issue" @change="e => { for (const f of e.target.files) addAttachmentFile(ATT_TYPE_BUKTI_ISSUE, createAttachments, f); e.target.value = ''; }" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-amber-50 file:text-amber-700 dark:file:bg-amber-900/30 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/50" />
+        <p v-if="createErrors.attachments_bukti_issue" class="text-red-500 text-xs mt-1">{{ createErrors.attachments_bukti_issue }}</p>
       </div>
     </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showCreateModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-simpan" type="submit" :disabled="createForm.processing" class="px-6 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-save mr-1.5"></i>Simpan</button></div></form></div></Transition></Teleport>
 
     <!-- Edit Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showEditModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-edit" @submit.prevent="submitEdit" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-edit text-amber-500 mr-2"></i>Edit Tiket</h3><button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Utama</label><span data-testid="btn-select-main-pic"><SearchableSelectAjax data-testid="select-main-pic" v-model="editForm.main_pic_employee_id" url="/karyawan/api/search/employees" placeholder="— Pilih PIC Utama —" display-key="name" /></span></div>
+      <FormErrorSummary :errors="editErrors" testId="edit-error-summary" />
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Utama</label><span data-testid="btn-select-main-pic"><SearchableSelectAjax data-testid="select-main-pic" v-model="editForm.main_pic_employee_id" url="/karyawan/api/search/employees" placeholder="— Pilih PIC Utama —" display-key="name" :error="!!editErrors.main_pic_employee_id" /></span><p v-if="editErrors.main_pic_employee_id" class="text-red-500 text-xs mt-1">{{ editErrors.main_pic_employee_id }}</p></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Tambahan</label>
         <div v-if="additionalPics.length > 0" class="flex flex-wrap items-center gap-2 mb-2">
           <span v-for="pic in additionalPics" :key="pic.employee_id" data-testid="chip-additional-pic" class="inline-flex items-center px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-full text-xs font-medium">{{ pic.employee_name }}<button type="button" data-testid="btn-remove-pic" @click="removeAdditionalPic(pic.employee_id)" class="ml-1.5 hover:text-red-600"><i class="fas fa-times"></i></button></span>
         </div>
-        <SearchableSelectAjax data-testid="select-additional-pic" url="/karyawan/api/search/employees" placeholder="— Tambah PIC Tambahan —" display-key="name" @update:modelValue="(v) => { if (v) { const emp = employees.find(e => e.id === v); if (emp) addAdditionalPic(emp.id, emp.name); }}" />
+        <SearchableSelectAjax data-testid="select-additional-pic" url="/karyawan/api/search/employees" placeholder="— Tambah PIC Tambahan —" display-key="name" :error="!!editErrors.additional_pic_employee_ids" @update:modelValue="(v) => { if (v) { const emp = employees.find(e => e.id === v); if (emp) addAdditionalPic(emp.id, emp.name); }}" />
+        <p v-if="editErrors.additional_pic_employee_ids" class="text-red-500 text-xs mt-1">{{ editErrors.additional_pic_employee_ids }}</p>
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan</label><input data-testid="input-issue-dimulai" v-model="editForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" /></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Selesai Gangguan</label><input data-testid="input-issue-diselesaikan" v-model="editForm.issue_diselesaikan_pada" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" /></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Pengerjaan</label><select data-testid="select-status-pengerjaan" v-model="editForm.status_pengerjaan" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none"><option v-for="s in statusPengerjaanOptions" :key="s" :value="s">{{ s }}</option></select></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan</label><textarea data-testid="textarea-catatan" v-model="editForm.catatan" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan</label><input data-testid="input-issue-dimulai" v-model="editForm.issue_dimulai_dari" type="datetime-local" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none', editErrors.issue_dimulai_dari ? 'border-red-400 focus:ring-2 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']" /><p v-if="editErrors.issue_dimulai_dari" class="text-red-500 text-xs mt-1">{{ editErrors.issue_dimulai_dari }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Selesai Gangguan</label><input data-testid="input-issue-diselesaikan" v-model="editForm.issue_diselesaikan_pada" type="datetime-local" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none', editErrors.issue_diselesaikan_pada ? 'border-red-400 focus:ring-2 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']" /><p v-if="editErrors.issue_diselesaikan_pada" class="text-red-500 text-xs mt-1">{{ editErrors.issue_diselesaikan_pada }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Pengerjaan</label><select data-testid="select-status-pengerjaan" v-model="editForm.status_pengerjaan" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none', editErrors.status_pengerjaan ? 'border-red-400 focus:ring-2 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']"><option v-for="s in statusPengerjaanOptions" :key="s" :value="s">{{ s }}</option></select><p v-if="editErrors.status_pengerjaan" class="text-red-500 text-xs mt-1">{{ editErrors.status_pengerjaan }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan</label><textarea data-testid="textarea-catatan" v-model="editForm.catatan" rows="3" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none resize-none', editErrors.catatan ? 'border-red-400 focus:ring-2 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']"></textarea><p v-if="editErrors.catatan" class="text-red-500 text-xs mt-1">{{ editErrors.catatan }}</p></div>
 
       <!-- Attachments: existing + new uploads -->
       <div>
@@ -511,6 +534,7 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
           </div>
         </div>
         <input data-testid="input-file-bukti-issue" @change="e => { for (const f of e.target.files) addAttachmentFile(ATT_TYPE_BUKTI_ISSUE, editAttachments, f); e.target.value = ''; }" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-amber-50 file:text-amber-700 dark:file:bg-amber-900/30 dark:file:text-amber-400 hover:file:bg-amber-100 dark:hover:file:bg-amber-900/50" />
+        <p v-if="editErrors.attachments_bukti_issue" class="text-red-500 text-xs mt-1">{{ editErrors.attachments_bukti_issue }}</p>
       </div>
 
       <!-- Bukti Issue Selesai attachments -->
@@ -536,11 +560,13 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
           </div>
         </div>
         <input data-testid="input-file-bukti-selesai" @change="e => { for (const f of e.target.files) addAttachmentFile(ATT_TYPE_BUKTI_ISSUE_SELESAI, editAttachments, f); e.target.value = ''; }" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700 dark:file:bg-emerald-900/30 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50" />
+        <p v-if="editErrors.attachments_bukti_issue_selesai" class="text-red-500 text-xs mt-1">{{ editErrors.attachments_bukti_issue_selesai }}</p>
       </div>
     </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showEditModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-update" type="submit" :disabled="editForm.processing" class="px-6 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Update</button></div></form></div></Transition></Teleport>
 
     <!-- Resolve Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showResolveModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showResolveModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-resolve" @submit.prevent="submitResolve" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-check-circle text-emerald-500 mr-2"></i>Tandai Selesai</h3><button type="button" @click="showResolveModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+      <FormErrorSummary :errors="resolveErrors" testId="resolve-error-summary" />
       <p class="text-sm text-gray-600 dark:text-gray-400">Tandai tiket <strong class="text-gray-900 dark:text-white">{{ selectedItem?.code }}</strong> sebagai selesai.</p>
 
       <div>
@@ -565,6 +591,7 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
           </div>
         </div>
         <input data-testid="input-file-bukti-selesai" @change="e => { for (const f of e.target.files) addAttachmentFile(ATT_TYPE_BUKTI_ISSUE_SELESAI, resolveAttachments, f); e.target.value = ''; }" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf" class="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:bg-emerald-50 file:text-emerald-700 dark:file:bg-emerald-900/30 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50" />
+        <p v-if="resolveErrors.attachments_bukti_issue_selesai" class="text-red-500 text-xs mt-1">{{ resolveErrors.attachments_bukti_issue_selesai }}</p>
       </div>
     </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showResolveModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-confirm-resolve" type="submit" :disabled="resolveForm.processing" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Tandai Selesai</button></div></form></div></Transition></Teleport>
 

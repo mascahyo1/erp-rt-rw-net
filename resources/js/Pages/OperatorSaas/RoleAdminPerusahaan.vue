@@ -4,7 +4,9 @@ import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 import OperatorSaasLayout from '@/Layouts/OperatorSaasLayout.vue';
 import SearchableSelect from '@/Components/SearchableSelect.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import { useToast } from '@/Composables/useToast';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
 defineOptions({ layout: OperatorSaasLayout });
@@ -266,7 +268,7 @@ function saveCreate() {
       toast.success('Role admin perusahaan berhasil ditetapkan.');
     },
     onError: () => {
-      toast.error('Validasi gagal. Periksa kembali isian form.');
+      toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000);
     },
   });
 }
@@ -280,7 +282,7 @@ function saveEdit() {
       toast.success('Role admin perusahaan berhasil diperbarui.');
     },
     onError: () => {
-      toast.error('Validasi gagal. Periksa kembali isian form.');
+      toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000);
     },
   });
 }
@@ -486,19 +488,20 @@ onMounted(() => {
               <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="createForm.errors" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
-                <SearchableSelect v-model="createForm.company_id" :options="companyOptions" placeholder="— Pilih Perusahaan —" @search="onFilterCompanySearch" />
+                <SearchableSelect v-model="createForm.company_id" :options="companyOptions" placeholder="— Pilih Perusahaan —" @search="onFilterCompanySearch" :error="!!createForm.errors.company_id" />
                 <p v-if="createForm.errors.company_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.company_id }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Admin <span class="text-red-500">*</span></label>
-                <SearchableSelect v-model="createForm.admin_id" :options="createAdminOptions" :placeholder="createForm.company_id ? '— Pilih Admin —' : 'Pilih perusahaan dulu'" :disabled="!createForm.company_id" />
+                <SearchableSelect v-model="createForm.admin_id" :options="createAdminOptions" :placeholder="createForm.company_id ? '— Pilih Admin —' : 'Pilih perusahaan dulu'" :disabled="!createForm.company_id" :error="!!createForm.errors.admin_id" />
                 <p v-if="createForm.errors.admin_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.admin_id }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-                <SearchableSelect v-model="createForm.role_id" :options="createRoleOptions" :placeholder="createForm.company_id ? '— Pilih Role —' : 'Pilih perusahaan dulu'" :disabled="!createForm.company_id" />
+                <SearchableSelect v-model="createForm.role_id" :options="createRoleOptions" :placeholder="createForm.company_id ? '— Pilih Role —' : 'Pilih perusahaan dulu'" :disabled="!createForm.company_id" :error="!!createForm.errors.role_id" />
                 <p v-if="createForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.role_id }}</p>
               </div>
             </div>
@@ -524,6 +527,7 @@ onMounted(() => {
               <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="editForm.errors" />
               <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-lg">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0">{{ selectedAssignment?.admin_nama?.charAt(0) }}</div>
                 <div>
@@ -540,7 +544,7 @@ onMounted(() => {
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Role <span class="text-red-500">*</span></label>
-                <SearchableSelect v-model="editForm.role_id" :options="editRoleOptions" placeholder="— Pilih Role —" />
+                <SearchableSelect v-model="editForm.role_id" :options="editRoleOptions" placeholder="— Pilih Role —" :error="!!editForm.errors.role_id" />
                 <p v-if="editForm.errors.role_id" class="text-red-500 text-xs mt-1">{{ editForm.errors.role_id }}</p>
               </div>
             </div>

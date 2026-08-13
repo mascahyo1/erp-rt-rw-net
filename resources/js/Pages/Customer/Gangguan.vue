@@ -2,6 +2,8 @@
 import { ref, computed, reactive } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import CustomerLayout from '@/Layouts/CustomerLayout.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import { errorSummary } from '@/Composables/useFormErrorToast.js';
 import { useToast } from '@/Composables/useToast';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
 import ToastContainer from '@/Components/ToastContainer.vue';
@@ -33,6 +35,7 @@ const showDeleteModal = ref(false);
 const selectedItem = ref(null);
 
 const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '' });
+const createErrors = ref({});
 const createAttachments = reactive({
   [ATT_TYPE_BUKTI_ISSUE]: { files: [], names: [], descs: [] },
 });
@@ -127,6 +130,7 @@ function removeAttachmentFile(typeKey, stateRef, index) {
 function openCreate() {
   createForm.reset();
   createForm.clearErrors();
+  createErrors.value = {};
   createAttachments[ATT_TYPE_BUKTI_ISSUE] = { files: [], names: [], descs: [] };
   showCreateModal.value = true;
 }
@@ -157,7 +161,13 @@ async function submitCreate() {
       toast.success('Laporan gangguan berhasil dikirim. Tim kami akan segera menindaklanjuti.');
       fetchData();
     } else {
-      toast.error(data.message || `Gagal (HTTP ${resp.status})`);
+      const errs = data.errors || {};
+      if (Object.keys(errs).length > 0) {
+        createErrors.value = errs;
+        toast.error('Validasi gagal: ' + errorSummary(errs), 6000);
+      } else {
+        toast.error(data.message || `Gagal (HTTP ${resp.status})`);
+      }
     }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
@@ -277,9 +287,10 @@ function confirmDelete() { router.delete(`/customer/gangguan/${selectedItem.valu
 
     <!-- Create Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-create" @submit.prevent="submitCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-triangle-exclamation text-amber-500 mr-2"></i>Buat Laporan Gangguan</h3><button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
-        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/customer/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" /></span><p v-if="createForm.errors.cust_internet_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.cust_internet_id }}</p></div>
-        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kapan gangguan terjadi? <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none" /><p v-if="createForm.errors.issue_dimulai_dari" class="text-red-500 text-xs mt-1">{{ createForm.errors.issue_dimulai_dari }}</p></div>
-        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah yang Anda alami..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea><p v-if="createForm.errors.catatan" class="text-red-500 text-xs mt-1">{{ createForm.errors.catatan }}</p></div>
+        <FormErrorSummary :errors="createErrors" testId="form-error-summary-create-gangguan" />
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/customer/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" :error="!!createErrors.cust_internet_id" /></span><p v-if="createErrors.cust_internet_id" class="text-red-500 text-xs mt-1">{{ createErrors.cust_internet_id }}</p></div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kapan gangguan terjadi? <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createErrors.issue_dimulai_dari ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-emerald-500']" /><p v-if="createErrors.issue_dimulai_dari" class="text-red-500 text-xs mt-1">{{ createErrors.issue_dimulai_dari }}</p></div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah yang Anda alami..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', createErrors.catatan ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-emerald-500']"></textarea><p v-if="createErrors.catatan" class="text-red-500 text-xs mt-1">{{ createErrors.catatan }}</p></div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue <span class="text-xs text-gray-400">(opsional, bisa lebih dari 1 file)</span></label>

@@ -7,6 +7,8 @@ import SearchableSelect from '@/Components/SearchableSelect.vue';
 import CountryCodeSelect from '@/Components/CountryCodeSelect.vue';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 
 defineOptions({ layout: OperatorSaasLayout });
 
@@ -200,14 +202,14 @@ function saveCreate() {
   createForm.post('/operator-saas/admin-perusahaan', {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showCreateModal.value = false; toast.success('Admin Perusahaan berhasil ditambahkan.'); },
-    onError: () => toast.error('Validasi gagal. Periksa kembali isian form.'),
+    onError: () => toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000),
   });
 }
 function saveEdit() {
   editForm.put(`/operator-saas/admin-perusahaan/${editForm.id}`, {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showEditModal.value = false; toast.success('Admin Perusahaan berhasil diperbarui.'); },
-    onError: () => toast.error('Validasi gagal. Periksa kembali isian form.'),
+    onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000),
   });
 }
 function confirmDelete() {
@@ -422,9 +424,10 @@ function confirmDelete() {
             <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
           </div>
           <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+            <FormErrorSummary :errors="createForm.errors" />
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
-              <SearchableSelect v-model="createForm.company_id" :options="companyOptions" placeholder="— Pilih Perusahaan —" @search="searchCompanies" @load-more="loadMoreCompanies" />
+              <SearchableSelect v-model="createForm.company_id" :error="createForm.errors.company_id" :options="companyOptions" placeholder="— Pilih Perusahaan —" @search="searchCompanies" @load-more="loadMoreCompanies" />
               <p v-if="createForm.errors.company_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.company_id }}</p>
             </div>
             <div>
@@ -445,14 +448,16 @@ function confirmDelete() {
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon <span class="text-red-500">*</span></label>
               <div class="flex gap-2">
-                <select v-model="createForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors hidden"><option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option></select><div class="w-36"><CountryCodeSelect v-model="createForm.kode_negara" accent="indigo" size="sm" /></div>
+                <select v-model="createForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors hidden"><option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option></select><div class="w-36"><CountryCodeSelect v-model="createForm.kode_negara" :error="createForm.errors.kode_negara" accent="indigo" size="sm" /></div>
                 <input v-model="createForm.no_telp" type="text" placeholder="81234567890" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', createForm.errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
               </div>
+              <p v-if="createForm.errors.kode_negara" class="text-red-500 text-xs mt-1">{{ createForm.errors.kode_negara }}</p>
               <p v-if="createForm.errors.no_telp" class="text-red-500 text-xs mt-1">{{ createForm.errors.no_telp }}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
-              <select v-model="createForm.status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+              <select v-model="createForm.status" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none transition-colors', createForm.errors.status ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+              <p v-if="createForm.errors.status" class="text-red-500 text-xs mt-1">{{ createForm.errors.status }}</p>
             </div>
           </div>
           <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
@@ -473,9 +478,10 @@ function confirmDelete() {
             <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
           </div>
           <div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+            <FormErrorSummary :errors="editForm.errors" />
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
-              <SearchableSelect v-model="editForm.company_id" :options="companyOptions" placeholder="— Pilih Perusahaan —" @search="searchCompanies" @load-more="loadMoreCompanies" />
+              <SearchableSelect v-model="editForm.company_id" :error="editForm.errors.company_id" :options="companyOptions" placeholder="— Pilih Perusahaan —" @search="searchCompanies" @load-more="loadMoreCompanies" />
               <p v-if="editForm.errors.company_id" class="text-red-500 text-xs mt-1">{{ editForm.errors.company_id }}</p>
             </div>
             <div>
@@ -496,14 +502,16 @@ function confirmDelete() {
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Telepon <span class="text-red-500">*</span></label>
               <div class="flex gap-2">
-                <select v-model="editForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors hidden"><option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option></select><div class="w-36"><CountryCodeSelect v-model="editForm.kode_negara" accent="indigo" size="sm" /></div>
+                <select v-model="editForm.kode_negara" class="w-24 px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors hidden"><option v-for="kode in kodeNegaraList" :key="kode" :value="kode">{{ kode }}</option></select><div class="w-36"><CountryCodeSelect v-model="editForm.kode_negara" :error="editForm.errors.kode_negara" accent="indigo" size="sm" /></div>
                 <input v-model="editForm.no_telp" type="text" placeholder="81234567890" :class="['flex-1 px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', editForm.errors.no_telp ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']" />
               </div>
+              <p v-if="editForm.errors.kode_negara" class="text-red-500 text-xs mt-1">{{ editForm.errors.kode_negara }}</p>
               <p v-if="editForm.errors.no_telp" class="text-red-500 text-xs mt-1">{{ editForm.errors.no_telp }}</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
-              <select v-model="editForm.status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+              <select v-model="editForm.status" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm outline-none transition-colors', editForm.errors.status ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500']"><option value="Aktif">Aktif</option><option value="Nonaktif">Nonaktif</option></select>
+              <p v-if="editForm.errors.status" class="text-red-500 text-xs mt-1">{{ editForm.errors.status }}</p>
             </div>
           </div>
           <div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700">

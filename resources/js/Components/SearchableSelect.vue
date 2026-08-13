@@ -7,6 +7,8 @@ const props = defineProps({
   placeholder: { type: String, default: 'Pilih...' },
   searchable: { type: Boolean, default: true },
   disabled: { type: Boolean, default: false },
+  error: { type: Boolean, default: false },
+  error: { type: Boolean, default: false },
   pageSize: { type: Number, default: 25 },
   debounceMs: { type: Number, default: 300 },  // delay hemat resource
 });
@@ -106,8 +108,11 @@ watch(() => props.modelValue, () => { searchText.value = ''; });
       type="button"
       @click="toggle"
       :disabled="disabled"
-      class="flex items-center justify-between gap-1.5 w-full min-w-[160px] px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm transition-colors hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-      :class="open ? 'ring-2 ring-indigo-500 border-indigo-500' : ''"
+      :class="[
+        'flex items-center justify-between gap-1.5 w-full min-w-[160px] px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed',
+        error ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500',
+        open && !error ? 'ring-2 ring-indigo-500 border-indigo-500' : ''
+      ]"
     >
       <span :class="modelValue ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'">
         {{ modelValue ? selectedLabel : placeholder }}

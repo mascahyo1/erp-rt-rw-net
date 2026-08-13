@@ -4,6 +4,8 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import KaryawanLayout from '@/Layouts/KaryawanLayout.vue';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
 import LocationPicker from '@/Components/LocationPicker.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import { errorSummary } from '@/Composables/useFormErrorToast.js';
 import { useToast } from '@/Composables/useToast';
 import ToastContainer from '@/Components/ToastContainer.vue';
 
@@ -28,6 +30,7 @@ const showCreateModal = ref(false); const showDetailModal = ref(false);
 const showEditModal = ref(false); const showDeleteModal = ref(false);
 const showImportModal = ref(false);
 const importFile = ref(null);
+const importErrors = ref({});
 const createLocationPicker = ref(null);
 const editLocationPicker = ref(null);
 const detailLocationPicker = ref(null);
@@ -73,10 +76,10 @@ const createForm = useForm({ customer_id: '', internet_package_id: '', account_n
 const editForm = useForm({ customer_id: '', internet_package_id: '', account_number: '', router_sn: '', customer_address: '', customer_address_long: '', customer_address_lat: '', internet_status: '', company_notes: '' });
 
 function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; nextTick(() => createLocationPicker.value?.invalidateSize()); }
-function submitCreate() { createForm.post('/karyawan/langganan-customer', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Langganan berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal.') }); }
+function submitCreate() { createForm.post('/karyawan/langganan-customer', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Langganan berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000) }); }
 function openEdit(item) { editForm.customer_id = item.customer_id; editForm.internet_package_id = item.internet_package_id; editForm.account_number = item.account_number || ''; editForm.router_sn = item.router_sn || ''; editForm.customer_address = item.customer_address || ''; editForm.customer_address_long = item.customer_address_long || ''; editForm.customer_address_lat = item.customer_address_lat || ''; editForm.internet_status = item.internet_status; editForm.company_notes = item.company_notes; editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; nextTick(() => editLocationPicker.value?.invalidateSize()); }
 function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; nextTick(() => detailLocationPicker.value?.invalidateSize()); }
-function submitEdit() { editForm.put('/karyawan/langganan-customer/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Langganan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal.') }); }
+function submitEdit() { editForm.put('/karyawan/langganan-customer/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Langganan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
 function confirmDelete() { router.delete('/karyawan/langganan-customer/' + selectedItem.value.id, { onSuccess: () => { showDeleteModal.value = false; fetchData(); toast.success('Langganan berhasil dihapus.'); } }); }
 function confirmRestore(id) { router.patch('/karyawan/langganan-customer/' + id + '/restore', { onSuccess: () => { fetchData(); toast.success('Langganan berhasil dipulihkan.'); } }); }
@@ -93,8 +96,8 @@ function buildFilterParams() {
 function exportAll() { const params = buildFilterParams(); window.open('/karyawan/langganan-customer/export' + (params ? '?' + params : ''), '_blank'); }
 function exportSelected() { if (selectedIds.value.length > 0) { window.open('/karyawan/langganan-customer/export?ids=' + selectedIds.value.join(','), '_blank'); } else { const params = buildFilterParams(); window.open('/karyawan/langganan-customer/export' + (params ? '?' + params : ''), '_blank'); } }
 function downloadTemplate() { window.open('/karyawan/langganan-customer/template', '_blank'); }
-function openImportModal() { importFile.value = null; showImportModal.value = true; }
-function submitImport() { if (!importFile.value) return; const formData = new FormData(); formData.append('file', importFile.value); toast.add({ message: 'Mengimport data...', type: 'info' }); router.post('/karyawan/langganan-customer/import', formData, { onSuccess: () => { showImportModal.value = false; importFile.value = null; fetchData(); toast.success('Import berhasil.'); }, onError: () => toast.error('Import gagal.') }); }
+function openImportModal() { importFile.value = null; importErrors.value = {}; showImportModal.value = true; }
+function submitImport() { if (!importFile.value) return; const formData = new FormData(); formData.append('file', importFile.value); toast.add({ message: 'Mengimport data...', type: 'info' }); router.post('/karyawan/langganan-customer/import', formData, { onSuccess: () => { showImportModal.value = false; importFile.value = null; fetchData(); toast.success('Import berhasil.'); }, onError: (errors) => { importErrors.value = errors || {}; toast.error('Import gagal: ' + errorSummary(importErrors.value), 6000); } }); }
 
 const items = computed(() => props.langganans?.data || []);
 const pagination = computed(() => ({ current: props.langganans?.current_page || 1, last: props.langganans?.last_page || 1, total: props.langganans?.total || 0 }));
@@ -342,30 +345,33 @@ onMounted(() => { });
               <button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-4 sm:px-6 py-4 sm:py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="createForm.errors" testId="form-error-summary-create-langganan" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Pelanggan <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="createForm.customer_id" url="/karyawan/api/search/customers" placeholder="— Pilih Pelanggan —" />
+                <SearchableSelectAjax v-model="createForm.customer_id" url="/karyawan/api/search/customers" placeholder="— Pilih Pelanggan —" :error="!!createForm.errors.customer_id" />
                 <p v-if="createForm.errors.customer_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.customer_id }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Paket <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="createForm.internet_package_id" url="/karyawan/api/search/packages" placeholder="— Pilih Paket —" />
+                <SearchableSelectAjax v-model="createForm.internet_package_id" url="/karyawan/api/search/packages" placeholder="— Pilih Paket —" :error="!!createForm.errors.internet_package_id" />
                 <p v-if="createForm.errors.internet_package_id" class="text-red-500 text-xs mt-1">{{ createForm.errors.internet_package_id }}</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">No. Akun <span class="text-red-500">*</span></label>
-                  <input v-model="createForm.account_number" type="text" placeholder="ACC-001" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="createForm.account_number" type="text" placeholder="ACC-001" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createForm.errors.account_number ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
                   <p v-if="createForm.errors.account_number" class="text-red-500 text-xs mt-1">{{ createForm.errors.account_number }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Router SN</label>
-                  <input v-model="createForm.router_sn" type="text" placeholder="SN-XXXX" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="createForm.router_sn" type="text" placeholder="SN-XXXX" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createForm.errors.router_sn ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="createForm.errors.router_sn" class="text-red-500 text-xs mt-1">{{ createForm.errors.router_sn }}</p>
                 </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat</label>
-                <input v-model="createForm.customer_address" type="text" placeholder="Jl. Raya..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                <input v-model="createForm.customer_address" type="text" placeholder="Jl. Raya..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createForm.errors.customer_address ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                <p v-if="createForm.errors.customer_address" class="text-red-500 text-xs mt-1">{{ createForm.errors.customer_address }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Titik Lokasi</label>
@@ -374,19 +380,22 @@ onMounted(() => { });
                   v-model:lat="createForm.customer_address_lat"
                   v-model:lng="createForm.customer_address_long"
                 />
+                <p v-if="createForm.errors.customer_address_lat || createForm.errors.customer_address_long" class="text-red-500 text-xs mt-1">{{ createForm.errors.customer_address_lat || createForm.errors.customer_address_long }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
-                <select v-model="createForm.internet_status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                <select v-model="createForm.internet_status" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createForm.errors.internet_status ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']">
                   <option value="active">Aktif</option>
                   <option value="inactive">Nonaktif</option>
                   <option value="suspended">Suspend</option>
                   <option value="terminated">Terminasi</option>
                 </select>
+                <p v-if="createForm.errors.internet_status" class="text-red-500 text-xs mt-1">{{ createForm.errors.internet_status }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan Perusahaan</label>
-                <textarea v-model="createForm.company_notes" rows="2" placeholder="Catatan internal..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
+                <textarea v-model="createForm.company_notes" rows="2" placeholder="Catatan internal..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', createForm.errors.company_notes ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']"></textarea>
+                <p v-if="createForm.errors.company_notes" class="text-red-500 text-xs mt-1">{{ createForm.errors.company_notes }}</p>
               </div>
             </div>
             <div class="shrink-0 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 dark:border-gray-700">
@@ -409,30 +418,33 @@ onMounted(() => { });
               <button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button>
             </div>
             <div class="overflow-y-auto flex-1 px-4 sm:px-6 py-4 sm:py-5 space-y-4 modal-scroll">
+              <FormErrorSummary :errors="editForm.errors" testId="form-error-summary-edit-langganan" />
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Pelanggan <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="editForm.customer_id" url="/karyawan/api/search/customers" placeholder="— Pilih Pelanggan —" :selected-label="selectedItem?.customer_name" />
+                <SearchableSelectAjax v-model="editForm.customer_id" url="/karyawan/api/search/customers" placeholder="— Pilih Pelanggan —" :selected-label="selectedItem?.customer_name" :error="!!editForm.errors.customer_id" />
                 <p v-if="editForm.errors.customer_id" class="text-red-500 text-xs mt-1">{{ editForm.errors.customer_id }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Paket <span class="text-red-500">*</span></label>
-                <SearchableSelectAjax v-model="editForm.internet_package_id" url="/karyawan/api/search/packages" placeholder="— Pilih Paket —" :selected-label="selectedItem?.internet_package_name" />
+                <SearchableSelectAjax v-model="editForm.internet_package_id" url="/karyawan/api/search/packages" placeholder="— Pilih Paket —" :selected-label="selectedItem?.internet_package_name" :error="!!editForm.errors.internet_package_id" />
                 <p v-if="editForm.errors.internet_package_id" class="text-red-500 text-xs mt-1">{{ editForm.errors.internet_package_id }}</p>
               </div>
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">No. Akun <span class="text-red-500">*</span></label>
-                  <input v-model="editForm.account_number" type="text" placeholder="ACC-001" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="editForm.account_number" type="text" placeholder="ACC-001" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editForm.errors.account_number ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
                   <p v-if="editForm.errors.account_number" class="text-red-500 text-xs mt-1">{{ editForm.errors.account_number }}</p>
                 </div>
                 <div>
                   <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Router SN</label>
-                  <input v-model="editForm.router_sn" type="text" placeholder="SN-XXXX" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                  <input v-model="editForm.router_sn" type="text" placeholder="SN-XXXX" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editForm.errors.router_sn ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                  <p v-if="editForm.errors.router_sn" class="text-red-500 text-xs mt-1">{{ editForm.errors.router_sn }}</p>
                 </div>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alamat</label>
-                <input v-model="editForm.customer_address" type="text" placeholder="Jl. Raya..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+                <input v-model="editForm.customer_address" type="text" placeholder="Jl. Raya..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editForm.errors.customer_address ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']" />
+                <p v-if="editForm.errors.customer_address" class="text-red-500 text-xs mt-1">{{ editForm.errors.customer_address }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Titik Lokasi</label>
@@ -441,19 +453,22 @@ onMounted(() => { });
                   v-model:lat="editForm.customer_address_lat"
                   v-model:lng="editForm.customer_address_long"
                 />
+                <p v-if="editForm.errors.customer_address_lat || editForm.errors.customer_address_long" class="text-red-500 text-xs mt-1">{{ editForm.errors.customer_address_lat || editForm.errors.customer_address_long }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
-                <select v-model="editForm.internet_status" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none">
+                <select v-model="editForm.internet_status" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editForm.errors.internet_status ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']">
                   <option value="active">Aktif</option>
                   <option value="inactive">Nonaktif</option>
                   <option value="suspended">Suspend</option>
                   <option value="terminated">Terminasi</option>
                 </select>
+                <p v-if="editForm.errors.internet_status" class="text-red-500 text-xs mt-1">{{ editForm.errors.internet_status }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan Perusahaan</label>
-                <textarea v-model="editForm.company_notes" rows="2" placeholder="Catatan internal..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none resize-none"></textarea>
+                <textarea v-model="editForm.company_notes" rows="2" placeholder="Catatan internal..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', editForm.errors.company_notes ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']"></textarea>
+                <p v-if="editForm.errors.company_notes" class="text-red-500 text-xs mt-1">{{ editForm.errors.company_notes }}</p>
               </div>
             </div>
             <div class="shrink-0 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 dark:border-gray-700">
@@ -498,6 +513,7 @@ onMounted(() => { });
               <button type="button" @click="showImportModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-times"></i></button>
             </div>
             <div class="px-6 py-5 space-y-4">
+              <FormErrorSummary :errors="importErrors" testId="form-error-summary-import-langganan" />
               <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center">
                 <input type="file" ref="importFile" @change="importFile = $event.target.files[0]" accept=".xlsx,.xls,.csv" class="hidden" />
                 <button @click="$refs.importFile.click()" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 text-sm font-medium rounded-lg hover:bg-amber-200 dark:hover:bg-amber-900/60 transition-colors">
@@ -505,6 +521,7 @@ onMounted(() => { });
                 </button>
                 <p class="text-xs text-gray-400 mt-2">Format: .xlsx, .xls, .csv (max 2MB)</p>
               </div>
+              <p v-if="importErrors.file" class="text-red-500 text-xs">{{ importErrors.file }}</p>
               <button @click="downloadTemplate" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                 <i class="fas fa-download"></i>Download Template
               </button>

@@ -6,6 +6,7 @@ const props = defineProps({
   url: { type: String, required: true },
   placeholder: { type: String, default: 'Pilih...' },
   disabled: { type: Boolean, default: false },
+  error: { type: Boolean, default: false },
   pageSize: { type: Number, default: 25 },
   debounceMs: { type: Number, default: 300 },
   labelKey: { type: String, default: 'label' },
@@ -145,7 +146,7 @@ onUnmounted(() => document.removeEventListener('click', handleClickOutside));
       @click="toggle"
       :disabled="disabled"
       class="flex items-center justify-between gap-1.5 w-full min-w-[160px] px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm transition-colors hover:border-gray-400 dark:hover:border-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
-      :class="open ? 'ring-2 ring-sky-500 border-sky-500' : ''"
+      :class="error ? 'border-red-400 ring-1 ring-red-300' : open ? 'ring-2 ring-sky-500 border-sky-500' : ''"
     >
       <span :class="modelValue ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'">
         {{ modelValue ? selectedLabelComputed : placeholder }}

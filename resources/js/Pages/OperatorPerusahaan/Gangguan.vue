@@ -5,6 +5,8 @@ import OperatorPerusahaanLayout from '@/Layouts/OperatorPerusahaanLayout.vue';
 import { useToast } from '@/Composables/useToast';
 import SearchableSelectAjax from '@/Components/SearchableSelectAjax.vue';
 import ToastContainer from '@/Components/ToastContainer.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
+import { errorSummary } from '@/Composables/useFormErrorToast';
 
 defineOptions({ layout: OperatorPerusahaanLayout });
 
@@ -43,6 +45,11 @@ const showImportModal = ref(false);
 const importing = ref(false);
 const importFile = ref(null);
 const selectedItem = ref(null);
+const createErrors = ref({});
+const editErrors = ref({});
+const verifyErrors = ref({});
+const bulkVerifyErrors = ref({});
+const importErrors = ref({});
 
 const createForm = useForm({ cust_internet_id: '', main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', issue_dimulai_dari: '', issue_diselesaikan_pada: '' });
 const editForm = useForm({ main_pic_employee_id: '', additional_pic_employee_ids: [], catatan: '', status_pengerjaan: '', issue_dimulai_dari: '', issue_diselesaikan_pada: '', alasan_verifikasi: '', status_verifikasi: '' });
@@ -173,6 +180,7 @@ const showBulkVerifyModal = ref(false);
 const bulkVerifyForm = useForm({ status_verifikasi: '', alasan_verifikasi: '' });
 function openBulkVerify() {
   bulkVerifyForm.reset(); bulkVerifyForm.clearErrors();
+  bulkVerifyErrors.value = {};
   bulkVerifyForm.status_verifikasi = ''; bulkVerifyForm.alasan_verifikasi = '';
   showBulkVerifyModal.value = true;
 }
@@ -183,7 +191,11 @@ async function submitBulkVerify() {
     const resp = await fetch('/operator-perusahaan/gangguan/bulk-verify', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ ids: selectedIds.value, status_verifikasi: bulkVerifyForm.status_verifikasi, alasan_verifikasi: bulkVerifyForm.alasan_verifikasi }) });
     const data = await resp.json().catch(() => ({}));
     if (resp.ok) { showBulkVerifyModal.value = false; selectedIds.value = []; toast.success(data.message || 'Verifikasi berhasil.'); fetchData(); }
-    else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+    else {
+      const errs = data.errors || {};
+      bulkVerifyErrors.value = errs;
+      toast.error('Validasi gagal: ' + errorSummary(errs), 6000);
+    }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
 const items = computed(() => props.gangguans?.data || []);
@@ -191,6 +203,7 @@ const pagination = computed(() => ({ current: props.gangguans?.current_page || 1
 
 function openCreate() {
   createForm.reset(); createForm.clearErrors();
+  createErrors.value = {};
   resetAttachmentState();
   createExistingAttachments.value = { [ATT_TYPE_BUKTI_ISSUE]: [] };
   additionalPics.value = [];
@@ -222,12 +235,17 @@ async function submitCreate() {
     const resp = await fetch('/operator-perusahaan/gangguan', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, body: fd });
     const data = await resp.json().catch(() => ({}));
     if (resp.ok) { showCreateModal.value = false; additionalPics.value = []; resetAttachmentState(); toast.success('Tiket berhasil dibuat.'); fetchData(); }
-    else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+    else {
+      const errs = data.errors || {};
+      createErrors.value = errs;
+      toast.error('Validasi gagal: ' + errorSummary(errs), 6000);
+    }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
 
 function openEdit(item) {
   editForm.reset(); editForm.clearErrors();
+  editErrors.value = {};
   editForm.main_pic_employee_id = item.assigned_to_employee_id || '';
   editForm.catatan = item.catatan || '';
   editForm.status_pengerjaan = item.status_pengerjaan;
@@ -270,12 +288,17 @@ async function submitEdit() {
     const resp = await fetch(`/operator-perusahaan/gangguan/${selectedItem.value.id}`, { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, body: fd });
     const data = await resp.json().catch(() => ({}));
     if (resp.ok) { showEditModal.value = false; resetAttachmentState(); toast.success('Tiket berhasil diperbarui.'); fetchData(); }
-    else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+    else {
+      const errs = data.errors || {};
+      editErrors.value = errs;
+      toast.error('Validasi gagal: ' + errorSummary(errs), 6000);
+    }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
 
 function openVerify(item) {
   verifyForm.reset(); verifyForm.clearErrors();
+  verifyErrors.value = {};
   verifyForm.status_verifikasi = '';
   verifyForm.alasan_verifikasi = '';
   selectedItem.value = item;
@@ -291,7 +314,11 @@ async function submitVerify() {
     });
     const data = await resp.json().catch(() => ({}));
     if (resp.ok) { showVerifyModal.value = false; toast.success('Verifikasi berhasil disimpan.'); fetchData(); }
-    else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+    else {
+      const errs = data.errors || {};
+      verifyErrors.value = errs;
+      toast.error('Validasi gagal: ' + errorSummary(errs), 6000);
+    }
   } catch (e) { toast.error('Error: ' + e.message); }
 }
 
@@ -301,7 +328,7 @@ function confirmDelete() { router.delete(`/operator-perusahaan/gangguan/${select
 
 function downloadTemplate() { window.open('/operator-perusahaan/gangguan/template', '_blank'); }
 function exportData() { window.open('/operator-perusahaan/gangguan/export', '_blank'); }
-function openImport() { importFile.value = null; showImportModal.value = true; }
+function openImport() { importFile.value = null; importErrors.value = {}; showImportModal.value = true; }
 function onImportFileChange(e) { importFile.value = e.target.files[0]; }
 async function submitImport() {
   if (!importFile.value) { toast.error('Pilih file Excel dulu.'); return; }
@@ -313,7 +340,11 @@ async function submitImport() {
     const resp = await fetch('/operator-perusahaan/gangguan/import', { method: 'POST', headers: { 'X-CSRF-TOKEN': csrf, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }, body: fd });
     const data = await resp.json().catch(() => ({}));
     if (resp.ok) { showImportModal.value = false; toast.success(data.message || 'Import berhasil.'); fetchData(); }
-    else { toast.error(data.message || `Gagal (HTTP ${resp.status})`); }
+    else {
+      const errs = data.errors || {};
+      importErrors.value = errs;
+      toast.error('Validasi gagal: ' + errorSummary(errs), 6000);
+    }
   } catch (e) { toast.error('Error: ' + e.message); }
   finally { importing.value = false; }
 }
@@ -445,17 +476,18 @@ async function submitImport() {
 
     <!-- Create Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showCreateModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-create" @submit.prevent="submitCreate" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-plus text-emerald-500 mr-2"></i>Buat Tiket Gangguan</h3><button type="button" @click="showCreateModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/operator-perusahaan/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" /></span></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none" /></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Selesai Gangguan <span class="text-xs text-gray-400">(opsional, jika sudah fix)</span></label><input data-testid="input-issue-diselesaikan" v-model="createForm.issue_diselesaikan_pada" type="datetime-local" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none" /></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Utama <span class="text-xs text-gray-400">(opsional, bisa dikosongi)</span></label><span data-testid="btn-select-main-pic"><SearchableSelectAjax data-testid="select-main-pic" v-model="createForm.main_pic_employee_id" url="/operator-perusahaan/api/search/employees" placeholder="— Pilih PIC Utama —" display-key="name" /></span></div>
+      <FormErrorSummary :errors="createErrors" testId="form-error-summary-create" />
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Kode Langganan <span class="text-red-500">*</span></label><span data-testid="btn-select-cust-internet"><SearchableSelectAjax data-testid="select-cust-internet" v-model="createForm.cust_internet_id" url="/operator-perusahaan/api/search/langganans" placeholder="— Pilih Kode Langganan —" display-key="label" :error="!!createErrors.cust_internet_id" /></span><p v-if="createErrors.cust_internet_id" class="text-red-500 text-xs mt-1">{{ createErrors.cust_internet_id }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Mulai Gangguan <span class="text-red-500">*</span></label><input data-testid="input-issue-dimulai" v-model="createForm.issue_dimulai_dari" type="datetime-local" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createErrors.issue_dimulai_dari ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-sky-500']" /><p v-if="createErrors.issue_dimulai_dari" class="text-red-500 text-xs mt-1">{{ createErrors.issue_dimulai_dari }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Tgl Selesai Gangguan <span class="text-xs text-gray-400">(opsional, jika sudah fix)</span></label><input data-testid="input-issue-diselesaikan" v-model="createForm.issue_diselesaikan_pada" type="datetime-local" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createErrors.issue_diselesaikan_pada ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-sky-500']" /><p v-if="createErrors.issue_diselesaikan_pada" class="text-red-500 text-xs mt-1">{{ createErrors.issue_diselesaikan_pada }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Utama <span class="text-xs text-gray-400">(opsional, bisa dikosongi)</span></label><span data-testid="btn-select-main-pic"><SearchableSelectAjax data-testid="select-main-pic" v-model="createForm.main_pic_employee_id" url="/operator-perusahaan/api/search/employees" placeholder="— Pilih PIC Utama —" display-key="name" :error="!!createErrors.main_pic_employee_id" /></span><p v-if="createErrors.main_pic_employee_id" class="text-red-500 text-xs mt-1">{{ createErrors.main_pic_employee_id }}</p></div>
       <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">PIC Tambahan <span class="text-xs text-gray-400">(bisa lebih dari 1, opsional)</span></label>
         <div class="flex flex-wrap items-center gap-2 mb-2" v-if="additionalPics.length > 0">
           <span v-for="pic in additionalPics" :key="pic.employee_id" data-testid="chip-additional-pic" class="inline-flex items-center px-3 py-1 bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400 rounded-full text-xs font-medium">{{ pic.employee_name }}<button type="button" data-testid="btn-remove-pic" @click="removeAdditionalPic(pic.employee_id)" class="ml-1.5 text-sky-700 dark:text-sky-400 hover:text-red-600 dark:hover:text-red-400"><i class="fas fa-times"></i></button></span>
         </div>
         <SearchableSelectAjax data-testid="select-additional-pic" :url="'/operator-perusahaan/api/search/employees'" placeholder="— Tambah PIC Tambahan —" display-key="name" @update:modelValue="(v) => { if (v) { const emp = employees.find(e => e.id === v); if (emp) addAdditionalPic(emp.id, emp.name); }}" />
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan <span class="text-red-500">*</span></label><textarea data-testid="textarea-catatan" v-model="createForm.catatan" rows="4" placeholder="Jelaskan masalah..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', createErrors.catatan ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-sky-500']"></textarea><p v-if="createErrors.catatan" class="text-red-500 text-xs mt-1">{{ createErrors.catatan }}</p></div>
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue <span class="text-xs text-gray-400">(opsional, bisa lebih dari 1 file)</span></label>
         <div v-if="createAttachments[ATT_TYPE_BUKTI_ISSUE].files.length > 0" class="space-y-2 mb-2">
@@ -474,13 +506,14 @@ async function submitImport() {
 
     <!-- Edit Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showEditModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-edit" @submit.prevent="submitEdit" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-edit text-sky-500 mr-2"></i>Edit Tiket</h3><button type="button" @click="showEditModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Penanggung Jawab</label><select data-testid="select-assigned" v-model="editForm.assigned_to_employee_id" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none"><option value="">— Belum di-assign —</option><option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option></select></div>
+      <FormErrorSummary :errors="editErrors" testId="form-error-summary-edit" />
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Penanggung Jawab</label><select data-testid="select-assigned" v-model="editForm.assigned_to_employee_id" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editErrors.main_pic_employee_id ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-sky-500']"><option value="">— Belum di-assign —</option><option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option></select><p v-if="editErrors.main_pic_employee_id" class="text-red-500 text-xs mt-1">{{ editErrors.main_pic_employee_id }}</p></div>
       <div class="grid grid-cols-2 gap-3">
-        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Pengerjaan</label><select data-testid="select-status-pengerjaan" v-model="editForm.status_pengerjaan" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none"><option v-for="s in statusPengerjaanOptions" :key="s" :value="s">{{ s }}</option></select></div>
-        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Verifikasi</label><select data-testid="select-status-verifikasi" v-model="editForm.status_verifikasi" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none"><option v-for="s in statusVerifikasiOptions" :key="s" :value="s">{{ s }}</option></select></div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Pengerjaan</label><select data-testid="select-status-pengerjaan" v-model="editForm.status_pengerjaan" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editErrors.status_pengerjaan ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-sky-500']"><option v-for="s in statusPengerjaanOptions" :key="s" :value="s">{{ s }}</option></select><p v-if="editErrors.status_pengerjaan" class="text-red-500 text-xs mt-1">{{ editErrors.status_pengerjaan }}</p></div>
+        <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Verifikasi</label><select data-testid="select-status-verifikasi" v-model="editForm.status_verifikasi" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editErrors.status_verifikasi ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-sky-500']"><option v-for="s in statusVerifikasiOptions" :key="s" :value="s">{{ s }}</option></select><p v-if="editErrors.status_verifikasi" class="text-red-500 text-xs mt-1">{{ editErrors.status_verifikasi }}</p></div>
       </div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan</label><textarea data-testid="textarea-catatan" v-model="editForm.catatan" rows="3" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan Verifikasi</label><textarea data-testid="textarea-alasan" v-model="editForm.alasan_verifikasi" rows="2" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-sky-500 outline-none resize-none"></textarea></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catatan</label><textarea data-testid="textarea-catatan" v-model="editForm.catatan" rows="3" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', editErrors.catatan ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-sky-500']"></textarea><p v-if="editErrors.catatan" class="text-red-500 text-xs mt-1">{{ editErrors.catatan }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan Verifikasi</label><textarea data-testid="textarea-alasan" v-model="editForm.alasan_verifikasi" rows="2" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', editErrors.alasan_verifikasi ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-sky-500']"></textarea><p v-if="editErrors.alasan_verifikasi" class="text-red-500 text-xs mt-1">{{ editErrors.alasan_verifikasi }}</p></div>
       <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Bukti Issue</label>
         <div v-if="editExistingAttachments[ATT_TYPE_BUKTI_ISSUE].length > 0" class="space-y-1.5 mb-2">
@@ -525,9 +558,10 @@ async function submitImport() {
 
     <!-- Verify Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showVerifyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showVerifyModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-verify" @submit.prevent="submitVerify" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-clipboard-check text-emerald-500 mr-2"></i>Verifikasi Hasil</h3><button type="button" @click="showVerifyModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+      <FormErrorSummary :errors="verifyErrors" testId="form-error-summary-verify" />
       <p class="text-sm text-gray-600 dark:text-gray-400">Verifikasi tiket <strong class="text-gray-900 dark:text-white">{{ selectedItem?.code }}</strong>:</p>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Verifikasi <span class="text-red-500">*</span></label><select data-testid="select-verify-status" v-model="verifyForm.status_verifikasi" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none"><option value="">— Pilih —</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option></select></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan <span class="text-red-500">*</span></label><textarea data-testid="textarea-alasan" v-model="verifyForm.alasan_verifikasi" rows="3" placeholder="Jelaskan alasan persetujuan/penolakan..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Verifikasi <span class="text-red-500">*</span></label><select data-testid="select-verify-status" v-model="verifyForm.status_verifikasi" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', verifyErrors.status_verifikasi ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-emerald-500']"><option value="">— Pilih —</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option></select><p v-if="verifyErrors.status_verifikasi" class="text-red-500 text-xs mt-1">{{ verifyErrors.status_verifikasi }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan <span class="text-red-500">*</span></label><textarea data-testid="textarea-alasan" v-model="verifyForm.alasan_verifikasi" rows="3" placeholder="Jelaskan alasan persetujuan/penolakan..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', verifyErrors.alasan_verifikasi ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-emerald-500']"></textarea><p v-if="verifyErrors.alasan_verifikasi" class="text-red-500 text-xs mt-1">{{ verifyErrors.alasan_verifikasi }}</p></div>
     </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showVerifyModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-confirm-verify" type="submit" :disabled="verifyForm.processing" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Verifikasi</button></div></form></div></Transition></Teleport>
 
     <!-- Detail Modal -->
@@ -563,9 +597,10 @@ async function submitImport() {
 
     <!-- Bulk Verify Modal -->
     <Teleport to="body"><Transition name="modal"><div v-if="showBulkVerifyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="showBulkVerifyModal = false"><div class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div><form data-testid="modal-bulk-verify" @submit.prevent="submitBulkVerify" class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col"><div class="shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white"><i class="fas fa-clipboard-check text-emerald-500 mr-2"></i>Bulk Verifikasi ({{ selectedIds.length }})</h3><button type="button" @click="showBulkVerifyModal = false" class="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><i class="fas fa-times"></i></button></div><div class="overflow-y-auto flex-1 px-6 py-5 space-y-4 modal-scroll">
+      <FormErrorSummary :errors="bulkVerifyErrors" testId="form-error-summary-bulk-verify" />
       <div class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg px-4 py-3 text-sm text-emerald-700 dark:text-emerald-400"><i class="fas fa-info-circle mr-1.5"></i> {{ selectedResolvedCount }} tiket berstatus <strong>resolved + pending</strong> akan di-verify. Tiket dengan status lain akan di-skip.</div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Verifikasi <span class="text-red-500">*</span></label><select data-testid="select-bulk-verify-status" v-model="bulkVerifyForm.status_verifikasi" class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none"><option value="">— Pilih —</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option></select></div>
-      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan (untuk semua tiket) <span class="text-red-500">*</span></label><textarea data-testid="textarea-bulk-alasan" v-model="bulkVerifyForm.alasan_verifikasi" rows="3" placeholder="Jelaskan alasan verifikasi..." class="w-full px-3 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none resize-none"></textarea></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status Verifikasi <span class="text-red-500">*</span></label><select data-testid="select-bulk-verify-status" v-model="bulkVerifyForm.status_verifikasi" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', bulkVerifyErrors.status_verifikasi ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-emerald-500']"><option value="">— Pilih —</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option></select><p v-if="bulkVerifyErrors.status_verifikasi" class="text-red-500 text-xs mt-1">{{ bulkVerifyErrors.status_verifikasi }}</p></div>
+      <div><label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Alasan (untuk semua tiket) <span class="text-red-500">*</span></label><textarea data-testid="textarea-bulk-alasan" v-model="bulkVerifyForm.alasan_verifikasi" rows="3" placeholder="Jelaskan alasan verifikasi..." :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none resize-none', bulkVerifyErrors.alasan_verifikasi ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-emerald-500']"></textarea><p v-if="bulkVerifyErrors.alasan_verifikasi" class="text-red-500 text-xs mt-1">{{ bulkVerifyErrors.alasan_verifikasi }}</p></div>
     </div><div class="shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200 dark:border-gray-700"><button type="button" @click="showBulkVerifyModal = false" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button><button data-testid="btn-confirm-bulk-verify" type="submit" :disabled="bulkVerifyForm.processing" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"><i class="fas fa-check mr-1.5"></i>Verifikasi Semua</button></div></form></div></Transition></Teleport>
 
     <!-- Import Modal -->
