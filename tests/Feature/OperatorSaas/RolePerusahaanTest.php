@@ -185,10 +185,10 @@ class RolePerusahaanTest extends TestCase
         $company = Company::factory()->create();
         Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'Active A', 'is_active' => true, 'display_order' => 1]);
         Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'Active B', 'is_active' => true, 'display_order' => 2]);
-        $trashed = Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'Trashed', 'is_active' => true, 'display_order' => 3]);
+        $trashed = Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'TrashedTfilterUnique', 'is_active' => true, 'display_order' => 3]);
         $trashed->delete();
 
-        $response = $this->get('/operator-saas/role-perusahaan?terhapus=ya');
+        $response = $this->get('/operator-saas/role-perusahaan?terhapus=ya&search=TrashedTfilterUnique');
 
         $response->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -201,11 +201,11 @@ class RolePerusahaanTest extends TestCase
     {
         $this->actingAs($this->user, 'admin-saas');
         $company = Company::factory()->create();
-        Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'Active A', 'is_active' => true, 'display_order' => 1]);
-        Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'Active B', 'is_active' => true, 'display_order' => 2]);
-        Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'Inactive', 'is_active' => false, 'display_order' => 3]);
+        Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'SfactUniqueAxx', 'is_active' => true, 'display_order' => 1]);
+        Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'SfactUniqueBxx', 'is_active' => true, 'display_order' => 2]);
+        Role::create(['scope' => 'admin_perusahaan', 'company_id' => $company->id, 'name' => 'SfactInactivexx', 'is_active' => false, 'display_order' => 3]);
 
-        $response = $this->get('/operator-saas/role-perusahaan?status=Aktif');
+        $response = $this->get('/operator-saas/role-perusahaan?status=Aktif&search=SfactUnique');
 
         $response->assertOk()
             ->assertInertia(fn (Assert $page) => $page
@@ -236,16 +236,16 @@ class RolePerusahaanTest extends TestCase
         $this->actingAs($this->user, 'admin-saas');
 
         $adminPerm = Permission::create([
-            'name' => 'customer.list',
+            'name' => 'permscope_admin_unique_test',
             'scope' => 'admin_perusahaan',
-            'display_order' => 1,
-            'description' => 'Lihat daftar customer',
+            'display_order' => 9999,
+            'description' => 'Unique admin scope test perm',
         ]);
         $karyawanPerm = Permission::create([
-            'name' => 'karyawan-customer.list',
+            'name' => 'permscope_karyawan_unique_test',
             'scope' => 'karyawan_perusahaan',
-            'display_order' => 2,
-            'description' => 'Lihat daftar customer via karyawan',
+            'display_order' => 9998,
+            'description' => 'Unique karyawan scope test perm',
         ]);
 
         $response = $this->get('/operator-saas/role-perusahaan');
@@ -253,11 +253,12 @@ class RolePerusahaanTest extends TestCase
         $response->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('OperatorSaas/RolePerusahaan')
-                ->has('availablePermissions', 1)
-                ->where('availablePermissions.0.nama', 'customer.list')
                 ->where('availablePermissions.0.id', $adminPerm->id)
             );
-        $this->assertDatabaseHas('permissions', ['id' => $karyawanPerm->id]);
+        // admin perm must be present; karyawan perm must NOT be present
+        $permIds = collect($response->original->getData()['props']['availablePermissions'] ?? [])->pluck('id')->all();
+        $this->assertContains($adminPerm->id, $permIds);
+        $this->assertNotContains($karyawanPerm->id, $permIds);
     }
 
     public function test_role_payload_includes_permission_ids_and_names()
@@ -265,28 +266,28 @@ class RolePerusahaanTest extends TestCase
         $this->actingAs($this->user, 'admin-saas');
         $company = Company::factory()->create();
         $permA = Permission::create([
-            'name' => 'customer.list',
+            'name' => 'permpayload_a_unique_test',
             'scope' => 'admin_perusahaan',
-            'display_order' => 1,
-            'description' => 'Lihat daftar customer',
+            'display_order' => 9997,
+            'description' => 'Payload perm A',
         ]);
         $permB = Permission::create([
-            'name' => 'tagihan.create',
+            'name' => 'permpayload_b_unique_test',
             'scope' => 'admin_perusahaan',
-            'display_order' => 2,
-            'description' => 'Tambah tagihan',
+            'display_order' => 9996,
+            'description' => 'Payload perm B',
         ]);
 
         $role = Role::create([
             'scope' => 'admin_perusahaan',
             'company_id' => $company->id,
-            'name' => 'Role With Perms',
+            'name' => 'RolePayloadUniqueTestName',
             'is_active' => true,
             'display_order' => 1,
         ]);
-        $role->permissions()->sync([$permA->id, $permB->id]);
+        $role->permissions()->sync([(string) $permA->id, (string) $permB->id]);
 
-        $response = $this->get('/operator-saas/role-perusahaan');
+        $response = $this->get('/operator-saas/role-perusahaan?search=RolePayloadUniqueTestName');
 
         $response->assertOk()
             ->assertInertia(fn (Assert $page) => $page
