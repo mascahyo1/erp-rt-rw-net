@@ -383,7 +383,7 @@ onMounted(() => { });
                 <p v-if="createForm.errors.customer_address_lat || createForm.errors.customer_address_long" class="text-red-500 text-xs mt-1">{{ createForm.errors.customer_address_lat || createForm.errors.customer_address_long }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status <span class="text-red-500">*</span></label>
                 <select v-model="createForm.internet_status" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', createForm.errors.internet_status ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']">
                   <option value="active">Aktif</option>
                   <option value="inactive">Nonaktif</option>
@@ -456,7 +456,7 @@ onMounted(() => { });
                 <p v-if="editForm.errors.customer_address_lat || editForm.errors.customer_address_long" class="text-red-500 text-xs mt-1">{{ editForm.errors.customer_address_lat || editForm.errors.customer_address_long }}</p>
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Status <span class="text-red-500">*</span></label>
                 <select v-model="editForm.internet_status" :class="['w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', editForm.errors.internet_status ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-amber-500']">
                   <option value="active">Aktif</option>
                   <option value="inactive">Nonaktif</option>
