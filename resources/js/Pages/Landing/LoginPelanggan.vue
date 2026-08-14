@@ -79,7 +79,7 @@ const loginEmailError = computed(() => {
 const loginPasswordError = computed(() => {
     if (!lt.password.value) return null;
     if (!loginForm.password) return 'Password wajib diisi.';
-    if (loginForm.password.length < 6) return 'Password minimal 6 karakter.';
+    if (!loginForm.password) return 'Password wajib diisi.';
     return null;
 });
 
@@ -282,7 +282,7 @@ function switchTab(tab) {
                                 <p v-if="loginCompanyError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ loginCompanyError }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i :class="['fas fa-envelope text-sm transition-colors', loginEmailError ? 'text-red-400' : 'text-gray-400']"></i>
@@ -298,10 +298,11 @@ function switchTab(tab) {
                                             : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500/30 focus:border-emerald-500'"
                                     />
                                 </div>
-                                <p v-if="loginEmailError || loginForm.errors.email" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ loginEmailError || loginForm.errors.email }}</p>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Format: nama@domain.com</p>
+<p v-if="loginEmailError || loginForm.errors.email" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ loginEmailError || loginForm.errors.email }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i :class="['fas fa-lock text-sm transition-colors', loginPasswordError ? 'text-red-400' : 'text-gray-400']"></i>
@@ -325,7 +326,8 @@ function switchTab(tab) {
                                         <i :class="['fas text-sm', showLoginPassword ? 'fa-eye-slash' : 'fa-eye']"></i>
                                     </button>
                                 </div>
-                                <p v-if="loginPasswordError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ loginPasswordError }}</p>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Gunakan password akun Anda.</p>
+<p v-if="loginPasswordError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ loginPasswordError }}</p>
                             </div>
                             <div class="flex items-center justify-between text-sm">
                                 <label class="flex items-center gap-2 text-gray-600 dark:text-gray-400 cursor-pointer group">
@@ -367,7 +369,7 @@ function switchTab(tab) {
                                 <p v-if="regCompanyError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regCompanyError }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Lengkap</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i :class="['fas fa-id-card text-sm transition-colors', regNameError ? 'text-red-400' : 'text-gray-400']"></i>
@@ -386,7 +388,7 @@ function switchTab(tab) {
                                 <p v-if="regNameError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regNameError }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i :class="['fas fa-envelope text-sm transition-colors', regEmailError ? 'text-red-400' : 'text-gray-400']"></i>
@@ -402,10 +404,11 @@ function switchTab(tab) {
                                             : 'border-gray-300 dark:border-gray-700 focus:ring-emerald-500/30 focus:border-emerald-500'"
                                     />
                                 </div>
-                                <p v-if="regEmailError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regEmailError }}</p>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Format: nama@domain.com</p>
+<p v-if="regEmailError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regEmailError }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nomor HP</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nomor HP <span class="text-red-500">*</span></label>
                                 <div class="grid grid-cols-[5.5rem_1fr] sm:grid-cols-[7rem_1fr] gap-2">
                                     <div>
                                         <CountryCodeSelect v-model="registerForm.phone_country_code" accent="emerald" size="sm" />
@@ -429,7 +432,7 @@ function switchTab(tab) {
                                 <p v-if="regPhoneError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regPhoneError }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i :class="['fas fa-lock text-sm transition-colors', regPasswordError ? 'text-red-400' : 'text-gray-400']"></i>
@@ -458,10 +461,11 @@ function switchTab(tab) {
                                     </div>
                                     <span class="text-2xs text-gray-500 dark:text-gray-400 min-w-12">{{ passwordStrength.label }}</span>
                                 </div>
-                                <p v-if="regPasswordError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regPasswordError }}</p>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Minimal 8 karakter dan harus cocok dengan konfirmasi.</p>
+<p v-if="regPasswordError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regPasswordError }}</p>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Konfirmasi Password</label>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Konfirmasi Password <span class="text-red-500">*</span></label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <i :class="['fas fa-lock text-sm transition-colors', regPasswordConfirmError ? 'text-red-400' : 'text-gray-400']"></i>

@@ -23,6 +23,7 @@ const selectedCompany = ref(null);
 const isResetMode = computed(() => !!props.token);
 const siteKey = computed(() => page.props.turnstile_site_key || '');
 const turnstileSolved = computed(() => !siteKey.value || !!form['cf-turnstile-response']);
+const showPassword = ref(false);
 
 const form = useForm({
     email: props.email || '',
@@ -140,7 +141,8 @@ const submit = () => {
                                         :class="['w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-colors', form.errors.email ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']"
                                     />
                                 </div>
-                                <p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
+                                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Format: nama@domain.com</p>
+<p v-if="form.errors.email" class="text-red-500 text-xs mt-1">{{ form.errors.email }}</p>
                             </div>
 
                             <template v-else>
@@ -156,13 +158,15 @@ const submit = () => {
                                         </div>
                                         <input
                                             v-model="form.password"
-                                            type="password"
+                                            :type="showPassword ? 'text' : 'password'"
                                             placeholder="Minimal 8 karakter"
                                             required
-                                            :class="['w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-colors', form.errors.password ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']"
+                                            :class="['w-full pl-10 pr-10 py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-colors', form.errors.password ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']"
                                         />
+                                    <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors" :title="showPassword ? 'Sembunyikan' : 'Tampilkan'"><i :class="['fas text-sm', showPassword ? 'fa-eye-slash' : 'fa-eye']"></i></button>
                                     </div>
-                                    <p v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</p>
+                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Minimal 8 karakter.</p>
+<p v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</p>
                                 </div>
 
                                 <div>
@@ -173,11 +177,12 @@ const submit = () => {
                                         </div>
                                         <input
                                             v-model="form.password_confirmation"
-                                            type="password"
+                                            :type="showPassword ? 'text' : 'password'"
                                             placeholder="Ulangi password baru"
                                             required
-                                            :class="['w-full pl-10 pr-4 py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-colors', form.errors.password_confirmation ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']"
+                                            :class="['w-full pl-10 pr-10 py-2.5 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-colors', form.errors.password_confirmation ? 'border-red-400 focus:ring-red-500/30 focus:border-red-500' : 'border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-sky-500 focus:border-sky-500']"
                                         />
+                                    <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-sky-500 dark:hover:text-sky-400 transition-colors" :title="showPassword ? 'Sembunyikan' : 'Tampilkan'"><i :class="['fas text-sm', showPassword ? 'fa-eye-slash' : 'fa-eye']"></i></button>
                                     </div>
                                 </div>
                             </template>

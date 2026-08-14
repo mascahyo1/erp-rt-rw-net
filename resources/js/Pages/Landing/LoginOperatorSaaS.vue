@@ -63,7 +63,6 @@ const emailError = computed(() => {
 const passwordError = computed(() => {
   if (!passwordTouched.value) return null;
   if (!form.password) return 'Password wajib diisi.';
-  if (form.password.length < 6) return 'Password minimal 6 karakter.';
   return null;
 });
 
@@ -145,7 +144,7 @@ function submit() {
             <form class="space-y-4" @submit.prevent="submit" novalidate>
             <FormErrorSummary :errors="form.errors" title="Gagal masuk — periksa isian berikut:" />
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email <span class="text-red-500">*</span></label>
                 <div class="relative">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i :class="['fas fa-envelope text-sm transition-colors', emailError ? 'text-red-400' : 'text-gray-400']"></i>
@@ -161,14 +160,15 @@ function submit() {
                       : 'border-gray-300 dark:border-gray-700 focus:ring-indigo-500/30 focus:border-indigo-500'"
                   />
                 </div>
-                <p v-if="emailError || page.props.errors?.email" class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Format: nama@domain.com</p>
+<p v-if="emailError || page.props.errors?.email" class="text-red-500 text-xs mt-1 flex items-center gap-1">
                   <i class="fas fa-exclamation-circle"></i>
                   {{ emailError || page.props.errors.email[0] }}
                 </p>
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password <span class="text-red-500">*</span></label>
                 <div class="relative">
                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <i :class="['fas fa-lock text-sm transition-colors', passwordError ? 'text-red-400' : 'text-gray-400']"></i>
@@ -192,7 +192,8 @@ function submit() {
                     <i :class="['fas text-sm', showPassword ? 'fa-eye-slash' : 'fa-eye']"></i>
                   </button>
                 </div>
-                <p v-if="passwordError || page.props.errors?.password || page.props.errors?.email" class="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Gunakan password akun Anda.</p>
+<p v-if="passwordError || page.props.errors?.password || page.props.errors?.email" class="text-red-500 text-xs mt-1 flex items-center gap-1">
                   <i class="fas fa-exclamation-circle"></i>
                   {{ passwordError || page.props.errors?.password?.[0] || page.props.errors?.email?.[0] }}
                 </p>
