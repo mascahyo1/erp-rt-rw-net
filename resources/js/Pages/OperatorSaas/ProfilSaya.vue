@@ -14,6 +14,7 @@ const page = usePage();
 const toast = useToast();
 const user = page.props.auth.user;
 
+const showPw = ref(false);
 const form = useForm({
   name: user.name,
   email: user.email,
@@ -86,18 +87,19 @@ function submit() {
             <div v-if="showPasswordFields" class="space-y-4 mt-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password Saat Ini</label>
-                <input v-model="form.current_password" type="password" :class="['w-full px-4 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', form.errors.current_password ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500']" />
+                <div class="relative"><input v-model="form.current_password" type="password" :class="['w-full px-4 py-2.5 pr-10 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', form.errors.current_password ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500']" /><button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-500 transition-colors" :title="showPw ? 'Sembunyikan' : 'Tampilkan'"><i :class="['fas text-sm', showPw ? 'fa-eye-slash' : 'fa-eye']"></i></button></div>
                 <p v-if="form.errors.current_password" class="text-red-500 text-xs mt-1">{{ form.errors.current_password }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Password Baru</label>
-                <input v-model="form.password" type="password" :class="['w-full px-4 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', form.errors.password ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500']" placeholder="Minimal 8 karakter" />
+                <div class="relative"><input v-model="form.password" type="password" :class="['w-full px-4 py-2.5 pr-10 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', form.errors.password ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500']" placeholder="Minimal 8 karakter" />
+                <button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-500 transition-colors" :title="showPw ? 'Sembunyikan' : 'Tampilkan'"><i :class="['fas text-sm', showPw ? 'fa-eye-slash' : 'fa-eye']"></i></button></div>
                 <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1"><i class="fas fa-info-circle mr-1"></i>Opsional — isi hanya jika ingin ganti password. Minimal 8 karakter.</p>
 <p v-if="form.errors.password" class="text-red-500 text-xs mt-1">{{ form.errors.password }}</p>
               </div>
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Konfirmasi Password Baru</label>
-                <input v-model="form.password_confirmation" type="password" :class="['w-full px-4 py-2.5 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', form.errors.password_confirmation ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500']" />
+                <div class="relative"><input v-model="form.password_confirmation" type="password" :class="['w-full px-4 py-2.5 pr-10 rounded-lg border bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 outline-none', form.errors.password_confirmation ? 'border-red-400 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-indigo-500 focus:border-indigo-500']" /><button type="button" @click="showPw = !showPw" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-indigo-500 transition-colors" :title="showPw ? 'Sembunyikan' : 'Tampilkan'"><i :class="['fas text-sm', showPw ? 'fa-eye-slash' : 'fa-eye']"></i></button></div>
                 <p v-if="form.errors.password_confirmation" class="text-red-500 text-xs mt-1">{{ form.errors.password_confirmation }}</p>
               </div>
             </div>
