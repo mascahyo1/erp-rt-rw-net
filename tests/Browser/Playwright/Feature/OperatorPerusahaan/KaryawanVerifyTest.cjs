@@ -30,7 +30,7 @@ class KaryawanVerifyTest {
 
     async run() {
         console.log('=== KARYAWAN VERIFY TEST (modal, datatable, import, export) ===\n');
-        const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+        const browser = await chromium.launch({ slowMo: 350, headless: false, args: ['--no-sandbox'] });
         const context = await browser.newContext({ viewport: { width: 1366, height: 850 }, acceptDownloads: true });
         const page = await context.newPage();
 

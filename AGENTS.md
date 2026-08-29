@@ -4,10 +4,11 @@ Compact guide for AI coding agents working in **ERP RT/RW Net** — multi-tenant
 
 For exhaustive context, read in this order before doing non-trivial work:
 
-1. `CLAUDE.md` — stack, commands, gotchas (verbose, slightly stale)
-2. `dokumentasi/CONVENTIONS.md` — **Hybrid Inertia + AJAX** form rules (mandatory before writing forms)
-3. `DOCS.md` — demo login credentials
-4. `dokumentasi/operator-perusahaan/` — per-feature docs
+1. `STANDARDS.md` — **v4 Single Source of Truth** (§1 kontrak build-time, §7 headed E2E per-langkah, §8 DoD) + `workflow.md` ringkas
+2. `CLAUDE.md` — stack, commands, gotchas (verbose, slightly stale)
+3. `dokumentasi/CONVENTIONS.md` — **Hybrid Inertia + AJAX** form rules (mandatory before writing forms)
+4. `DOCS.md` — demo login credentials
+5. `dokumentasi/operator-perusahaan/` — per-feature docs
 
 ---
 
@@ -23,31 +24,40 @@ Teliti workflow — agents in this repo have burned cycles by rushing:
 
 ---
 
-## Test runners — use the right one
+## Test runners — use the right one (STANDARDS.md §7)
 
-This repo has THREE test paths; don't confuse them:
+This repo has THREE test paths; don't confuse them — **STANDARDS §7.1 adalah sumber tunggal**:
 
 | Path | Engine | Use for | Notes |
 |---|---|---|---|
-| `tests/Feature/**/*.php`, `tests/Unit/` | **PHPUnit** (via `php artisan test`) | Backend unit/feature, auth, RBAC, controllers | Default. `phpunit.xml` points at DB `erp_rt_rw_net` (NOT `_tmp`) |
-| `tests/Browser/Playwright/Feature/**/*.cjs` | **Playwright (Node, CommonJS)** | UI/E2E, visual regression, screenshots | Active ecosystem. **Always `headless: false`** for debug. SlowMo 300–500. `chromedriver.exe` is in repo root. |
-| `tests/Browser/Feature/{Guard}/*Test.php` | **Laravel Dusk** | (legacy — see note) | Dusk scaffolding + `parallel-dusk.ps1` exist, but the Guard-level tests are mostly absent from the current tree. New E2E work goes into **Playwright `.cjs`**, not Dusk. Older `.kilo/skills/new-feature-test.md` is **outdated** — don't follow it. |
+| `tests/Feature/**/*.php`, `tests/Unit/` | **PHPUnit** (via `php artisan test`) | Backend unit/feature, auth, RBAC, controllers | Default. `phpunit.xml` points at DB `erp_rt_rw_net` (NOT `_tmp`). Via `.\parallel-test.ps1`. **Jangan** untuk verify UI. |
+| `tests/Browser/Playwright/Feature/**/*.cjs` | **Playwright (Node, CommonJS)** | **PRIMARY — UI/E2E, visual, CRUD** | **Always `headless: false` + `slowMo:350` for debug** (`PLAYWRIGHT_HEADLESS=true` untuk CI). Template `DeepVerifyKonfigurasiSaaS.cjs`, per-langkah `assert+screenshot+network`. `chromedriver.exe` in root. |
+| `tests/Browser/deprecatedoldFeature/**/*.php` | **Laravel Dusk** | **Legacy** — jangan buat baru | Scaffolding + `parallel-dusk.ps1` exist. New E2E → Playwright `.cjs`. `.kilo/skills/new-feature-test.md` **outdated**. |
 
 Helpers:
-- `tests/Browser/Playwright/support/PlaywrightHelper.cjs` — login/logout, demo-user setup
-- `parallel-dusk.ps1` — multi-worker Dusk runner with CSV report
+- `tests/Browser/Playwright/support/PlaywrightHelper.cjs` — headed launch, login (`.fa-building`), screenshot, console capture, `assertNoConsoleErrors()`
+- `tests/Browser/Playwright/support/baseUrl.cjs` — baseUrl helper (env → .env → default)
+- `tests/Browser/Playwright/support/DeepVerifyTemplate.cjs` — template 15 langkah deep verify
+- `scripts/check-testing-standards.cjs` — enforce STANDARDS §1+§7 (0 errors = boleh testing)
+- `parallel-dusk.ps1` — multi-worker Dusk + CSV report
 - `parallel-test.ps1` — `php artisan test --parallel`
 
 Single test runs:
 ```bash
-# PHPUnit — single file
-php artisan test --filter=CustomerTest
-
-# Playwright — single file
+# Playwright — single (headed)
 node tests/Browser/Playwright/Feature/OperatorPerusahaan/CheckPdfLogoHeaded.cjs
+node tests/Browser/Playwright/Feature/OperatorSaas/DeepVerifyKonfigurasiSaaS.cjs
+
+# PHPUnit — single
+php artisan test --filter=CustomerTest
+# atau parallel:
+.\parallel-test.ps1 -MaxWorkers 8
+
+# Standards check
+node scripts/check-testing-standards.cjs
 ```
 
-Playwright convention: log in via the `.fa-building` button on the login page → pick company from dropdown. Demo users are seeded by `DemoSeeder` (see `DOCS.md`).
+Playwright convention: log in via the `.fa-building` button on the login page → pick company from dropdown. Demo users are seeded by `DemoSeeder` (see `DOCS.md`). Deep verify checklist: lihat `STANDARDS.md §7.3`.
 
 ---
 

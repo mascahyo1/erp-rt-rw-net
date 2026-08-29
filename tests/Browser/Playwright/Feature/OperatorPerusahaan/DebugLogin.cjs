@@ -5,7 +5,7 @@ const path = require('path');
 
 const BASE = require('../../support/baseUrl.cjs');
 (async () => {
-    const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+    const browser = await chromium.launch({ slowMo: 350, headless: false, args: ['--no-sandbox'] });
     const ctx = await browser.newContext({ viewport: { width: 1366, height: 850 } });
     const page = await ctx.newPage();
     page.on('console', msg => console.log('[console]', msg.text()));

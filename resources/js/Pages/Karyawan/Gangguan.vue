@@ -364,7 +364,7 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
       <div class="flex flex-wrap items-end gap-3">
         <div class="flex-1 min-w-[200px]">
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Cari</label>
-          <input v-model="searchInput" @keyup.enter="applySearch" type="text" placeholder="Cari kode / catatan / customer..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" />
+          <input v-model="searchInput" @keyup.enter="applySearch" type="text" placeholder="Cari kode / catatan / customer..." class="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 outline-none" data-testid="input-search">
         </div>
         <div class="min-w-[160px]">
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Pengerjaan</label>
@@ -400,7 +400,7 @@ function confirmDelete() { router.delete(`/karyawan/gangguan/${selectedItem.valu
 
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table data-testid="table-data" class="w-full text-sm">
           <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <tr>
               <th class="px-3 py-3 w-10"><input data-testid="checkbox-select-all" type="checkbox" v-model="isAllSelected" class="rounded border-gray-300 text-amber-600 focus:ring-amber-500" /></th>

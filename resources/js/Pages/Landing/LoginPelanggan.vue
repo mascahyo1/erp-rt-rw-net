@@ -342,8 +342,7 @@ function switchTab(tab) {
                                 </a>
                             </div>
                             <button
-                                type="submit"
-                                data-testid="btn-login-submit"
+                                type="submit" data-testid="btn-login-submit"
                                 :disabled="loginForm.processing || !loginTurnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
@@ -491,8 +490,7 @@ function switchTab(tab) {
                                 <p v-if="regPasswordConfirmError" class="text-red-500 text-xs mt-1 flex items-center gap-1"><i class="fas fa-exclamation-circle"></i>{{ regPasswordConfirmError }}</p>
                             </div>
                             <button
-                                type="submit"
-                                data-testid="btn-register-submit"
+                                type="submit" data-testid="btn-register-submit"
                                 :disabled="registerForm.processing || !registerTurnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >

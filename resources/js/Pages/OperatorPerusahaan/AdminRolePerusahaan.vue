@@ -65,7 +65,7 @@ const bulkUpdateRoleForm = useForm({ ids: [], role_id: '' });
 function openCreate() { createForm.reset(); createForm.clearErrors(); showCreateModal.value = true; }
 function submitCreate() { createForm.post('/operator-perusahaan/admin-role-perusahaan', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Mapping berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000) }); }
 function openEdit(item) { editForm.defaults({ role_id: item.role_id }); editForm.reset(); editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; }
-function submitEdit() { editForm.put('/operator-perusahaan/admin-role-perusahaan/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Mapping berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
+function submitEdit() { editForm.transform(data => ({...data, _method: 'PUT'})).post('/operator-perusahaan/admin-role-perusahaan/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Mapping berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
 function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
 function confirmDelete() {
@@ -124,10 +124,10 @@ const pagination = computed(() => ({ current: props.assignments?.current_page ||
           <button v-if="can('admin-role-perusahaan-op.create')" data-testid="btn-open-bulk-assign" @click="openBulkAssign" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
             <i class="fas fa-layer-group mr-1.5"></i> Tambah Sekaligus
           </button>
-          <button v-if="can('admin-role-perusahaan-op.import')" @click="openImport" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+          <button v-if="can('admin-role-perusahaan-op.import')" @click="openImport" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm" data-testid="btn-import">
             <i class="fas fa-upload mr-1.5"></i> Import
           </button>
-          <button v-if="can('admin-role-perusahaan-op.export')" @click="exportAll" class="inline-flex items-center px-4 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors shadow-sm">
+          <button v-if="can('admin-role-perusahaan-op.export')" @click="exportAll" class="inline-flex items-center px-4 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors shadow-sm" data-testid="btn-export">
             <i class="fas fa-download mr-1.5"></i> Export
           </button>
           <a v-if="can('admin-role-perusahaan-op.import')" @click="downloadTemplate" class="inline-flex items-center px-3 py-2.5 text-xs text-sky-600 dark:text-sky-400 hover:underline cursor-pointer">
@@ -160,10 +160,10 @@ const pagination = computed(() => ({ current: props.assignments?.current_page ||
 
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-sm min-w-[640px]">
+          <table data-testid="table-data" class="w-full text-sm min-w-[640px]">
             <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 dark:border-gray-600 text-sky-600 focus:ring-sky-500" /></th>
+                <th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 dark:border-gray-600 text-sky-600 focus:ring-sky-500" data-testid="checkbox-select-all" /></th>
                 <th @click="sort('admin_nama')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors">
                   <span class="inline-flex items-center gap-1">Admin <i :class="['fas', sortIcon('admin_nama'), 'text-[10px]', sortField === 'admin_nama' ? 'text-sky-500' : 'text-gray-400']"></i></span>
                 </th>

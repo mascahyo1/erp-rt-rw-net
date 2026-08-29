@@ -40,19 +40,39 @@ class PlaywrightHelper {
         this.screenshotCount = 0;
     }
 
-    async launch() {
+    async launch(opts = {}) {
+        // STANDARDS §7.1 — headed untuk debug, CI bisa gate via PLAYWRIGHT_HEADLESS=true
+        const headlessEnv = process.env.PLAYWRIGHT_HEADLESS === 'true';
+        const headless = opts.headless ?? (headlessEnv ? true : false);
+        const slowMo = opts.slowMo ?? (headless ? 0 : 350);
         this.browser = await chromium.launch({
-            headless: false,
+            headless,
+            slowMo,
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
+        const recordVideo = opts.recordVideo ?? (process.env.PLAYWRIGHT_VIDEO === 'true');
         this.context = await this.browser.newContext({
-            viewport: { width: 1280, height: 720 },
-            ignoreHTTPSErrors: true
+            viewport: { width: opts.width || 1280, height: opts.height || 720 },
+            ignoreHTTPSErrors: true,
+            ...(recordVideo ? { recordVideo: { dir: path.join(__dirname, '..', 'videos'), size: { width: 1280, height: 720 } } } : {}),
         });
         this.page = await this.context.newPage();
+        // STANDARDS §7.2 — capture console errors untuk deep verify
+        this.consoleErrors = [];
+        this.page.on('pageerror', e => this.consoleErrors.push('pageerror: ' + e.message));
+        this.page.on('console', m => { if (m.type() === 'error') this.consoleErrors.push('console.error: ' + m.text()); });
 
-        await this.page.goto(this.baseUrl);
-        await this.page.waitForLoadState('networkidle');
+        if (!opts.skipGoto) {
+            await this.page.goto(this.baseUrl);
+            await this.page.waitForLoadState('networkidle');
+        }
+    }
+
+    getConsoleErrors() { return this.consoleErrors || []; }
+    assertNoConsoleErrors() {
+        if (this.consoleErrors && this.consoleErrors.length > 0) {
+            throw new Error('JS errors detected: ' + this.consoleErrors.join('; '));
+        }
     }
 
     async close() {
@@ -62,9 +82,22 @@ class PlaywrightHelper {
     }
 
     async loginAsAdminPerusahaan(email, password) {
+        // STANDARDS: login flow via .fa-building button + company dropdown (CLAUDE.md)
         await this.page.goto(`${this.baseUrl}/login-perusahaan`);
         await this.page.waitForLoadState('networkidle');
-
+        await this.page.waitForTimeout(800);
+        // Jika ada tombol pilih perusahaan (.fa-building), klik dulu
+        const buildingBtn = this.page.locator('button:has(.fa-building)').first();
+        if (await buildingBtn.count() > 0 && await buildingBtn.isVisible().catch(() => false)) {
+            await buildingBtn.click();
+            await this.page.waitForTimeout(800);
+            // Pilih perusahaan pertama yang tersedia
+            const firstCompany = this.page.locator('button').filter({ hasText: /PT |CV |UD / }).first();
+            if (await firstCompany.count() > 0) {
+                await firstCompany.click();
+                await this.page.waitForTimeout(500);
+            }
+        }
         await this.page.fill('input[type="email"]', email);
         await this.page.fill('input[type="password"]', password);
         await this.page.click('button[type="submit"]');

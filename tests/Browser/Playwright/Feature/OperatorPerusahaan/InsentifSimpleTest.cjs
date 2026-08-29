@@ -54,7 +54,7 @@ class InsentifSimpleTest {
         console.log('========================================\n');
 
         try {
-            this.browser = await chromium.launch({ headless: false });
+            this.browser = await chromium.launch({ headless: false, slowMo: 350 });
             this.context = await this.browser.newContext({ viewport: { width: 1280, height: 720 } });
             this.page = await this.context.newPage();
 

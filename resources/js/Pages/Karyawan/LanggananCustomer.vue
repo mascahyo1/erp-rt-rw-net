@@ -79,7 +79,7 @@ function openCreate() { createForm.reset(); createForm.clearErrors(); showCreate
 function submitCreate() { createForm.post('/karyawan/langganan-customer', { preserveState: true, preserveScroll: true, onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Langganan berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000) }); }
 function openEdit(item) { editForm.customer_id = item.customer_id; editForm.internet_package_id = item.internet_package_id; editForm.account_number = item.account_number || ''; editForm.router_sn = item.router_sn || ''; editForm.customer_address = item.customer_address || ''; editForm.customer_address_long = item.customer_address_long || ''; editForm.customer_address_lat = item.customer_address_lat || ''; editForm.internet_status = item.internet_status; editForm.company_notes = item.company_notes; editForm.clearErrors(); selectedItem.value = item; showEditModal.value = true; nextTick(() => editLocationPicker.value?.invalidateSize()); }
 function openDetail(item) { selectedItem.value = item; showDetailModal.value = true; nextTick(() => detailLocationPicker.value?.invalidateSize()); }
-function submitEdit() { editForm.put('/karyawan/langganan-customer/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Langganan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
+function submitEdit() { editForm.transform(data => ({...data, _method: 'PUT'})).post('/karyawan/langganan-customer/' + selectedItem.value.id, { preserveState: true, preserveScroll: true, onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Langganan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
 function openDelete(item) { selectedItem.value = item; showDeleteModal.value = true; }
 function confirmDelete() { router.delete('/karyawan/langganan-customer/' + selectedItem.value.id, { onSuccess: () => { showDeleteModal.value = false; fetchData(); toast.success('Langganan berhasil dihapus.'); } }); }
 function confirmRestore(id) { router.patch('/karyawan/langganan-customer/' + id + '/restore', { onSuccess: () => { fetchData(); toast.success('Langganan berhasil dipulihkan.'); } }); }
@@ -125,7 +125,7 @@ onMounted(() => { });
           <button v-if="can('karyawan-langganan.import') && terhapusFilter !== 'ya'" @click="openImportModal" class="inline-flex items-center px-4 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
             <i class="fas fa-file-import mr-1.5"></i> Import
           </button>
-          <button v-if="can('karyawan-langganan.export')" @click="exportAll" class="inline-flex items-center px-4 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors shadow-sm">
+          <button v-if="can('karyawan-langganan.export')" @click="exportAll" class="inline-flex items-center px-4 py-2.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700 transition-colors shadow-sm" data-testid="btn-export">
             <i class="fas fa-file-export mr-1.5"></i> Export
           </button>
           <button v-if="can('karyawan-langganan.export')" @click="exportSelected" class="inline-flex items-center px-4 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm">
@@ -134,7 +134,7 @@ onMounted(() => { });
           <a @click.prevent="downloadTemplate" class="inline-flex items-center px-3 py-2.5 text-amber-600 dark:text-amber-400 text-sm font-medium hover:underline cursor-pointer">
             <i class="fas fa-file-excel mr-1"></i> Template
           </a>
-          <button v-if="terhapusFilter !== 'ya'" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm">
+          <button v-if="terhapusFilter !== 'ya'" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm" data-testid="btn-tambah">
             <i class="fas fa-plus mr-1.5"></i> Tambah
           </button>
         </div>
@@ -147,7 +147,7 @@ onMounted(() => { });
             <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wider">Cari</label>
             <div class="relative">
               <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div>
-              <input v-model="searchInput" type="text" placeholder="Cari customer, paket, no akun..." class="w-full pl-10 pr-16 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors" @keydown.enter="applySearch" />
+              <input v-model="searchInput" type="text" placeholder="Cari customer, paket, no akun..." class="w-full pl-10 pr-16 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none transition-colors" @keydown.enter="applySearch" data-testid="input-search">
               <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
                 <button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white" title="Clear"><i class="fas fa-times text-xs"></i></button>
               </div>
@@ -185,7 +185,7 @@ onMounted(() => { });
       <!-- Table -->
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-sm min-w-[800px]">
+          <table data-testid="table-data" class="w-full text-sm min-w-[800px]">
             <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th class="px-4 py-3 w-10"><input type="checkbox" :checked="selectedIds.length > 0 && selectedIds.length === pagination.total" @change="toggleSelectAll" class="rounded border-gray-300 text-amber-600" /></th>

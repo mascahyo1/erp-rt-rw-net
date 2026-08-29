@@ -225,8 +225,7 @@ function submit() {
                             </div>
 
                             <button
-                                type="submit"
-                                data-testid="btn-login-submit"
+                                type="submit" data-testid="btn-login-submit"
                                 :disabled="form.processing || !turnstileSolved"
                                 class="w-full py-2.5 bg-linear-to-r from-sky-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-sky-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >

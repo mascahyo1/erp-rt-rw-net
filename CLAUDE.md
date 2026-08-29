@@ -61,15 +61,18 @@ php artisan tinker
 - **Blameable**: `HasBlameable` trait (auto-fill created_by, updated_by, deleted_by, restored_by)
 - **Re-seed**: `php artisan migrate:fresh --seed` (DESTRUCTIVE)
 
-## Testing
+## Testing — lihat `STANDARDS.md §7` (Single Source)
 
-**Tool:** Playwright (NodeJS) only — `tests/Browser/Playwright/Feature/**/*.cjs`
-**NOT used:** Laravel Dusk, PHPUnit Feature/Unit tests (deprecated)
+**Tool primary:** Playwright (NodeJS) — `tests/Browser/Playwright/Feature/**/*.cjs`
+**Secondary:** PHPUnit `tests/Feature/**/*.php` untuk backend murni (via `.\parallel-test.ps1`)
+**Legacy:** Laravel Dusk `tests/Browser/deprecatedoldFeature/**/*.php` — jangan buat baru (STANDARDS §7.1)
 
 - Test files: `tests/Browser/Playwright/Feature/{portal}/{Resource}Test.cjs`
 - All test files use CommonJS (`.cjs`), NOT ESM
-- **WAJIB pakai `headless: false`** untuk debug visual (lihat [memory](.claude/projects/c--laragon-www-erp-rt-rw-net/memory/testing-with-headed-browser.md))
-- Built-in: `slowMo: 300` agar terlihat animasi
+- **WAJIB pakai `headless: false` + `slowMo:350`** untuk debug visual (lihat [memory](.claude/projects/c--laragon-www-erp-rt-rw-net/memory/testing-with-headed-browser.md) & `STANDARDS.md §7.1`). CI: `PLAYWRIGHT_HEADLESS=true`.
+- Per-langkah wajib `assert` + `screenshot` + `network` (`waitForResponse`) + `video` jika kritis — lihat `STANDARDS.md §7.2` & template `DeepVerifyKonfigurasiSaaS.cjs`
+- Deep verify checklist 13 poin — lihat `STANDARDS.md §7.3`, jangan `QuickVerify*`
+- Enforce: `node scripts/check-testing-standards.cjs` (0 errors = boleh testing)
 - Login flow: klik button `.fa-building` di halaman login, pilih company dari dropdown
 
 ## Architecture: Hybrid Inertia + AJAX

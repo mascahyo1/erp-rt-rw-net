@@ -110,7 +110,7 @@ function openEdit(item) {
   showEditModal.value = true;
 }
 function submitEdit() {
-  editForm.put('/operator-perusahaan/riwayat-insentif/' + selectedItem.value.id, {
+  editForm.transform(data => ({...data, _method: 'PUT'})).post('/operator-perusahaan/riwayat-insentif/' + selectedItem.value.id, {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Riwayat insentif berhasil diperbarui.'); },
     onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000)
@@ -210,21 +210,21 @@ const isAllSelected = computed(() => items.value.length > 0 && items.value.every
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div><h2 class="text-2xl font-bold text-gray-900 dark:text-white">Riwayat Insentif</h2><p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Riwayat perhitungan insentif untuk setiap transaksi.</p></div>
         <div class="flex items-center gap-2">
-          <button v-if="can('riwayat-insentif.import') && terhapusFilter !== 'ya'" @click="openImport" class="inline-flex items-center px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm"><i class="fas fa-file-import mr-1.5"></i> Import</button>
+          <button v-if="can('riwayat-insentif.import') && terhapusFilter !== 'ya'" @click="openImport" class="inline-flex items-center px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm" data-testid="btn-import"><i class="fas fa-file-import mr-1.5"></i> Import</button>
           <button v-if="can('riwayat-insentif.import')" @click="downloadTemplate" class="inline-flex items-center px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors shadow-sm"><i class="fas fa-download mr-1.5"></i> Template</button>
           <div v-if="can('riwayat-insentif.export')" class="relative">
             <button @click="showExportDropdown = !showExportDropdown" class="inline-flex items-center px-3 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm">
               <i class="fas fa-file-export mr-1.5"></i> Export <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
             </button>
             <div v-if="showExportDropdown" class="absolute right-0 mt-1 w-44 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-30">
-              <button @click="exportAll" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-list mr-2 text-emerald-500"></i>Export Semua</button>
+              <button @click="exportAll" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" data-testid="btn-export"><i class="fas fa-list mr-2 text-emerald-500"></i>Export Semua</button>
               <button @click="exportSelected" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-check-square mr-2 text-emerald-500"></i>Export Selected ({{ selectedIds.length }})</button>
             </div>
           </div>
-          <button v-if="can('riwayat-insentif.create') && terhapusFilter !== 'ya'" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm"><i class="fas fa-plus mr-1.5"></i> Tambah Riwayat</button>
+          <button v-if="can('riwayat-insentif.create') && terhapusFilter !== 'ya'" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors shadow-sm" data-testid="btn-tambah"><i class="fas fa-plus mr-1.5"></i> Tambah Riwayat</button>
         </div>
       </div>
-      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between"><div class="relative w-full sm:w-72"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div><input v-model="searchInput" type="text" placeholder="Cari..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-sky-500 outline-none" @keydown.enter="applySearch" /><div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5"><button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white" title="Clear"><i class="fas fa-times text-xs"></i></button><button @click="applySearch" class="px-2 py-1 rounded bg-sky-600 text-white hover:bg-sky-700" title="Cari"><i class="fas fa-search text-xs"></i></button></div></div><div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><span>{{ props.riwayats?.total || 0 }} data</span><button v-if="hasFilter" @click="resetFilters" class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline">Reset filter</button></div></div>
+      <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between"><div class="relative w-full sm:w-72"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div><input v-model="searchInput" type="text" placeholder="Cari..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-sky-500 outline-none" @keydown.enter="applySearch" data-testid="input-search"><div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5"><button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white" title="Clear"><i class="fas fa-times text-xs"></i></button><button @click="applySearch" class="px-2 py-1 rounded bg-sky-600 text-white hover:bg-sky-700" title="Cari"><i class="fas fa-search text-xs"></i></button></div></div><div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><span>{{ props.riwayats?.total || 0 }} data</span><button v-if="hasFilter" @click="resetFilters" class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 underline">Reset filter</button></div></div>
 
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm">
         <div class="flex flex-wrap items-end gap-4">
@@ -268,7 +268,7 @@ const isAllSelected = computed(() => items.value.length > 0 && items.value.every
 
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-sm min-w-[900px]">
+          <table data-testid="table-data" class="w-full text-sm min-w-[900px]">
             <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th class="px-4 py-3 w-10">

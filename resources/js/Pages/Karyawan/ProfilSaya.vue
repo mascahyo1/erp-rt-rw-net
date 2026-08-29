@@ -215,7 +215,7 @@ function statusLabel() {
       </div>
 
       <!-- Edit Mode (Form) -->
-      <form v-if="editMode" @submit.prevent="saveProfile" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 space-y-4">
+      <form v-if="editMode" @submit.prevent="saveProfile" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 space-y-4" data-testid="form-main">
         <!-- Kode (read-only banner) -->
         <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg px-4 py-3">
           <div class="flex items-center gap-2">
@@ -229,12 +229,12 @@ function statusLabel() {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">No. NIK <span class="text-red-500">*</span></label>
-            <input v-model="profileForm.no_nik" type="text" placeholder="Nomor KTP" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', formErrors.no_nik ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']" />
+            <input v-model="profileForm.no_nik" type="text" placeholder="Nomor KTP" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', formErrors.no_nik ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']"  data-testid="input-nomor-ktp" />
             <p v-if="formErrors.no_nik" class="text-red-500 text-xs mt-1">{{ formErrors.no_nik }}</p>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">No. KK <span class="text-red-500">*</span></label>
-            <input v-model="profileForm.no_kk" type="text" placeholder="Nomor Kartu Keluarga" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', formErrors.no_kk ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']" />
+            <input v-model="profileForm.no_kk" type="text" placeholder="Nomor Kartu Keluarga" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', formErrors.no_kk ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-amber-500']"  data-testid="input-nomor-kartu-keluarga" />
             <p v-if="formErrors.no_kk" class="text-red-500 text-xs mt-1">{{ formErrors.no_kk }}</p>
           </div>
         </div>
@@ -284,7 +284,7 @@ function statusLabel() {
           <button type="button" @click="cancelEdit" :disabled="submitting" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50">
             Batal
           </button>
-          <button type="submit" :disabled="submitting" class="px-6 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm disabled:opacity-50">
+          <button type="submit" :disabled="submitting" class="px-6 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm disabled:opacity-50" data-testid="btn-simpan">
             <i class="fas fa-save mr-1.5"></i>{{ submitting ? 'Menyimpan...' : 'Simpan' }}
           </button>
         </div>

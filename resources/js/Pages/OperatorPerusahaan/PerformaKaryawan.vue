@@ -97,7 +97,7 @@ function formatRupiah(n) {
     <!-- Table -->
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-sm">
+        <table data-testid="table-data" class="w-full text-sm">
           <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <tr>
               <th class="px-3 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 text-xs">Kode Karyawan</th>

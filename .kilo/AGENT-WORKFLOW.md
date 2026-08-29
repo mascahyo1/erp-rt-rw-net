@@ -36,6 +36,16 @@ Setiap kali dapat tugas baru (user prompt selain sapaan/pertanyaan meta), **defa
 3. **Tanya user** untuk verifikasi todo (contoh: "Todo sudah benar? Lanjut?").
 4. Baru mulai coding setelah user konfirmasi.
 
+## Standar Testing Wajib (STANDARDS.md §7 — ringkas)
+
+- **Playwright primary:** `tests/Browser/Playwright/Feature/**/*.cjs` — `headless:false`, `slowMo:300-500`, `.cjs` only. Lihat `STANDARDS.md §7` & `workflow.md`.
+- **Per langkah wajib:** `assert/check` + `screenshot/shot` + `network (waitForResponse)` + `video` jika kritis. No silent step.
+- **Cakupan Deep Verify:** login → list → CRUD all types → validasi 422 → file upload → soft-delete/bulk → import/export → dark/responsive → no JS errors.
+- **Template:** `DeepVerifyKonfigurasiSaaS.cjs` — copy untuk fitur baru, jangan `QuickVerify*`.
+- **PHPUnit:** hanya backend murni, via `.\parallel-test.ps1`. Jangan untuk verify UI.
+- **Dusk:** legacy, jangan buat baru.
+- **Enforcement:** `node scripts/check-testing-standards.cjs` harus 0 violation sebelum push (kontrak §1+§7).
+
 ## Larangan
 
 - ❌ Langsung `edit`/`write` tanpa todo + sign-off.
@@ -43,3 +53,5 @@ Setiap kali dapat tugas baru (user prompt selain sapaan/pertanyaan meta), **defa
 - ❌ Silent iteration pada visual issue.
 - ❌ Respons panjang tanpa `path:line`.
 - ❌ Bertanya di akhir respons (no engagement fishing).
+- ❌ Buat test E2E baru tanpa `assert`+`screenshot`+`network` per langkah (§7.2).
+- ❌ Pakai `headless:true` untuk debug visual (hanya CI) atau `QuickVerify*` prefix.

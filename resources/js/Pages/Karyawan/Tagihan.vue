@@ -87,7 +87,7 @@ const importing = ref(false);
 function openCreate() { createForm.reset(); showCreateModal.value = true; }
 function submitCreate() { createForm.post('/karyawan/tagihan', { onSuccess: () => { showCreateModal.value = false; fetchData(); toast.success('Tagihan berhasil ditambahkan.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(createForm.errors), 6000) }); }
 function openEdit(item) { editForm.defaults({ cust_internet_id: item.cust_internet_id, usage_start_date: item.usage_start_date || '', usage_end_date: item.usage_end_date || '', total_amount: item.total_amount, discount_amount: item.discount_amount, tax_amount: item.tax_amount, due_date: item.due_date || '', description: item.description || '' }); editForm.reset(); selectedItem.value = item; showEditModal.value = true; }
-function submitEdit() { editForm.put('/karyawan/tagihan/' + selectedItem.value.id, { onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Tagihan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
+function submitEdit() { editForm.transform(data => ({...data, _method: 'PUT'})).post('/karyawan/tagihan/' + selectedItem.value.id, { onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Tagihan berhasil diperbarui.'); }, onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000) }); }
 
 const paymentHistory = ref({ payments: [], total_paid: 0, remaining: 0, grand_total: 0, payment_status_label: 'unpaid' });
 const paymentHistoryLoading = ref(false);
@@ -172,7 +172,7 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
           <button v-if="can('karyawan-tagihan.generate')" @click="openGenerate" class="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors shadow-sm">
             <i class="fas fa-magic mr-1.5"></i> Generate
           </button>
-          <button v-if="can('karyawan-tagihan.import')" @click="openImport" class="inline-flex items-center px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+          <button v-if="can('karyawan-tagihan.import')" @click="openImport" class="inline-flex items-center px-3 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm" data-testid="btn-import">
             <i class="fas fa-file-import mr-1.5"></i> Import
           </button>
           <button v-if="can('karyawan-tagihan.import')" @click="downloadTemplate" class="inline-flex items-center px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors shadow-sm">
@@ -183,11 +183,11 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
               <i class="fas fa-file-export mr-1.5"></i> Export <i class="fas fa-chevron-down ml-1.5 text-xs"></i>
             </button>
             <div class="absolute right-0 mt-1 w-44 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg py-1 z-30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-              <button @click="exportAll" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-list mr-2"></i> Export Semua</button>
+              <button @click="exportAll" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" data-testid="btn-export"><i class="fas fa-list mr-2"></i> Export Semua</button>
               <button @click="exportSelected" class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"><i class="fas fa-check-square mr-2"></i>Export Selected<span v-if="selectedIds.length > 0"> ({{ selectedIds.length }})</span></button>
             </div>
           </div>
-          <button v-if="can('karyawan-tagihan.create')" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm">
+          <button v-if="can('karyawan-tagihan.create')" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm" data-testid="btn-tambah">
             <i class="fas fa-plus mr-1.5"></i> Tambah
           </button>
         </div>
@@ -197,7 +197,7 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
       <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div class="relative w-full sm:w-72">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div>
-          <input v-model="searchInput" type="text" placeholder="Cari..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-amber-500 outline-none" @keydown.enter="applySearch" />
+          <input v-model="searchInput" type="text" placeholder="Cari..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-amber-500 outline-none" @keydown.enter="applySearch" data-testid="input-search">
           <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
             <button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white" title="Clear"><i class="fas fa-times text-xs"></i></button>
             <button @click="applySearch" class="px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700" title="Cari"><i class="fas fa-search text-xs"></i></button>
@@ -264,10 +264,10 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
 
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-sm min-w-[1200px]">
+          <table data-testid="table-data" class="w-full text-sm min-w-[1200px]">
             <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 text-amber-600 cursor-pointer" /></th>
+                <th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 text-amber-600 cursor-pointer" data-testid="checkbox-select-all" /></th>
                 <th @click="sort('invoice_number')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none"><span class="inline-flex items-center gap-1">No. Invoice <i :class="['fas', sortIcon('invoice_number'), 'text-[10px]', sortField === 'invoice_number' ? 'text-amber-500' : 'text-gray-400']"></i></span></th>
                 <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">No. Langganan</th>
                 <th class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400">Kode Pelanggan</th>
@@ -385,7 +385,7 @@ const hasFilter = computed(() => searchInput.value || statusFilter.value || terh
                 <div v-if="paymentHistoryLoading" class="text-xs text-gray-500 dark:text-gray-400 py-2">Memuat...</div>
                 <div v-else-if="paymentHistory.payments.length === 0" class="text-xs text-gray-500 dark:text-gray-400 italic py-2">Belum ada pembayaran.</div>
                 <div v-else class="overflow-x-auto">
-                  <table class="w-full text-xs">
+                  <table data-testid="table-data" class="w-full text-xs">
                     <thead>
                       <tr class="bg-gray-50 dark:bg-gray-900">
                         <th class="px-2 py-1.5 text-left font-semibold text-gray-600 dark:text-gray-400">Kode Pembayaran</th>

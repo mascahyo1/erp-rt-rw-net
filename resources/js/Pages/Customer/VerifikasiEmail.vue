@@ -135,7 +135,7 @@ const submit = () => {
                             </p>
                         </div>
 
-                        <form @submit.prevent="submit" class="space-y-4" novalidate>
+                        <form @submit.prevent="submit" class="space-y-4" novalidate data-testid="form-main">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Perusahaan <span class="text-red-500">*</span></label>
                                 <CompanySearchInput v-model="selectedCompany" placeholder="Cari perusahaan Anda..." />
@@ -151,7 +151,7 @@ const submit = () => {
                                         type="email"
                                         placeholder="email@contoh.com"
                                         class="w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm outline-none transition-all duration-200 focus:ring-2 focus:shadow-md border-gray-300 dark:border-gray-700 focus:ring-emerald-500/30 focus:border-emerald-500"
-                                    />
+                                     data-testid="input-email-contoh-com" />
                                 </div>
                                 <p v-if="form.errors.email" class="text-red-500 text-xs mt-1 flex items-center gap-1">
                                     <i class="fas fa-exclamation-circle"></i>{{ form.errors.email }}
@@ -162,7 +162,7 @@ const submit = () => {
                                 type="submit"
                                 :disabled="submitting"
                                 class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:shadow-xl hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
+                             data-testid="btn-simpan">
                                 <i v-if="submitting" class="fas fa-spinner fa-spin mr-2"></i>
                                 <i v-else class="fas fa-paper-plane mr-2"></i>
                                 {{ submitting ? 'Mengirim...' : 'Kirim Ulang Link Verifikasi' }}

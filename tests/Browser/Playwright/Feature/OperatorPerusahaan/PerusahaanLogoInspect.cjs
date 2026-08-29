@@ -219,8 +219,8 @@ class PerusahaanLogoInspect {
     }
 
     async run() {
-        const browser = await chromium.launch({
-            headless: true,
+        const browser = await chromium.launch({ slowMo: 350,
+            headless: false,
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
             // Enable video recording
             recordVideo: { dir: this.outDir, size: { width: 1280, height: 720 } }

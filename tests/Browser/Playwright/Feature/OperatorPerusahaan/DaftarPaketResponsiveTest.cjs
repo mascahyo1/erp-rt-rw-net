@@ -45,7 +45,7 @@ class DaftarPaketResponsiveTest {
         console.log('========================================\n');
 
         try {
-            this.browser = await chromium.launch({ headless: false });
+            this.browser = await chromium.launch({ headless: false, slowMo: 350 });
 
             // Login first
             this.context = await this.browser.newContext({

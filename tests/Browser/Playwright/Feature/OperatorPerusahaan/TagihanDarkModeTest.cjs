@@ -37,7 +37,7 @@ class TagihanDarkModeTest {
         console.log('========================================\n');
 
         try {
-            this.browser = await chromium.launch({ headless: false });
+            this.browser = await chromium.launch({ headless: false, slowMo: 350 });
             const context = await this.browser.newContext({ viewport: { width: 1280, height: 720 } });
             this.page = await context.newPage();
 

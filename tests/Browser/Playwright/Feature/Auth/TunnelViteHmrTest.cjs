@@ -12,7 +12,7 @@ const { execSync } = require('child_process');
 const TUNNEL = 'https://lerp-rt-rw-net.cahyosoft.my.id';
 
 (async () => {
-    const browser = await chromium.launch({ headless: true });
+    const browser = await chromium.launch({ slowMo: 350, headless: false });
     const results = { total: 0, passed: 0, failed: 0 };
     const assert = (name, cond, info) => {
         results.total++;

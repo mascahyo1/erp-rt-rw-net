@@ -549,7 +549,7 @@ class PerusahaanSayaCRUDTest {
         console.log('========================================\n');
 
         try {
-            this.browser = await chromium.launch({ headless: true });
+            this.browser = await chromium.launch({ slowMo: 350, headless: false });
             this.context = await this.browser.newContext({ viewport: { width: 1280, height: 720 } });
             this.page = await this.context.newPage();
 

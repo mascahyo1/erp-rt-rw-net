@@ -4,7 +4,10 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "test:standards": "node scripts/check-testing-standards.cjs",
+        "test:playwright": "node tests/Browser/Playwright/Feature/OperatorSaas/DeepVerifyKonfigurasiSaaS.cjs",
+        "test:phpunit": "php artisan test --parallel --processes=4"
     },
     "devDependencies": {
         "@fortawesome/fontawesome-free": "^7.2.0",

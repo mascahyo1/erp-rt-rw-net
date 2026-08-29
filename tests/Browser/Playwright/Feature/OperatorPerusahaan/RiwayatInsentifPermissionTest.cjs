@@ -73,7 +73,7 @@ class RiwayatInsentifPermissionTest {
         console.log('========================================\n');
 
         try {
-            this.browser = await chromium.launch({ headless: false });
+            this.browser = await chromium.launch({ headless: false, slowMo: 350 });
 
             // ============================================================
             // TEST 01: list + create only

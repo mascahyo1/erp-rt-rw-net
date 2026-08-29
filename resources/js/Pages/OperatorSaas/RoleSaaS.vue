@@ -354,13 +354,13 @@ function confirmDelete() {
 
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div><h2 class="text-2xl font-bold text-gray-900 dark:text-white">Role SaaS</h2><p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Kelola role dan permission untuk admin platform SaaS.</p></div>
-        <button @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"><i class="fas fa-plus mr-1.5"></i> Tambah Role</button>
+        <button @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm" data-testid="btn-tambah"><i class="fas fa-plus mr-1.5"></i> Tambah Role</button>
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div class="relative w-full sm:w-72">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div>
-          <input v-model="searchInput" type="text" placeholder="Cari role..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors" @keydown.enter="applySearch" />
+          <input v-model="searchInput" type="text" placeholder="Cari role..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-colors" @keydown.enter="applySearch" data-testid="input-search">
           <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
             <button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors" title="Clear"><i class="fas fa-times text-xs"></i></button>
             <button @click="applySearch" class="px-2 py-1 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition-colors" title="Cari"><i class="fas fa-search text-xs"></i></button>
@@ -409,10 +409,10 @@ function confirmDelete() {
 
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-sm min-w-[600px]">
+          <table data-testid="table-data" class="w-full text-sm min-w-[600px]">
             <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" /></th>
+                <th class="px-4 py-3 w-10"><input v-model="selectAll" type="checkbox" @change="toggleSelectAll" class="rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500" data-testid="checkbox-select-all" /></th>
                 <th @click="sort('name')" class="px-4 py-3 text-left font-semibold text-gray-600 dark:text-gray-400 cursor-pointer select-none hover:text-gray-900 dark:hover:text-white transition-colors">
                   <span class="inline-flex items-center gap-1">
                     Nama Role

@@ -107,7 +107,7 @@ function openEdit(item) {
   showEditModal.value = true;
 }
 function submitEdit() {
-  editForm.put('/karyawan/insentif-saya/' + selectedItem.value.id, {
+  editForm.transform(data => ({...data, _method: 'PUT'})).post('/karyawan/insentif-saya/' + selectedItem.value.id, {
     preserveState: true, preserveScroll: true,
     onSuccess: () => { showEditModal.value = false; fetchData(); toast.success('Klaim insentif berhasil diperbarui.'); },
     onError: () => toast.error('Validasi gagal: ' + errorSummary(editForm.errors), 6000)
@@ -137,7 +137,7 @@ const isAllSelected = computed(() => items.value.length > 0 && items.value.every
           <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Insentif Saya</h2>
           <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Klaim insentif yang Anda ajukan sendiri. Menunggu persetujuan dari admin.</p>
         </div>
-        <button v-if="can('riwayat-insentif.create') && terhapusFilter !== 'ya'" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm">
+        <button v-if="can('riwayat-insentif.create') && terhapusFilter !== 'ya'" @click="openCreate" class="inline-flex items-center px-4 py-2.5 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors shadow-sm" data-testid="btn-tambah">
           <i class="fas fa-plus mr-1.5"></i> Tambah Klaim
         </button>
       </div>
@@ -145,7 +145,7 @@ const isAllSelected = computed(() => items.value.length > 0 && items.value.every
       <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div class="relative w-full sm:w-72">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fas fa-search text-gray-400 text-sm"></i></div>
-          <input v-model="searchInput" type="text" placeholder="Cari..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-amber-500 outline-none" @keydown.enter="applySearch" />
+          <input v-model="searchInput" type="text" placeholder="Cari..." class="w-full pl-10 pr-16 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-amber-500 outline-none" @keydown.enter="applySearch" data-testid="input-search">
           <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-1.5">
             <button v-if="searchInput" @click="clearSearch" class="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-white" title="Clear"><i class="fas fa-times text-xs"></i></button>
             <button @click="applySearch" class="px-2 py-1 rounded bg-amber-600 text-white hover:bg-amber-700" title="Cari"><i class="fas fa-search text-xs"></i></button>
@@ -201,7 +201,7 @@ const isAllSelected = computed(() => items.value.length > 0 && items.value.every
 
       <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-sm min-w-[900px]">
+          <table data-testid="table-data" class="w-full text-sm min-w-[900px]">
             <thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th class="px-4 py-3 w-10">

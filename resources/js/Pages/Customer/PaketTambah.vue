@@ -120,7 +120,7 @@ async function submitForm() {
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Pilih paket internet dan lengkapi data untuk pengajuan langganan.</p>
       </div>
 
-      <form @submit.prevent="submitForm" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 space-y-4 max-w-2xl">
+      <form @submit.prevent="submitForm" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-6 space-y-4 max-w-2xl" data-testid="form-main">
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Pilih Paket <span class="text-red-500">*</span></label>
           <select v-model="form.internet_package_id" :class="['w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors bg-white dark:bg-gray-900 text-gray-900 dark:text-white', formErrors.internet_package_id ? 'border-red-400 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-emerald-500']">
@@ -190,7 +190,7 @@ async function submitForm() {
 
         <div class="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
           <Link href="/customer/paket-saya" class="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</Link>
-          <button type="submit" :disabled="submitting" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50">
+          <button type="submit" :disabled="submitting" class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50" data-testid="btn-simpan">
             <i class="fas fa-paper-plane mr-1.5"></i>{{ submitting ? 'Mengirim...' : 'Ajukan Langganan' }}
           </button>
         </div>
